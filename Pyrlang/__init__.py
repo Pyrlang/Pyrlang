@@ -1,3 +1,10 @@
-from Pyrlang.node import ErlNode, ErlPid
-from Pyrlang.process import ErlProcess
-from Pyrlang.atom import ErlAtom
+from Pyrlang.node import *
+from Pyrlang.process import *
+from Pyrlang.atom import *
+
+
+def init():
+    pass
+
+__all__ = ['init',
+           'ErlNode', 'ErlPid', 'ErlProcess', 'ErlAtom']
