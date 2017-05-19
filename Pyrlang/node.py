@@ -4,6 +4,7 @@ import gevent
 from gevent import Greenlet
 
 from Pyrlang.Dist.distribution import ErlDistribution
+from Pyrlang.Dist.node_opts import ErlNodeOpts
 from Pyrlang.atom import ErlAtom
 from Pyrlang.process import ErlProcess
 from Pyrlang.pid import ErlPid
@@ -27,8 +28,9 @@ class ErlNode(Greenlet):
         self.processes_ = {}
         self.reg_names_ = {}
         self.is_exiting_ = False
+        self.node_opts_ = ErlNodeOpts(cookie=cookie)
 
-        self.dist_ = ErlDistribution(self, name, cookie)
+        self.dist_ = ErlDistribution(node=self, name=name)
 
     def _run(self):
         self.dist_.connect(self)

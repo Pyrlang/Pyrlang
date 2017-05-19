@@ -1,10 +1,15 @@
 from gevent import monkey
-from Pyrlang import ErlNode
+monkey.patch_all()
+
+import Pyrlang as pyr
 
 
 def main():
-    monkey.patch_all()
-
-    node = ErlNode("py", "COOKIE")
+    pyr.init()
+    node = pyr.ErlNode("py@127.0.0.1", "COOKIE")
     # Block until the node has finished running
-    node.join()
+    node.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,6 +1,8 @@
 from __future__ import print_function
 import gevent
 from gevent.server import StreamServer
+
+from Pyrlang.Dist import util
 from Pyrlang.Dist.epmd import ErlEpmd
 from Pyrlang.Dist.in_connection import *
 
@@ -11,17 +13,23 @@ class ErlDistribution:
         ErlNode as a parameter but don't store it to avoid creating a ref cycle    
     """
 
-    def __init__(self, node, name: str, cookie: str) -> None:
+    def __init__(self, node, name: str) -> None:
         self.name_ = name
-        self.cookie_ = cookie
         self.creation_ = None
 
         # Listener for Incoming connections from other nodes
+        # Create handler using make_handler helper
+        proto_kwargs = {"node_opts": node.node_opts_,
+                        "dist": self}
+        handler = util.make_handler(receiver_class=InConnection,
+                                    args=[],
+                                    kwargs=proto_kwargs)
+
         self.in_srv_ = StreamServer(listener=('127.0.0.1', 0),
-                                    handle=make_handler(InConnection))
+                                    handle=handler)
         self.in_srv_.start()
         self.in_port_ = self.in_srv_.server_port
-        print("Dist: in port", self.in_port_)
+        print("Dist: Listening for dist connections on port", self.in_port_)
 
         self.epmd_ = ErlEpmd()
 

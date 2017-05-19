@@ -5,7 +5,8 @@ from gevent import socket
 
 NODE_HIDDEN = 77
 NODE_NORMAL = 72
-DIST_VSN = 5  # Distribution protocol version
+DIST_VSN = 5
+DIST_VSN_PAIR = (DIST_VSN, DIST_VSN)  # Distribution protocol version (MAX,MIN)
 
 REQ_ALIVE2 = 120
 DIST_PROTOCOL = 0  # 0 = TCP/IP
@@ -30,7 +31,6 @@ class ErlEpmd:
 
     def connect(self) -> bool:
         """ A long running connection to EPMD
-            :param dist: Distribution object
             :return: True
         """
         while True:
@@ -53,7 +53,7 @@ class ErlEpmd:
         self._req_alive2(nodetype=NODE_HIDDEN,
                          node_name=dist.name_,
                          in_port=dist.in_port_,
-                         dist_vsn=(DIST_VSN, DIST_VSN),
+                         dist_vsn=DIST_VSN_PAIR,
                          extra="")
 
         creation = self._read_alive2_reply()
@@ -91,6 +91,7 @@ class ErlEpmd:
         extra = bytes(extra, "latin1")
         name = bytes(name.split("@")[0], "utf8")
 
+        # Here let's tell EPMD that we've arrived, our protocols and our name
         msg1 = struct.pack(">BH BB HH",
                            REQ_ALIVE2, in_port,
                            nodetype, DIST_PROTOCOL,
@@ -114,4 +115,4 @@ class ErlEpmd:
         self.sock_.sendall(header + req)
 
 
-__all__ = ['ErlEpmd']
+__all__ = ['ErlEpmd', 'DIST_VSN', 'DIST_VSN_PAIR']
