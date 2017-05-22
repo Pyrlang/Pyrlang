@@ -1,10 +1,15 @@
+from __future__ import print_function
 import random
 import struct
 from hashlib import md5
 from typing import Union
 
-from Pyrlang.Dist import epmd, util
+from Pyrlang.Dist import epmd, util, etf
 from Pyrlang.Dist.node_opts import ErlNodeOpts
+
+
+class DistributionError(Exception):
+    pass
 
 
 class InConnection:
@@ -48,10 +53,10 @@ class InConnection:
 
         # Dist protocol switches from 2 byte packet length to 4 at some point
         if self.packet_len_size_ == 2:
-            pkt_size = self._as_u16(data, 0)
+            pkt_size = util.u16(data, 0)
             offset = 2
         else:
-            pkt_size = self._as_u32(data, 0)
+            pkt_size = util.u32(data, 0)
             offset = 4
 
         if len(data) < self.packet_len_size_ + pkt_size:
@@ -85,14 +90,6 @@ class InConnection:
             return self.on_packet_connected(data)
 
     @staticmethod
-    def _as_u16(data: bytes, pos: int = 0):
-        return struct.unpack(">H", data[pos:pos+2])[0]
-
-    @staticmethod
-    def _as_u32(data: bytes, pos: int = 0):
-        return struct.unpack(">I", data[pos:pos+4])[0]
-
-    @staticmethod
     def error(msg) -> False:
         print("Distribution protocol error:", msg)
         return False
@@ -115,7 +112,7 @@ class InConnection:
                               % (str(epmd.DIST_VSN_PAIR), str(pdv)))
         self.peer_distr_version_ = pdv
 
-        self.peer_flags_ = self._as_u32(data[3:7])
+        self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
         print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
@@ -133,7 +130,7 @@ class InConnection:
         if data[0] != ord('r'):
             return self.error("Unexpected packet (expecting CHALLENGE_REPLY)")
 
-        peers_challenge = self._as_u32(data, 1)
+        peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
         print("challengereply: peer's challenge", peers_challenge)
 
@@ -156,7 +153,10 @@ class InConnection:
 
         msg_type = chr(data[0])
         if msg_type == "p":
-            pass
+            (control_term, tail) = etf.binary_to_term(data[1:])
+            (msg_term, tail) = etf.binary_to_term(tail)
+
+            self.on_passthrough_message(control_term, msg_term)
         else:
             return self.error("Unexpected dist message type: %s" % msg_type)
 
@@ -205,6 +205,13 @@ class InConnection:
         """
         digest = InConnection.make_digest(peers_challenge, cookie)
         self._send_packet2(b'a' + digest)
+
+    def on_passthrough_message(self, control_term, msg_term):
+        """ On incoming 'p' message with control and data, handle it """
+        if not isinstance(control_term, tuple):
+            raise DistributionError("In a 'p' message control term must be a "
+                                    "tuple")
+
 
 
 __all__ = ['InConnection']

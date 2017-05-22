@@ -1,3 +1,8 @@
-.PHONY: test
+PY=python3
+
+.PHONY: test run
+run:
+	$(PY) test1.py
+
 test:
-	python3 test1.py
+	$(PY) test/dist_etf_test.py
