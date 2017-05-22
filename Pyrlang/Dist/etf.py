@@ -1,7 +1,9 @@
 from __future__ import print_function
+
 from zlib import decompressobj
 
-from Pyrlang.Dist import util, term
+from Pyrlang import term
+from Pyrlang.Dist import util
 
 ETF_VERSION_TAG = 131
 

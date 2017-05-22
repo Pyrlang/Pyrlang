@@ -8,6 +8,10 @@ from Pyrlang.Dist import epmd, util, etf
 from Pyrlang.Dist.node_opts import ErlNodeOpts
 
 
+# First element of control term in a 'p' message defines what it is
+CONTROL_TERM_SEND = 2
+CONTROL_TERM_REG_SEND = 6
+
 class DistributionError(Exception):
     pass
 
@@ -211,7 +215,15 @@ class InConnection:
         if not isinstance(control_term, tuple):
             raise DistributionError("In a 'p' message control term must be a "
                                     "tuple")
+        msg_type = control_term[0]
+        if msg_type == CONTROL_TERM_SEND:
+            # Normal send
+            pass
+        if msg_type == CONTROL_TERM_REG_SEND:
+            # Registered send
+            from Pyrlang.node import ErlNode
+            ErlNode.singleton.registered_send(receiver=control_term[3],
+                                              sender=control_term[1],
+                                              message=msg_term)
 
-
-
-__all__ = ['InConnection']
+        __all__ = ['InConnection']

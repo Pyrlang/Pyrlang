@@ -1,10 +1,11 @@
 import unittest
+
 import sys
 
 sys.path.insert(0, '.')
 
 from Pyrlang.Dist import etf
-from Pyrlang.Dist import term
+from Pyrlang import term
 
 
 class TestETF(unittest.TestCase):
