@@ -23,6 +23,9 @@ TAG_NEW_REF_EXT = 114
 class ETFDecodeException(Exception):
     pass
 
+class ETFEncodeException(Exception):
+    pass
+
 
 def incomplete_data():
     raise ETFDecodeException("Incomplete data")
@@ -153,4 +156,89 @@ def binary_to_term_2(data: bytes):
     raise ETFDecodeException("Unknown tag %d" % data[0])
 
 
-__all__ = ['binary_to_term']
+def _pack_list(lst, tail):
+    if len(lst) == 0:
+        return bytes([TAG_NIL_EXT])
+
+    data = b''
+    for item in lst:
+        data += term_to_binary_2(item)
+
+    tail = term_to_binary_2(tail)
+    return bytes([TAG_LIST_EXT]) + util.to_u32(len(lst)) + data + tail
+
+
+def _pack_string(val):
+    if len(val) == 0:
+        return _pack_list([], [])
+
+    # Save time here and don't check list elements to fit into a byte
+    # Otherwise TODO: if all elements were bytes - we could use TAG_STRING_EXT
+
+    return _pack_list(list(val), [])
+
+
+def _pack_tuple(val):
+    if len(val) < 256:
+        data = bytes([TAG_SMALL_TUPLE_EXT, len(val)])
+    else:
+        data = bytes([TAG_LARGE_TUPLE_EXT]) + util.to_u32(len(val))
+
+    for item in val:
+        data += term_to_binary_2(item)
+
+    return data
+
+
+def _pack_int(val):
+    if 0 <= val < 256:
+        return bytes([TAG_SMALL_INT, val])
+
+    return bytes([TAG_INT]) + util.to_i32(val)
+
+
+# TODO: maybe move this into atom class
+def _pack_atom(text: str) -> bytes:
+    # TODO: probably should be latin1 not utf8?
+    return bytes([TAG_ATOM_EXT]) + util.to_u16(len(text)) + bytes(text, "utf8")
+
+
+# TODO: maybe move this into pid class
+def _pack_pid(val: term.Pid) -> bytes:
+    data = bytes([TAG_PID_EXT]) + term_to_binary_2(val.node_) + \
+           util.to_u32(val.id_) + util.to_u32(val.serial_) + \
+           bytes([val.creation_])
+    return data
+
+
+# TODO: maybe move this into ref class
+def _pack_ref(val: term.Reference) -> bytes:
+    data = bytes([TAG_NEW_REF_EXT]) + util.to_u16(len(val.id_) // 4) + \
+           term_to_binary_2(val.node_) + bytes([val.creation_]) + val.id_
+    return data
+
+
+def term_to_binary_2(val):
+    if type(val) == bytes:
+        return _pack_string(val)
+    if type(val) == list:
+        return _pack_list(val, [])
+    if isinstance(val, term.List):
+        return _pack_list(val.elements_, val.tail_)
+    if type(val) == tuple:
+        return _pack_tuple(val)
+    if type(val) == int:
+        return _pack_int(val)
+    if isinstance(val, term.Atom):
+        return _pack_atom(val.text_)
+    if isinstance(val, term.Pid):
+        return _pack_pid(val)
+    if isinstance(val, term.Reference):
+        return _pack_ref(val)
+
+    raise ETFEncodeException("Can't encode %s" % str(val))
+
+def term_to_binary(val):
+    return bytes([ETF_VERSION_TAG]) + term_to_binary_2(val)
+
+__all__ = ['binary_to_term', 'term_to_binary']

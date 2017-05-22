@@ -4,6 +4,9 @@ import struct
 from hashlib import md5
 from typing import Union
 
+from gevent.queue import Queue
+
+from Pyrlang import term
 from Pyrlang.Dist import epmd, util, etf
 from Pyrlang.Dist.node_opts import ErlNodeOpts
 
@@ -12,13 +15,14 @@ from Pyrlang.Dist.node_opts import ErlNodeOpts
 CONTROL_TERM_SEND = 2
 CONTROL_TERM_REG_SEND = 6
 
+
 class DistributionError(Exception):
     pass
 
 
 class InConnection:
     """ Handling incoming connections from other nodes.
-        Called from handler provided by util.make_handler
+        Called and controlled from handler provided by util.make_handler
     """
     DISCONNECTED = 0
     RECV_NAME = 1
@@ -33,6 +37,7 @@ class InConnection:
 
         self.dist_ = dist  # reference to distribution object
         self.node_opts_ = node_opts
+        self.inbox_ = Queue()  # refer to util.make_handler which reads this
 
         self.peer_distr_version_ = (None, None)
         self.peer_flags_ = 0
@@ -81,6 +86,8 @@ class InConnection:
         """ Handler is called when the client has disconnected
         """
         self.state_ = self.DISCONNECTED
+        from Pyrlang.node import ErlNode
+        ErlNode.singleton.inbox_.put(('node_connected', self.peer_name_))
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
@@ -88,8 +95,10 @@ class InConnection:
         """
         if self.state_ == self.RECV_NAME:
             return self.on_packet_recvname(data)
+
         elif self.state_ == self.WAIT_CHALLENGE_REPLY:
             return self.on_packet_challengereply(data)
+
         elif self.state_ == self.CONNECTED:
             return self.on_packet_connected(data)
 
@@ -120,6 +129,10 @@ class InConnection:
         self.peer_name_ = data[7:].decode("latin1")
         print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
+        # Maybe too early here? Actual connection is established moments later
+        from Pyrlang.node import ErlNode
+        ErlNode.singleton.inbox_.put(('node_connected', self.peer_name_, self))
+
         # Report
         self._send_packet2(b"sok")
 
@@ -145,9 +158,10 @@ class InConnection:
         self._send_challenge_ack(peers_challenge, my_cookie)
         self.packet_len_size_ = 4
         self.state_ = self.CONNECTED
+
         # TODO: start timer with node_opts_.network_tick_time_
 
-        print("Connection established between nodes")
+        print("Connection established with %s" % self.peer_name_)
         return True
 
     def on_packet_connected(self, data):
@@ -158,7 +172,10 @@ class InConnection:
         msg_type = chr(data[0])
         if msg_type == "p":
             (control_term, tail) = etf.binary_to_term(data[1:])
-            (msg_term, tail) = etf.binary_to_term(tail)
+            if tail != b'':
+                (msg_term, tail) = etf.binary_to_term(tail)
+            else:
+                msg_term = None
 
             self.on_passthrough_message(control_term, msg_term)
         else:
@@ -169,8 +186,13 @@ class InConnection:
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        print("Send handshake:", util.hex_bytes(content))
         msg = struct.pack(">H", len(content)) + content
+        self.socket_.sendall(msg)
+
+    def _send_packet4(self, content: bytes):
+        """ Send a connection-time status message with a 4 byte length prefix
+        """
+        msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
     def _send_challenge(self, my_challenge):
@@ -199,8 +221,6 @@ class InConnection:
     def make_digest(challenge: int, cookie: str) -> bytes:
         result = md5(bytes(cookie, "ascii")
                      + bytes(str(challenge), "ascii")).digest()
-        print("make_digest cookie=", cookie, "challenge=", challenge,
-              "result=", result)
         return result
 
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):
@@ -226,4 +246,14 @@ class InConnection:
                                               sender=control_term[1],
                                               message=msg_term)
 
-        __all__ = ['InConnection']
+    def handle_one_inbox_message(self, m):
+        # Send a ('send', Dst, Msg) to deliver a message to the other side
+        if m[0] == 'send':
+            (_, dst, msg) = m
+            ctrl = (CONTROL_TERM_SEND, term.Atom(''), dst)
+            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+
+            self._send_packet4(packet)
+
+
+__all__ = ['InConnection']

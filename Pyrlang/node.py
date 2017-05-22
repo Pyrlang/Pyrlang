@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import gevent
 from gevent import Greenlet
+from gevent.queue import Queue
 
 from Pyrlang import term
 from Pyrlang.Dist.distribution import ErlDistribution
@@ -34,6 +35,7 @@ class ErlNode(Greenlet):
             raise ErlNodeException("Singleton ErlNode already created")
         ErlNode.singleton = self
 
+        self.inbox_ = Queue()
         self.pid_counter_ = 0
         self.processes_ = {}
         self.reg_names_ = {}
@@ -41,13 +43,29 @@ class ErlNode(Greenlet):
         self.node_opts_ = ErlNodeOpts(cookie=cookie)
         self.name_ = term.Atom(name)
 
+        self.dist_nodes_ = {}
         self.dist_ = ErlDistribution(node=self, name=name)
 
     def _run(self):
         self.dist_.connect(self)
 
         while not self.is_exiting_:
-            gevent.sleep(5)
+            while not self.inbox_.empty():
+                msg = self.inbox_.get_nowait()
+                self.handle_one_inbox_message(msg)
+            gevent.sleep(0)
+
+    def handle_one_inbox_message(self, m):
+        # Send a ('node_connected', IP, Connection) to inform about the
+        # connectivity with the other node
+        if m[0] == 'node_connected':
+            (_, addr, connection) = m
+            self.dist_nodes_[addr] = connection
+
+        # Send a ('node_disconnected', IP) to forget the connection
+        if m[0] == 'node_disconnected':
+            (_, addr) = m
+            del self.dist_nodes_[addr]
 
     def register_new_process(self, proc) -> ErlPid:
         """ Generate a new pid and add the process to the process dictionary        
@@ -90,9 +108,14 @@ class ErlNode(Greenlet):
         print("regsend %s: %s" % (receiver, message))
 
     def handle_net_kernel_message(self, m):
+        """ Net_kernel is the registered process in Erlang responsible for
+            net_adm:ping's for example. So we can satisfy this here for our node
+            to become pingable
+        """
         if not isinstance(m[0], term.Atom):
             return
 
+        # Incoming gen_call packet to net_kernel, might be that net_adm:ping
         if m[0].text_ == '$gen_call':
             (sender, ref) = m[1]
             msg = m[2]
@@ -102,12 +125,13 @@ class ErlNode(Greenlet):
 
             if msg[0].text_ == 'is_auth':
                 # other_node = msg[1]
+                # Respond with {Ref, 'yes'}
                 self.send(sender, (ref, term.Atom('yes')))
 
     def send(self, receiver, message):
         if not isinstance(receiver, term.Pid) \
                 and receiver not in self.reg_names_:
-            raise ErlNodeException("Receiver must be a pid or a registered name")
+            raise ErlNodeException("Receiver must be pid or registered name")
 
         if self.name_ == receiver.node_:
             # TODO: Local send
@@ -115,6 +139,12 @@ class ErlNode(Greenlet):
 
         else:
             # TODO: Remote send
+            receiver_node = receiver.node_.text_
+            if receiver_node not in self.dist_nodes_:
+                raise ErlNodeException("Node not connected %s" % receiver_node)
+
+            conn = self.dist_nodes_[receiver_node]
+            conn.inbox_.put(('send', receiver, message))
             print("remote to %s: %s" % (receiver, message))
 
 
