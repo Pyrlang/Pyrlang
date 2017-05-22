@@ -10,7 +10,6 @@ from Pyrlang import term
 from Pyrlang.Dist import epmd, util, etf
 from Pyrlang.Dist.node_opts import ErlNodeOpts
 
-
 # First element of control term in a 'p' message defines what it is
 CONTROL_TERM_SEND = 2
 CONTROL_TERM_REG_SEND = 6
@@ -236,24 +235,29 @@ class InConnection:
             raise DistributionError("In a 'p' message control term must be a "
                                     "tuple")
         msg_type = control_term[0]
-        if msg_type == CONTROL_TERM_SEND:
-            # Normal send
-            pass
-        if msg_type == CONTROL_TERM_REG_SEND:
+        if msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
             # Registered send
             from Pyrlang.node import ErlNode
-            ErlNode.singleton.registered_send(receiver=control_term[3],
-                                              sender=control_term[1],
-                                              message=msg_term)
+            ErlNode.singleton.send(receiver=control_term[3],
+                                   sender=control_term[1],
+                                   message=msg_term)
 
     def handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
             (_, dst, msg) = m
             ctrl = (CONTROL_TERM_SEND, term.Atom(''), dst)
-            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+            self._control_message(ctrl, msg)
 
-            self._send_packet4(packet)
+    def _control_message(self, ctrl, msg):
+        """ Pack a control message and a regular message (can be None) together
+            and send them over the connection
+        """
+        if msg is None:
+            packet = b'p' + etf.term_to_binary(ctrl)
+        else:
+            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+        self._send_packet4(packet)
 
 
 __all__ = ['InConnection']

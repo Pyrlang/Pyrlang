@@ -23,6 +23,7 @@ TAG_NEW_REF_EXT = 114
 class ETFDecodeException(Exception):
     pass
 
+
 class ETFEncodeException(Exception):
     pass
 
@@ -238,7 +239,9 @@ def term_to_binary_2(val):
 
     raise ETFEncodeException("Can't encode %s" % str(val))
 
+
 def term_to_binary(val):
     return bytes([ETF_VERSION_TAG]) + term_to_binary_2(val)
+
 
 __all__ = ['binary_to_term', 'term_to_binary']

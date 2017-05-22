@@ -93,9 +93,8 @@ class ErlNode(Greenlet):
         self.is_exiting_ = True
         self.dist_.disconnect()
 
-    def registered_send(self, sender, receiver, message):
-        """ Send a message to a named process
-            :param sender: A pid who sent the message
+    def _registered_send(self, receiver, message):
+        """ Try find a named process by atom key, drop a message into its inbox_
             :param receiver: A name, atom, of the receiver process
             :param message: The message
         """
@@ -105,7 +104,21 @@ class ErlNode(Greenlet):
         if receiver.text_ == 'net_kernel':
             return self.handle_net_kernel_message(message)
 
-        print("regsend %s: %s" % (receiver, message))
+        if receiver in self.reg_names_:
+            dst = self.reg_names_[receiver]
+            dst.inbox_.put(message)
+
+    def _send_local(self, receiver, message):
+        """ Try find a process by pid and drop a message into its inbox_
+            :param receiver:  Pid who will receive the message
+            :param message:  The message
+        """
+        if not isinstance(receiver, term.Pid):
+            raise ErlNodeException("send's receiver must be a pid")
+
+        if receiver in self.processes_:
+            dst = self.processes_[receiver]
+            dst.inbox_.put(message)
 
     def handle_net_kernel_message(self, m):
         """ Net_kernel is the registered process in Erlang responsible for
@@ -126,26 +139,27 @@ class ErlNode(Greenlet):
             if msg[0].text_ == 'is_auth':
                 # other_node = msg[1]
                 # Respond with {Ref, 'yes'}
-                self.send(sender, (ref, term.Atom('yes')))
+                self._send_remote(sender, (ref, term.Atom('yes')))
 
-    def send(self, receiver, message):
-        if not isinstance(receiver, term.Pid) \
-                and receiver not in self.reg_names_:
-            raise ErlNodeException("Receiver must be pid or registered name")
+    def send(self, sender, receiver, message):
+        is_atom = isinstance(receiver, term.Atom)
+        if is_atom:
+            return self._registered_send(receiver, message)
 
-        if self.name_ == receiver.node_:
-            # TODO: Local send
-            pass
-
+        is_pid = isinstance(receiver, term.Pid)
+        if is_pid and self.name_ == receiver.node_:
+            return self._send_local(receiver, message)
         else:
-            # TODO: Remote send
-            receiver_node = receiver.node_.text_
-            if receiver_node not in self.dist_nodes_:
-                raise ErlNodeException("Node not connected %s" % receiver_node)
+            return self._send_remote(receiver, message)
 
-            conn = self.dist_nodes_[receiver_node]
-            conn.inbox_.put(('send', receiver, message))
-            print("remote to %s: %s" % (receiver, message))
+    def _send_remote(self, receiver, message):
+        receiver_node = receiver.node_.text_
+        if receiver_node not in self.dist_nodes_:
+            raise ErlNodeException("Node not connected %s" % receiver_node)
+
+        conn = self.dist_nodes_[receiver_node]
+        conn.inbox_.put(('send', receiver, message))
+        print("remote to %s: %s" % (receiver, message))
 
 
 __all__ = ['ErlNode']
