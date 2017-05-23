@@ -34,36 +34,14 @@ def make_handler(receiver_class, args, kwargs):
         connection.
     """
 
-    def handle_fun(socket, address):
+    def _handle_connect_disconnect(socket, address):
         print("Client connected", address)
 
         receiver = receiver_class(*args, **kwargs)
         receiver.on_connected(socket, address)
 
         try:
-            collected = b''
-            while True:
-                # Because data is grouped in packets, first we try and assemble
-                # a full packet before calling on_packet in the handler class
-                # data = socket.recv(4096)
-                # if not data:
-                #    break  # disconnected
-                ready = select.select([socket], [], [], 0.1)
-                if ready[0]:
-                    data = socket.recv(4096)
-
-                    # print('Received data from client:', data)
-                    collected += data
-                    collected = receiver.consume(collected)
-                    if collected is None:
-                        print("Protocol requested to disconnect the socket")
-                        break
-                else:
-                    while not receiver.inbox_.empty():
-                        msg = receiver.inbox_.get_nowait()
-                        receiver.handle_one_inbox_message(msg)
-                    gevent.sleep(0.0)
-
+            _handle_socket_read(receiver, socket)
             print("Client disconnected", address)
 
         except socket.Exception as e:
@@ -73,13 +51,43 @@ def make_handler(receiver_class, args, kwargs):
             socket.close()
             receiver.on_connection_lost()
 
-    return handle_fun
+    def _handle_socket_read(receiver, socket):
+        collected = b''
+        while True:
+            # a full packet before calling on_packet in the handler class
+            ready = select.select([socket], [], [], 1)
+            try:
+                if ready[0]:
+                    data = socket.recv(4096)
+                    collected += data
+                    collected = receiver.consume(collected)
+                    if collected is None:
+                        print("Protocol requested to disconnect the socket")
+                        break
+                    gevent.sleep(0.0)
+                else:
+                    while not receiver.inbox_.empty():
+                        msg = receiver.inbox_.get_nowait()
+                        receiver.handle_one_inbox_message(msg)
+                    # Longer sleep when there's no data
+                    gevent.sleep(0.05)
+            except select.error:
+                # Disconnected probably or another error
+                break
+
+    return _handle_connect_disconnect
 
 
 def hex_bytes(s: bytes):
     return " ".join("{:02x}".format(c) for c in s)
 
 
-__all__ = ['make_handler', 'hex_bytes',
+# def schedule(delay, func, *args, **kw_args):
+#     """ Runs a func with args periodically """
+#     gevent.spawn_later(0, func, *args, **kw_args)
+#     gevent.spawn_later(delay, schedule, delay, func, *args, **kw_args)
+
+
+__all__ = ['make_handler', 'hex_bytes', 'schedule',
            'u16', 'u32', 'i32',
            'to_u16', 'to_u32', 'to_i32']

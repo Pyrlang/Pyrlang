@@ -72,7 +72,7 @@ class InConnection:
             return data
 
         packet = data[offset:(offset + pkt_size)]
-        print('Dist packet:', util.hex_bytes(packet))
+        #print('Dist packet:', util.hex_bytes(packet))
 
         if self.on_packet(packet):
             return data[(offset + pkt_size):]
@@ -166,6 +166,7 @@ class InConnection:
     def on_packet_connected(self, data):
         # TODO: Update timeout timer, that we have connectivity still
         if data == b'':
+            self._send_packet4(b'')
             return True  # this was a keepalive
 
         msg_type = chr(data[0])
