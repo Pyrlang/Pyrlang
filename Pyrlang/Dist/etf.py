@@ -64,19 +64,19 @@ def binary_to_term_2(data: bytes):
         if len_data < 3:
             return incomplete_data()
 
-        length = util.u16(data, 1) + 3
-        if length > len_data:
+        len_expected = util.u16(data, 1) + 3
+        if len_expected > len_data:
             return incomplete_data()
 
-        name = data[3:length]
+        name = data[3:len_expected]
         if name == b'true':
-            return True, data[length:]
+            return True, data[len_expected:]
         if name == b'false':
-            return False, data[length:]
+            return False, data[len_expected:]
         if name == b'undefined':
-            return None, data[length:]
+            return None, data[len_expected:]
 
-        return term.Atom(name.decode('utf8')), data[length:]
+        return term.Atom(name.decode('utf8')), data[len_expected:]
 
     if tag == TAG_NIL_EXT:
         return [], data[1:]
@@ -86,20 +86,21 @@ def binary_to_term_2(data: bytes):
         if len_data < 3:
             return incomplete_data()
 
-        length = util.u16(data, 1) + 3
-        if length < len_data:
+        len_expected = util.u16(data, 1) + 3
+
+        if len_expected > len_data:
             return incomplete_data()
 
-        return data[3:length].decode("utf8"), data[length:]
+        return data[3:len_expected].decode("utf8"), data[len_expected:]
 
     if tag == TAG_LIST_EXT:
-        length = util.u32(data, 1)
+        len_expected = util.u32(data, 1)
         result = term.List()
         tail = data[5:]
-        while length > 0:
+        while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
             result.append(term1)
-            length -= 1
+            len_expected -= 1
 
         # Read list tail and set it
         list_tail, tail = binary_to_term_2(tail)
@@ -108,24 +109,24 @@ def binary_to_term_2(data: bytes):
         return result, tail
 
     if tag == TAG_SMALL_TUPLE_EXT:
-        length = data[1]
+        len_expected = data[1]
         result = []
         tail = data[2:]
-        while length > 0:
+        while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
             result.append(term1)
-            length -= 1
+            len_expected -= 1
 
         return tuple(result), tail
 
     if tag == TAG_LARGE_TUPLE_EXT:
-        length = util.u32(data, 1)
+        len_expected = util.u32(data, 1)
         result = []
         tail = data[5:]
-        while length > 0:
+        while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
             result.append(term1)
-            length -= 1
+            len_expected -= 1
 
         return tuple(result), tail
 
@@ -230,6 +231,8 @@ def term_to_binary_2(val):
         return _pack_tuple(val)
     if type(val) == int:
         return _pack_int(val)
+    if val is None:
+        return _pack_atom('undefined')
     if isinstance(val, term.Atom):
         return _pack_atom(val.text_)
     if isinstance(val, term.Pid):

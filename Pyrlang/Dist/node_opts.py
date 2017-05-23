@@ -31,7 +31,7 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_MAP_TAG)
 
 
-class ErlNodeOpts:
+class NodeOpts:
     def __init__(self, cookie: str, dflags: int = DEFAULT_DFLAGS) -> None:
         self.dflags_ = dflags
         self.cookie_ = cookie

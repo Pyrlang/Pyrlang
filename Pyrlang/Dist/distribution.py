@@ -7,7 +7,7 @@ from Pyrlang.Dist.epmd import ErlEpmd
 from Pyrlang.Dist.in_connection import *
 
 
-class ErlDistribution:
+class ErlangDistribution:
     """ Implements network part of the EPMD registration and Erlang distribution
         protocol. Extends functionality of ErlNode, so all functions take 
         ErlNode as a parameter but don't store it to avoid creating a ref cycle    
@@ -15,7 +15,7 @@ class ErlDistribution:
 
     def __init__(self, node, name: str) -> None:
         self.name_ = name
-        self.creation_ = None
+        self.creation_ = 0
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler helper
@@ -50,4 +50,4 @@ class ErlDistribution:
         self.epmd_.close()
 
 
-__all__ = ['ErlDistribution']
+__all__ = ['ErlangDistribution']

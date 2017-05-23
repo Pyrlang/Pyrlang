@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import struct
+
 from future.utils import python_2_unicode_compatible
 from builtins import chr
 
@@ -10,6 +13,9 @@ PID_MARKER = "pyrlang.Pid"
 class Atom:
     def __repr__(self) -> str:
         return "Atom'%s'" % self.text_
+
+    def __str__(self):
+        return self.text_
 
     def __init__(self, text: str) -> None:
         self.text_ = text
@@ -31,8 +37,13 @@ class List:
         for improper list representation, and can be interpreted as Python
         string optionally
     """
+
     def __repr__(self) -> str:
-        return "List[%s | %s]" % (self.elements_, self.tail_)
+        if self.tail_ == []:
+            return str(self.elements_)
+
+        elements = ", ".join(str(e) for e in self.elements_)
+        return "[%s | %s]" % (elements, self.tail_)
 
     def __init__(self) -> None:
         self.elements_ = []
@@ -59,7 +70,7 @@ class Pid:
         self.creation_ = creation
 
     def __repr__(self) -> str:
-        return "Pid<%d.%d.%d>@%s" % (self.id_, self.serial_, self.creation_,
+        return "Pid<%d.%d.%d>@%s" % (self.creation_, self.id_, self.serial_,
                                      self.node_.text_)
 
     def __str__(self) -> str:
@@ -89,7 +100,9 @@ class Reference:
         self.creation_ = creation
 
     def __repr__(self) -> str:
-        return "Ref<%d %s>@%s" % (self.creation_, self.id_, self.node_.text_)
+        v = struct.unpack(">III", self.id_)
+        return "Ref<%d,%d,%d,%d>@%s" % \
+               (self.creation_, v[0], v[1], v[2], self.node_.text_)
 
     def __str__(self) -> str:
         return self.__repr__()

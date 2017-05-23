@@ -1,5 +1,6 @@
 from __future__ import print_function
 import struct
+import traceback
 
 import gevent
 import gevent.select as select
@@ -42,12 +43,14 @@ def make_handler(receiver_class, args, kwargs):
 
         try:
             _handle_socket_read(receiver, socket)
-            print("Client disconnected", address)
 
-        except socket.Exception as e:
-            print(e)
+        except Exception as e:
+            print("\nException: %s" % e)
+            traceback.print_exc()
+            print()
 
         finally:
+            print("Client disconnected", address)
             socket.close()
             receiver.on_connection_lost()
 
@@ -55,22 +58,22 @@ def make_handler(receiver_class, args, kwargs):
         collected = b''
         while True:
             # a full packet before calling on_packet in the handler class
-            ready = select.select([socket], [], [], 1)
+            ready = select.select([socket], [], [], 0.0)
             try:
                 if ready[0]:
                     data = socket.recv(4096)
+                    # print("data in: %s" % hex_bytes(data))
+
                     collected += data
                     collected = receiver.consume(collected)
                     if collected is None:
                         print("Protocol requested to disconnect the socket")
                         break
-                    gevent.sleep(0.0)
                 else:
                     while not receiver.inbox_.empty():
                         msg = receiver.inbox_.get_nowait()
                         receiver.handle_one_inbox_message(msg)
                     # Longer sleep when there's no data
-                    gevent.sleep(0.05)
             except select.error:
                 # Disconnected probably or another error
                 break
@@ -79,13 +82,14 @@ def make_handler(receiver_class, args, kwargs):
 
 
 def hex_bytes(s: bytes):
+    """ Format a bytes() object as a hex dump """
     return " ".join("{:02x}".format(c) for c in s)
 
 
-# def schedule(delay, func, *args, **kw_args):
-#     """ Runs a func with args periodically """
-#     gevent.spawn_later(0, func, *args, **kw_args)
-#     gevent.spawn_later(delay, schedule, delay, func, *args, **kw_args)
+def schedule(delay, func, *args, **kw_args):
+    """ Spawns a greenlet with args periodically """
+    gevent.spawn_later(0, func, *args, **kw_args)
+    gevent.spawn_later(delay, schedule, delay, func, *args, **kw_args)
 
 
 __all__ = ['make_handler', 'hex_bytes', 'schedule',

@@ -7,5 +7,5 @@ def init():
     pass
 
 __all__ = ['init',
-           'ErlNode', 'ErlProcess', 'Atom', 'Pid', 'Reference',
+           'Node', 'Process', 'Atom', 'Pid', 'Reference',
            'List']

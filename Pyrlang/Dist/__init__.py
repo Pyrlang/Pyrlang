@@ -1,1 +1,1 @@
-from Pyrlang.Dist.distribution import ErlDistribution
+from Pyrlang.Dist.distribution import ErlangDistribution

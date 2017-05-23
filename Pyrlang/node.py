@@ -5,18 +5,16 @@ from gevent import Greenlet
 from gevent.queue import Queue
 
 from Pyrlang import term
-from Pyrlang.Dist.distribution import ErlDistribution
-from Pyrlang.Dist.node_opts import ErlNodeOpts
-from Pyrlang.atom import ErlAtom
-from Pyrlang.pid import ErlPid
-from Pyrlang.process import ErlProcess
+from Pyrlang.Dist.distribution import ErlangDistribution
+from Pyrlang.Dist.node_opts import NodeOpts
+from Pyrlang.process import Process
 
 
-class ErlNodeException(Exception):
+class NodeException(Exception):
     pass
 
 
-class ErlNode(Greenlet):
+class Node(Greenlet):
     """ Implements an Erlang node which has a network name, a dictionary of 
         processes and registers itself via EPMD. 
         Node handles the networking asynchronously.
@@ -31,20 +29,25 @@ class ErlNode(Greenlet):
     def __init__(self, name: str, cookie: str, *args, **kwargs) -> None:
         Greenlet.__init__(self)
 
-        if ErlNode.singleton is not None:
-            raise ErlNodeException("Singleton ErlNode already created")
-        ErlNode.singleton = self
+        if Node.singleton is not None:
+            raise NodeException("Singleton Node was already created")
+        Node.singleton = self
 
         self.inbox_ = Queue()
         self.pid_counter_ = 0
         self.processes_ = {}
         self.reg_names_ = {}
         self.is_exiting_ = False
-        self.node_opts_ = ErlNodeOpts(cookie=cookie)
+        self.node_opts_ = NodeOpts(cookie=cookie)
         self.name_ = term.Atom(name)
 
         self.dist_nodes_ = {}
-        self.dist_ = ErlDistribution(node=self, name=name)
+        self.dist_ = ErlangDistribution(node=self, name=name)
+
+        # Spawn and register (automatically) the process 'rex' for remote
+        # execution, which takes 'rpc:call's from Erlang
+        from Pyrlang.rex import Rex
+        Rex(self).start()
 
     def _run(self):
         self.dist_.connect(self)
@@ -53,7 +56,7 @@ class ErlNode(Greenlet):
             while not self.inbox_.empty():
                 msg = self.inbox_.get_nowait()
                 self.handle_one_inbox_message(msg)
-            gevent.sleep(0)
+            gevent.sleep(0.0)
 
     def handle_one_inbox_message(self, m):
         # Send a ('node_connected', IP, Connection) to inform about the
@@ -67,24 +70,26 @@ class ErlNode(Greenlet):
             (_, addr) = m
             del self.dist_nodes_[addr]
 
-    def register_new_process(self, proc) -> ErlPid:
+    def register_new_process(self, proc) -> term.Pid:
         """ Generate a new pid and add the process to the process dictionary        
             :param proc: A new born process 
             :return: Pid for it (does not modify the process in place!)
         """
-        pid = ErlPid(self.pid_counter_)
+        pid = term.Pid(node=self.name_,
+                       id=self.pid_counter_ // 0x7fffffff,
+                       serial=self.pid_counter_ % 0x7fffffff,
+                       creation=self.dist_.creation_)
         self.pid_counter_ += 1
         self.processes_[pid] = proc
         return pid
 
-    def register_name(self, proc: ErlProcess, name: term.Atom) -> None:
+    def register_name(self, proc: Process, name: term.Atom) -> None:
         """ Add a name into registrations table (automatically removed when the
             referenced process is removed)
             :param proc: The process to register 
             :param name: The name to register with
         """
-        self.pid_counter_ += 1
-        self.reg_names_[proc.pid] = proc
+        self.reg_names_[name] = proc.pid_
 
     def stop(self) -> None:
         """ Sets the mark that node is done, closes connections and leaves
@@ -99,14 +104,16 @@ class ErlNode(Greenlet):
             :param message: The message
         """
         if not isinstance(receiver, term.Atom):
-            raise ErlNodeException("registered_send receiver must be an atom")
+            raise NodeException("registered_send receiver must be an atom")
 
         if receiver.text_ == 'net_kernel':
             return self.handle_net_kernel_message(message)
 
         if receiver in self.reg_names_:
             dst = self.reg_names_[receiver]
-            dst.inbox_.put(message)
+            self._send_local(dst, message)
+        else:
+            print("Node: send to unregistered name %s ignored" % receiver)
 
     def _send_local(self, receiver, message):
         """ Try find a process by pid and drop a message into its inbox_
@@ -114,11 +121,14 @@ class ErlNode(Greenlet):
             :param message:  The message
         """
         if not isinstance(receiver, term.Pid):
-            raise ErlNodeException("send's receiver must be a pid")
+            raise NodeException("send's receiver must be a pid")
 
         if receiver in self.processes_:
             dst = self.processes_[receiver]
+            print("Node._send_local: pid %s <- %s" % (receiver, message))
             dst.inbox_.put(message)
+        else:
+            print("Node._send_local: pid %s does not exist" % receiver)
 
     def handle_net_kernel_message(self, m):
         """ Net_kernel is the registered process in Erlang responsible for
@@ -147,6 +157,7 @@ class ErlNode(Greenlet):
             return self._registered_send(receiver, message)
 
         is_pid = isinstance(receiver, term.Pid)
+
         if is_pid and self.name_ == receiver.node_:
             return self._send_local(receiver, message)
         else:
@@ -155,11 +166,11 @@ class ErlNode(Greenlet):
     def _send_remote(self, receiver, message):
         receiver_node = receiver.node_.text_
         if receiver_node not in self.dist_nodes_:
-            raise ErlNodeException("Node not connected %s" % receiver_node)
+            raise NodeException("Node not connected %s" % receiver_node)
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(('send', receiver, message))
-        print("remote to %s: %s" % (receiver, message))
+        print("Node._send_remote %s <- %s" % (receiver, message))
 
 
-__all__ = ['ErlNode']
+__all__ = ['Node']

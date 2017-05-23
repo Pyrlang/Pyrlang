@@ -8,7 +8,7 @@ from gevent.queue import Queue
 
 from Pyrlang import term
 from Pyrlang.Dist import epmd, util, etf
-from Pyrlang.Dist.node_opts import ErlNodeOpts
+from Pyrlang.Dist.node_opts import NodeOpts
 
 # First element of control term in a 'p' message defines what it is
 CONTROL_TERM_SEND = 2
@@ -28,7 +28,7 @@ class InConnection:
     WAIT_CHALLENGE_REPLY = 2
     CONNECTED = 3
 
-    def __init__(self, dist, node_opts: ErlNodeOpts):
+    def __init__(self, dist, node_opts: NodeOpts):
         self.state_ = self.DISCONNECTED
         self.packet_len_size_ = 2
         self.socket_ = None
@@ -72,7 +72,7 @@ class InConnection:
             return data
 
         packet = data[offset:(offset + pkt_size)]
-        #print('Dist packet:', util.hex_bytes(packet))
+        # print('Dist packet:', util.hex_bytes(packet))
 
         if self.on_packet(packet):
             return data[(offset + pkt_size):]
@@ -85,8 +85,8 @@ class InConnection:
         """ Handler is called when the client has disconnected
         """
         self.state_ = self.DISCONNECTED
-        from Pyrlang.node import ErlNode
-        ErlNode.singleton.inbox_.put(('node_connected', self.peer_name_))
+        from Pyrlang.node import Node
+        Node.singleton.inbox_.put(('node_disconnected', self.peer_name_))
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
@@ -126,11 +126,11 @@ class InConnection:
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        #print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
         # Maybe too early here? Actual connection is established moments later
-        from Pyrlang.node import ErlNode
-        ErlNode.singleton.inbox_.put(('node_connected', self.peer_name_, self))
+        from Pyrlang.node import Node
+        Node.singleton.inbox_.put(('node_connected', self.peer_name_, self))
 
         # Report
         self._send_packet2(b"sok")
@@ -148,7 +148,7 @@ class InConnection:
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        print("challengereply: peer's challenge", peers_challenge)
+        #print("challengereply: peer's challenge", peers_challenge)
 
         my_cookie = self.node_opts_.cookie_
         if not self._check_digest(peer_digest, self.my_challenge_, my_cookie):
@@ -170,8 +170,10 @@ class InConnection:
             return True  # this was a keepalive
 
         msg_type = chr(data[0])
+
         if msg_type == "p":
             (control_term, tail) = etf.binary_to_term(data[1:])
+
             if tail != b'':
                 (msg_term, tail) = etf.binary_to_term(tail)
             else:
@@ -196,8 +198,8 @@ class InConnection:
         self.socket_.sendall(msg)
 
     def _send_challenge(self, my_challenge):
-        print("Sending challenge (our number is %d)" % my_challenge,
-              self.dist_.name_)
+        #print("Sending challenge (our number is %d)" % my_challenge,
+        #      self.dist_.name_)
         msg = b'n' \
               + struct.pack(">HII",
                             epmd.DIST_VSN,
@@ -230,18 +232,22 @@ class InConnection:
         digest = InConnection.make_digest(peers_challenge, cookie)
         self._send_packet2(b'a' + digest)
 
-    def on_passthrough_message(self, control_term, msg_term):
+    @staticmethod
+    def on_passthrough_message(control_term, msg_term):
         """ On incoming 'p' message with control and data, handle it """
-        if not isinstance(control_term, tuple):
+        if type(control_term) != tuple:
             raise DistributionError("In a 'p' message control term must be a "
                                     "tuple")
-        msg_type = control_term[0]
-        if msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
+
+        ctrl_msg_type = control_term[0]
+        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
             # Registered send
-            from Pyrlang.node import ErlNode
-            ErlNode.singleton.send(receiver=control_term[3],
-                                   sender=control_term[1],
-                                   message=msg_term)
+            from Pyrlang.node import Node
+            Node.singleton.send(receiver=control_term[3],
+                                sender=control_term[1],
+                                message=msg_term)
+        else:
+            print("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
 
     def handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
