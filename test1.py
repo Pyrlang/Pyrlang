@@ -12,7 +12,7 @@ def main():
 
     while True:
         # Sleep gives other greenlets time to run
-        gevent.sleep(0.0)
+        gevent.sleep(0.1)
 
 
 if __name__ == "__main__":

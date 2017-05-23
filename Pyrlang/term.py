@@ -12,7 +12,7 @@ PID_MARKER = "pyrlang.Pid"
 @python_2_unicode_compatible
 class Atom:
     def __repr__(self) -> str:
-        return "Atom'%s'" % self.text_
+        return "atom'%s'" % self.text_
 
     def __str__(self):
         return self.text_
@@ -100,6 +100,8 @@ class Reference:
         self.creation_ = creation
 
     def __repr__(self) -> str:
+        # Assume that ref has only 3 32-bit words (actually id size is not
+        # specified in docs and can be a different multiple of 4)
         v = struct.unpack(">III", self.id_)
         return "Ref<%d,%d,%d,%d>@%s" % \
                (self.creation_, v[0], v[1], v[2], self.node_.text_)

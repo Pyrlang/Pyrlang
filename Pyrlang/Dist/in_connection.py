@@ -198,7 +198,7 @@ class InConnection:
         self.socket_.sendall(msg)
 
     def _send_challenge(self, my_challenge):
-        #print("Sending challenge (our number is %d)" % my_challenge,
+        # print("Sending challenge (our number is %d)" % my_challenge,
         #      self.dist_.name_)
         msg = b'n' \
               + struct.pack(">HII",
@@ -253,8 +253,15 @@ class InConnection:
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
             (_, dst, msg) = m
-            ctrl = (CONTROL_TERM_SEND, term.Atom(''), dst)
-            self._control_message(ctrl, msg)
+            ctrl = self._control_term_send(dst)
+            print("Connection: control msg %s; %s" % (ctrl, msg))
+            return self._control_message(ctrl, msg)
+
+        print("Connection: Unhandled message to InConnection %s" % m)
+
+    @staticmethod
+    def _control_term_send(dst):
+        return CONTROL_TERM_SEND, term.Atom(''), dst
 
     def _control_message(self, ctrl, msg):
         """ Pack a control message and a regular message (can be None) together
@@ -264,6 +271,8 @@ class InConnection:
             packet = b'p' + etf.term_to_binary(ctrl)
         else:
             packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+
+        # print(util.hex_bytes(packet))
         self._send_packet4(packet)
 
 

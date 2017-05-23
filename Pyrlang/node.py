@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from typing import Union
+
 import gevent
 from gevent import Greenlet
 from gevent.queue import Queue
@@ -98,13 +100,13 @@ class Node(Greenlet):
         self.is_exiting_ = True
         self.dist_.disconnect()
 
-    def _registered_send(self, receiver, message):
+    def _send_local_registered(self, receiver, message):
         """ Try find a named process by atom key, drop a message into its inbox_
             :param receiver: A name, atom, of the receiver process
             :param message: The message
         """
         if not isinstance(receiver, term.Atom):
-            raise NodeException("registered_send receiver must be an atom")
+            raise NodeException("_send_local_registered receiver must be an atom")
 
         if receiver.text_ == 'net_kernel':
             return self.handle_net_kernel_message(message)
@@ -151,13 +153,14 @@ class Node(Greenlet):
                 # Respond with {Ref, 'yes'}
                 self._send_remote(sender, (ref, term.Atom('yes')))
 
-    def send(self, sender, receiver, message):
+    def send(self, sender: term.Pid,
+             receiver: Union[term.Pid, term.Atom],
+             message):
         is_atom = isinstance(receiver, term.Atom)
         if is_atom:
-            return self._registered_send(receiver, message)
+            return self._send_local_registered(receiver, message)
 
         is_pid = isinstance(receiver, term.Pid)
-
         if is_pid and self.name_ == receiver.node_:
             return self._send_local(receiver, message)
         else:
