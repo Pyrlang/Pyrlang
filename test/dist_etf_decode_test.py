@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, '.')
 
-from Pyrlang.Dist import etf, util
+from Pyrlang.Dist import etf
 from Pyrlang import term
 
 

@@ -10,6 +10,7 @@ from Pyrlang.Dist import util
 ETF_VERSION_TAG = 131
 
 TAG_NEW_FLOAT_EXT = 70
+TAG_BIT_BINARY_EXT = 77
 TAG_COMPRESSED = 80
 TAG_SMALL_INT = 97
 TAG_INT = 98
@@ -21,6 +22,7 @@ TAG_LARGE_TUPLE_EXT = 105
 TAG_NIL_EXT = 106
 TAG_STRING_EXT = 107
 TAG_LIST_EXT = 108
+TAG_BINARY_EXT = 109
 TAG_NEW_REF_EXT = 114
 TAG_MAP_EXT = 116
 
@@ -33,8 +35,11 @@ class ETFEncodeException(Exception):
     pass
 
 
-def incomplete_data():
-    raise ETFDecodeException("Incomplete data")
+def incomplete_data(where=""):
+    if where:
+        raise ETFDecodeException("Incomplete data")
+    else:
+        raise ETFDecodeException("Incomplete data at " + where)
 
 
 def binary_to_term(data: bytes):
@@ -67,11 +72,11 @@ def binary_to_term_2(data: bytes):
     if tag == TAG_ATOM_EXT:
         len_data = len(data)
         if len_data < 3:
-            return incomplete_data()
+            return incomplete_data("decoding length for an atom name")
 
         len_expected = util.u16(data, 1) + 3
         if len_expected > len_data:
-            return incomplete_data()
+            return incomplete_data("decoding text for an atom")
 
         name = data[3:len_expected]
         if name == b'true':
@@ -89,7 +94,7 @@ def binary_to_term_2(data: bytes):
     if tag == TAG_STRING_EXT:
         len_data = len(data)
         if len_data < 3:
-            return incomplete_data()
+            return incomplete_data("decoding length for a string")
 
         len_expected = util.u16(data, 1) + 3
 
@@ -99,6 +104,8 @@ def binary_to_term_2(data: bytes):
         return data[3:len_expected].decode("utf8"), data[len_expected:]
 
     if tag == TAG_LIST_EXT:
+        if len(data) < 5:
+            return incomplete_data("decoding length for a list")
         len_expected = util.u32(data, 1)
         result = term.List()
         tail = data[5:]
@@ -114,6 +121,8 @@ def binary_to_term_2(data: bytes):
         return result, tail
 
     if tag == TAG_SMALL_TUPLE_EXT:
+        if len(data) < 2:
+            return incomplete_data("decoding length for a small tuple")
         len_expected = data[1]
         result = []
         tail = data[2:]
@@ -125,6 +134,8 @@ def binary_to_term_2(data: bytes):
         return tuple(result), tail
 
     if tag == TAG_LARGE_TUPLE_EXT:
+        if len(data) < 5:
+            return incomplete_data("decoding length for a large tuple")
         len_expected = util.u32(data, 1)
         result = []
         tail = data[5:]
@@ -136,9 +147,13 @@ def binary_to_term_2(data: bytes):
         return tuple(result), tail
 
     if tag == TAG_SMALL_INT:
+        if len(data) < 2:
+            return incomplete_data("decoding a 8-bit small uint")
         return data[1], data[2:]
 
     if tag == TAG_INT:
+        if len(data) < 5:
+            return incomplete_data("decoding a 32-bit int")
         return util.i32(data, 1), data[5:]
 
     if tag == TAG_PID_EXT:
@@ -151,6 +166,8 @@ def binary_to_term_2(data: bytes):
         return pid, tail[9:]
 
     if tag == TAG_NEW_REF_EXT:
+        if len(data) < 2:
+            return incomplete_data("decoding length for a new-ref")
         term_len = util.u16(data, 1)
         node, tail = binary_to_term_2(data[3:])
         creation = tail[0]
@@ -161,6 +178,8 @@ def binary_to_term_2(data: bytes):
         return ref, tail[id_len + 1:]
 
     if tag == TAG_MAP_EXT:
+        if len(data) < 5:
+            return incomplete_data("decoding length for a map")
         len_expected = util.u32(data, 1)
         result = {}
         tail = data[5:]
@@ -172,8 +191,31 @@ def binary_to_term_2(data: bytes):
 
         return result, tail
 
+    if tag == TAG_BINARY_EXT:
+        len_data = len(data)
+        if len_data < 5:
+            return incomplete_data("decoding length for a binary")
+        len_expected = util.u32(data, 1) + 5
+        if len_expected > len_data:
+            return incomplete_data("decoding data for a binary")
+
+        bin1 = term.Binary(data=data[5:len_expected])
+        return bin1, data[len_expected:]
+
+    if tag == TAG_BIT_BINARY_EXT:
+        len_data = len(data)
+        if len_data < 6:
+            return incomplete_data("decoding length for a bit-binary")
+        len_expected = util.u32(data, 1) + 6
+        lbb = data[5]
+        if len_expected > len_data:
+            return incomplete_data("decoding data for a bit-binary")
+
+        bin1 = term.Binary(data=data[6:len_expected], last_byte_bits=lbb)
+        return bin1, data[len_expected:]
+
     if tag == TAG_NEW_FLOAT_EXT:
-        (result, ) = struct.unpack(">d", data[1:9])
+        (result,) = struct.unpack(">d", data[1:9])
         return result, data[10:]
 
     raise ETFDecodeException("Unknown tag %d" % data[0])
@@ -235,7 +277,7 @@ def _pack_atom(text: str) -> bytes:
 
 
 # TODO: maybe move this into pid class
-def _pack_pid(val: term.Pid) -> bytes:
+def _pack_pid(val) -> bytes:
     data = bytes([TAG_PID_EXT]) + \
            term_to_binary_2(val.node_) + \
            util.to_u32(val.id_) + \
@@ -245,7 +287,7 @@ def _pack_pid(val: term.Pid) -> bytes:
 
 
 # TODO: maybe move this into ref class
-def _pack_ref(val: term.Reference) -> bytes:
+def _pack_ref(val) -> bytes:
     data = bytes([TAG_NEW_REF_EXT]) + util.to_u16(len(val.id_) // 4) + \
            term_to_binary_2(val.node_) + bytes([val.creation_]) + val.id_
     return data
@@ -272,11 +314,16 @@ def _pack_float(val):
     return bytes([TAG_NEW_FLOAT_EXT]) + struct.pack(">d", val)
 
 
-def term_to_binary_2(val):
-    if type(val) == bytes:
-        return _pack_string(val)
+def _pack_binary(data, last_byte_bits):
+    if last_byte_bits == 8:
+        return bytes([TAG_BINARY_EXT]) + util.to_u32(len(data)) + data
 
-    elif type(val) == str:
+    return bytes([TAG_BIT_BINARY_EXT]) + util.to_u32(len(data)) + \
+        bytes([last_byte_bits]) + data
+
+
+def term_to_binary_2(val):
+    if type(val) == str:
         return _pack_str(val)
 
     elif type(val) == list:
@@ -308,6 +355,12 @@ def term_to_binary_2(val):
 
     elif isinstance(val, term.Reference):
         return _pack_ref(val)
+
+    elif type(val) == bytes:
+        return _pack_binary(val, 8)
+
+    elif isinstance(val, term.Binary):
+        return _pack_binary(val.bytes_, val.last_byte_bits_)
 
     return term_to_binary_2(_serialize_object(val))
     # obj_data = term_to_binary_2(_serialize_object(val))

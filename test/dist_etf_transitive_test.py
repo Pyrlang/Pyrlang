@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, '.')
 
-from Pyrlang.Dist import etf, util
+from Pyrlang.Dist import etf
 from Pyrlang import term
 
 
@@ -42,6 +42,22 @@ class TestETFEncode(unittest.TestCase):
         data1 = etf.term_to_binary(val1)
         (val2, tail) = etf.binary_to_term(data1)
         self.assertEqual(val1, val2)
+        self.assertEqual(tail, b'')
+
+    def test_binary(self):
+        """ Encode and decode binary immediately and compare results """
+        data1 = bytes([131, 109, 0, 0, 0, 1, 34])
+        (val1, tail) = etf.binary_to_term(data1)
+        data2 = etf.term_to_binary(val1)
+        self.assertEqual(data1, data2)
+        self.assertEqual(tail, b'')
+
+    def test_binary_bits(self):
+        """ Encode and decode binary bits immediately and compare results """
+        data1 = bytes([131, 77, 0, 0, 0, 1, 2, 192])
+        (val1, tail) = etf.binary_to_term(data1)
+        data2 = etf.term_to_binary(val1)
+        self.assertEqual(data1, data2)
         self.assertEqual(tail, b'')
 
 

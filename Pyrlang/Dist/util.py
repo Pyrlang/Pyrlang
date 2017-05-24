@@ -81,9 +81,14 @@ def make_handler(receiver_class, args, kwargs):
     return _handle_connect_disconnect
 
 
-def hex_bytes(s: bytes):
+def hex_bytes(data: bytes, sep: str= " "):
     """ Format a bytes() object as a hex dump """
-    return " ".join("{:02x}".format(c) for c in s)
+    return sep.join("{:02x}".format(bval) for bval in data)
+
+
+def dec_bytes(data: bytes, sep: str= " "):
+    """ Format a bytes() object as a decimal dump """
+    return sep.join(str(bval) for bval in data)
 
 
 def schedule(delay, func, *args, **kw_args):
@@ -92,6 +97,6 @@ def schedule(delay, func, *args, **kw_args):
     gevent.spawn_later(delay, schedule, delay, func, *args, **kw_args)
 
 
-__all__ = ['make_handler', 'hex_bytes', 'schedule',
+__all__ = ['make_handler', 'hex_bytes', 'dec_bytes', 'schedule',
            'u16', 'u32', 'i32',
            'to_u16', 'to_u32', 'to_i32']

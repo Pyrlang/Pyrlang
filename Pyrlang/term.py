@@ -5,6 +5,8 @@ import struct
 from future.utils import python_2_unicode_compatible
 from builtins import chr
 
+from Pyrlang.Dist import util
+
 ATOM_MARKER = "pyrlang.Atom"
 PID_MARKER = "pyrlang.Pid"
 
@@ -108,3 +110,35 @@ class Reference:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+
+class Binary:
+    """ Represents a bytes object, with last byte optionally incomplete.
+        Bit objects have last_byte_bits < 8
+    """
+    def __init__(self, data: bytes, last_byte_bits: int = 8) -> None:
+        self.bytes_ = data
+        self.last_byte_bits_ = last_byte_bits
+
+    def __repr__(self) -> str:
+        lbb = self.last_byte_bits_
+        if lbb == 8:
+            return "<<%s>>" % util.dec_bytes(self.bytes_, ",")
+        else:
+            return "<<%s:%d>>" % (util.dec_bytes(self.bytes_, ","), lbb)
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def equals(self, other) -> bool:
+        return isinstance(other, Binary) \
+               and self.bytes_ == other.bytes_ \
+               and self.last_byte_bits_ == other.last_byte_bits_
+
+    __eq__ = equals
+
+    def __ne__(self, other):
+        return not self.equals(other)
+
+
+__all__ = ['Atom', 'Pid', 'Binary', 'Reference']
