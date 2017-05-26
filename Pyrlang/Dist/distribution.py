@@ -4,7 +4,6 @@ from gevent.server import StreamServer
 
 from Pyrlang.Dist import util
 from Pyrlang.Dist.epmd import ErlEpmd
-from Pyrlang.Dist.in_connection import *
 
 
 class ErlangDistribution:
@@ -21,6 +20,8 @@ class ErlangDistribution:
         # Create handler using make_handler helper
         proto_kwargs = {"node_opts": node.node_opts_,
                         "dist": self}
+
+        from Pyrlang.Dist.in_connection import InConnection
         handler = util.make_handler(receiver_class=InConnection,
                                     args=[],
                                     kwargs=proto_kwargs)

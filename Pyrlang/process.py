@@ -18,6 +18,7 @@ class Process(Greenlet):
         self.inbox_ = Queue()
         self.pid_ = node.register_new_process(self)
         self.is_exiting_ = False
+        self.monitors_ = set()
 
     def _run(self):
         while not self.is_exiting_:

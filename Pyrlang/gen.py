@@ -24,11 +24,17 @@ class GenBase:
             NOTE: The gen:call caller attempts to monitor the target first. If
                 the monitor attempt fails, the exit here won't work
         """
-        reply = (term.Atom('DOWN'), self.ref_, None, None, reason)
+        # reply = (term.Atom('DOWN'), self.ref_, None, None, reason)
+
         from Pyrlang.node import Node
-        Node.singleton.send(sender=local_pid,
-                            receiver=self.sender_,
-                            message=reply)
+
+        reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
+        Node.singleton.dist_command(receiver_node=self.sender_.node_.text_,
+                                    message=reply)
+
+        # Node.singleton.send(sender=local_pid,
+        #                     receiver=self.sender_,
+        #                     message=reply)
 
 
 class GenIncomingMessage(GenBase):

@@ -65,10 +65,18 @@ def make_handler(receiver_class, args, kwargs):
                     # print("data in: %s" % hex_bytes(data))
 
                     collected += data
-                    collected = receiver.consume(collected)
-                    if collected is None:
-                        print("Protocol requested to disconnect the socket")
-                        break
+
+                    # Try and consume repeatedly if multiple messages arrived
+                    # in the same packet
+                    while True:
+                        collected1 = receiver.consume(collected)
+                        if collected1 is None:
+                            print("Protocol requested to disconnect the socket")
+                            break
+                        if collected1 == collected:
+                            break  # could not consume any more
+
+                        collected = collected1
                 else:
                     while not receiver.inbox_.empty():
                         msg = receiver.inbox_.get_nowait()

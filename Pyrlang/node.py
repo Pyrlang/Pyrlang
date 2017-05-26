@@ -6,10 +6,14 @@ import gevent
 from gevent import Greenlet
 from gevent.queue import Queue
 
-from Pyrlang import term, gen
+from Pyrlang import term, logger
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
+
+LOG = logger.nothing
+WARN = logger.nothing
+ERROR = logger.tty
 
 
 class NodeException(Exception):
@@ -28,7 +32,7 @@ class Node(Greenlet):
     """
     singleton = None
 
-    def __init__(self, name: str, cookie: str, *args, **kwargs) -> None:
+    def __init__(self, name: str, cookie: str) -> None:
         Greenlet.__init__(self)
 
         if Node.singleton is not None:
@@ -51,6 +55,11 @@ class Node(Greenlet):
         from Pyrlang.rex import Rex
         Rex(self).start()
 
+        # Spawn and register (automatically) the 'net_kernel' process which
+        # handles special ping messages
+        from Pyrlang.net_kernel import NetKernel
+        NetKernel(self).start()
+
     def _run(self):
         self.dist_.connect(self)
 
@@ -68,7 +77,7 @@ class Node(Greenlet):
             self.dist_nodes_[addr] = connection
 
         # Send a ('node_disconnected', IP) to forget the connection
-        if m[0] == 'node_disconnected':
+        elif m[0] == 'node_disconnected':
             (_, addr) = m
             del self.dist_nodes_[addr]
 
@@ -100,6 +109,15 @@ class Node(Greenlet):
         self.is_exiting_ = True
         self.dist_.disconnect()
 
+    def where_is(self, ident) -> Union[Process, None]:
+        if isinstance(ident, term.Atom) and ident in self.reg_names_:
+            ident = self.reg_names_[ident]
+
+        if isinstance(ident, term.Pid) and ident in self.processes_:
+            return self.processes_[ident]
+
+        return None
+
     def _send_local_registered(self, receiver, message):
         """ Try find a named process by atom key, drop a message into its inbox_
             :param receiver: A name, atom, of the receiver process
@@ -109,14 +127,11 @@ class Node(Greenlet):
             raise NodeException("_send_local_registered receiver must be an "
                                 "atom")
 
-        if receiver.text_ == 'net_kernel':
-            return self.handle_net_kernel_message(message)
-
-        if receiver in self.reg_names_:
-            dst = self.reg_names_[receiver]
-            self._send_local(dst, message)
+        receiver_obj = self.where_is(receiver)
+        if receiver_obj is not None:
+            receiver_obj.inbox_.put(message)
         else:
-            print("Node: send to unregistered name %s ignored" % receiver)
+            WARN("Node: send to unregistered name %s ignored" % receiver)
 
     def _send_local(self, receiver, message):
         """ Try find a process by pid and drop a message into its inbox_
@@ -126,53 +141,68 @@ class Node(Greenlet):
         if not isinstance(receiver, term.Pid):
             raise NodeException("send's receiver must be a pid")
 
-        if receiver in self.processes_:
-            dst = self.processes_[receiver]
-            print("Node._send_local: pid %s <- %s" % (receiver, message))
+        dst = self.where_is(receiver)
+        if dst is not None:
+            LOG("Node._send_local: pid %s <- %s" % (receiver, message))
             dst.inbox_.put(message)
         else:
-            print("Node._send_local: pid %s does not exist" % receiver)
-
-    def handle_net_kernel_message(self, m):
-        """ Net_kernel is the registered process in Erlang responsible for
-            net_adm:ping's for example.
-            Ping sends is_auth request, so we can satisfy it for the node
-            to become pingable
-        """
-        gencall = gen.parse_gen_message(m)
-        if not isinstance(gencall, gen.GenIncomingMessage):
-            print("Node: gen_call to net_kernel:", gencall)
-            return
-
-        # Incoming gen_call packet to net_kernel, might be that net_adm:ping
-        msg = gencall.message_
-
-        if isinstance(msg[0], term.Atom) and msg[0].text_ == 'is_auth':
-            # Respond with {Ref, 'yes'}
-            reply = (gencall.ref_, term.Atom('yes'))
-            self._send_remote(gencall.sender_, reply)
+            WARN("Node._send_local: pid %s does not exist" % receiver)
 
     def send(self, sender: term.Pid,
              receiver: Union[term.Pid, term.Atom],
              message):
-        is_atom = isinstance(receiver, term.Atom)
-        if is_atom:
+        """ Determines whether receiver is an atom or a pid, and whether it is
+            a local or remote pid, then delivers it using different functions
+        """
+        LOG("send to %s: %s" % (receiver, message))
+
+        if isinstance(receiver, term.Pid):
+            if self.name_ == receiver.node_:
+                return self._send_local(receiver, message)
+            else:
+                return self._send_remote(receiver, message)
+
+        if isinstance(receiver, term.Atom):
             return self._send_local_registered(receiver, message)
 
-        is_pid = isinstance(receiver, term.Pid)
-        if is_pid and self.name_ == receiver.node_:
-            return self._send_local(receiver, message)
-        else:
-            return self._send_remote(receiver, message)
+        raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, receiver, message):
-        receiver_node = receiver.node_.text_
+        LOG("Node._send_remote %s <- %s" % (receiver, message))
+        m = ('send', receiver, message)
+        return self.dist_command(receiver_node=receiver.node_.text_,
+                                 message=m)
+
+    def dist_command(self, receiver_node: str, message):
+        """ Place a tuple crafted by the caller into message box for Erlang
+            distribution socket. It will handle the message with a
+            'handle_one_inbox_message' call.
+
+        :param receiver_node: Name of the node whose connection is affected
+        :param message: A crafted tuple with some values
+        """
         if receiver_node not in self.dist_nodes_:
             raise NodeException("Node not connected %s" % receiver_node)
 
         conn = self.dist_nodes_[receiver_node]
-        conn.inbox_.put(('send', receiver, message))
-        print("Node._send_remote %s <- %s" % (receiver, message))
+        conn.inbox_.put(message)
+
+    def monitor_process(self, origin: term.Pid, target):
+        target_proc = self.where_is(target)
+        LOG("MonitorP: org %s targ %s = %s" % (origin, target, target_proc))
+        if target_proc is not None:
+            target_proc.monitors_.add(origin)
+        else:
+            msg = "Monitor target %s does not exist" % target
+            raise NodeException(msg)
+
+    def demonitor_process(self, origin, target):
+        target_proc = self.where_is(target)
+        if target_proc is not None:
+            target_proc.monitors_.discard(origin)
+        else:
+            msg = "Demonitor target %s does not exist" % target
+            raise NodeException(msg)
 
 
 __all__ = ['Node']

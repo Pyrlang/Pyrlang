@@ -17,23 +17,22 @@ class Rex(Process):
         node.register_name(self, term.Atom('rex'))
 
     def handle_one_inbox_message(self, msg):
-        # TODO: Factor this out into a gen_call library, also in Node.net_kernel
-
         gencall = gen.parse_gen_call(msg)
         if isinstance(gencall, str):
             print("REX:", gencall)
             return
 
         # Find and run the thing
-        pmod = __import__(gencall.get_mod_str(), fromlist=[''])
-        pfun = getattr(pmod, gencall.get_fun_str())
-
-        args = gencall.get_args()
         try:
-            result = pfun(*args)
+            pmod = __import__(gencall.get_mod_str(), fromlist=[''])
+            pfun = getattr(pmod, gencall.get_fun_str())
+            args = gencall.get_args()
+
+            # Call the thing
+            val = pfun(*args)
             # Send a reply
             gencall.reply(local_pid=self.pid_,
-                          message=(gencall.ref_, result))
+                          result=(gencall.ref_, val))
 
         except Exception as excpt:
             # Send an error

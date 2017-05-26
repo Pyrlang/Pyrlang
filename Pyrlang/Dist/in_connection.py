@@ -6,7 +6,7 @@ from typing import Union
 
 from gevent.queue import Queue
 
-from Pyrlang import term
+from Pyrlang import term, logger
 from Pyrlang.Dist import epmd, util, etf
 from Pyrlang.Dist.node_opts import NodeOpts
 
@@ -15,6 +15,10 @@ CONTROL_TERM_SEND = 2
 CONTROL_TERM_REG_SEND = 6
 CONTROL_TERM_MONITOR_P = 19
 CONTROL_TERM_DEMONITOR_P = 20
+CONTROL_TERM_MONITOR_P_EXIT = 21
+
+LOG = logger.nothing
+ERROR = logger.tty
 
 
 class DistributionError(Exception):
@@ -29,9 +33,6 @@ class InConnection:
     RECV_NAME = 1
     WAIT_CHALLENGE_REPLY = 2
     CONNECTED = 3
-
-    # Not sure if it is nice here, but is better than local import in the func
-    from Pyrlang.node import Node
 
     def __init__(self, dist, node_opts: NodeOpts):
         self.state_ = self.DISCONNECTED
@@ -77,7 +78,7 @@ class InConnection:
             return data
 
         packet = data[offset:(offset + pkt_size)]
-        # print('Dist packet:', util.hex_bytes(packet))
+        # LOG('Dist packet:', util.hex_bytes(packet))
 
         if self.on_packet(packet):
             return data[(offset + pkt_size):]
@@ -90,7 +91,9 @@ class InConnection:
         """ Handler is called when the client has disconnected
         """
         self.state_ = self.DISCONNECTED
-        InConnection.Node.singleton.inbox_.put(
+
+        from Pyrlang.node import Node
+        Node.singleton.inbox_.put(
             ('node_disconnected', self.peer_name_))
 
     def on_packet(self, data) -> bool:
@@ -108,7 +111,7 @@ class InConnection:
 
     @staticmethod
     def error(msg) -> False:
-        print("Distribution protocol error:", msg)
+        ERROR("Distribution protocol error:", msg)
         return False
 
     @staticmethod
@@ -131,10 +134,11 @@ class InConnection:
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        # print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        LOG("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
         # Maybe too early here? Actual connection is established moments later
-        InConnection.Node.singleton.inbox_.put(
+        from Pyrlang.node import Node
+        Node.singleton.inbox_.put(
             ('node_connected', self.peer_name_, self))
 
         # Report
@@ -153,7 +157,7 @@ class InConnection:
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        # print("challengereply: peer's challenge", peers_challenge)
+        LOG("challengereply: peer's challenge", peers_challenge)
 
         my_cookie = self.node_opts_.cookie_
         if not self._check_digest(peer_digest, self.my_challenge_, my_cookie):
@@ -165,7 +169,7 @@ class InConnection:
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        print("Connection established with %s" % self.peer_name_)
+        LOG("Connection established with %s" % self.peer_name_)
         return True
 
     def on_packet_connected(self, data):
@@ -183,8 +187,8 @@ class InConnection:
                 (msg_term, tail) = etf.binary_to_term(tail)
             else:
                 msg_term = None
-
             self.on_passthrough_message(control_term, msg_term)
+
         else:
             return self.error("Unexpected dist message type: %s" % msg_type)
 
@@ -203,8 +207,8 @@ class InConnection:
         self.socket_.sendall(msg)
 
     def _send_challenge(self, my_challenge):
-        # print("Sending challenge (our number is %d)" % my_challenge,
-        #      self.dist_.name_)
+        LOG("Sending challenge (our number is %d)" % my_challenge,
+            self.dist_.name_)
         msg = b'n' \
               + struct.pack(">HII",
                             epmd.DIST_VSN,
@@ -219,8 +223,8 @@ class InConnection:
         """ Hash cookie + the challenge together producing a verification hash
         """
         expected_digest = InConnection.make_digest(peer_challenge, cookie)
-        # print("Check digest: expected digest", expected_digest,
-        #      "peer digest", peer_digest)
+        LOG("Check digest: expected digest", expected_digest,
+            "peer digest", peer_digest)
         return peer_digest == expected_digest
 
     @staticmethod
@@ -239,37 +243,51 @@ class InConnection:
     @staticmethod
     def on_passthrough_message(control_term, msg_term):
         """ On incoming 'p' message with control and data, handle it """
+        LOG("Passthrough msg %s\n%s" % (control_term, msg_term))
+
         if type(control_term) != tuple:
             raise DistributionError("In a 'p' message control term must be a "
                                     "tuple")
 
         ctrl_msg_type = control_term[0]
 
-        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
-            # Registered send
-            InConnection.Node.singleton.send(
-                receiver=control_term[3],
-                sender=control_term[1],
-                message=msg_term)
+        from Pyrlang import node
+        the_node = node.Node.singleton
 
-        if ctrl_msg_type == CONTROL_TERM_MONITOR_P:
+        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
+            return the_node.send(sender=control_term[1],
+                                 receiver=control_term[3],
+                                 message=msg_term)
+
+        elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
+            return the_node.monitor_process(origin=sender,
+                                            target=target)
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
+            return the_node.demonitor_process(origin=sender,
+                                              target=target)
 
         else:
-            print("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
+            ERROR("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
 
     def handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
             (_, dst, msg) = m
             ctrl = self._control_term_send(dst)
-            print("Connection: control msg %s; %s" % (ctrl, msg))
+            LOG("Connection: control msg %s; %s" % (ctrl, msg))
             return self._control_message(ctrl, msg)
 
-        print("Connection: Unhandled message to InConnection %s" % m)
+        elif m[0] == 'monitor_p_exit':
+            (_, from_pid, to_pid, ref, reason) = m
+            ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
+                    from_pid, to_pid, ref, reason)
+            LOG("Monitor proc exit: %s with %s" % (from_pid, reason))
+            return self._control_message(ctrl, None)
+
+        ERROR("Connection: Unhandled message to InConnection %s" % m)
 
     @staticmethod
     def _control_term_send(dst):
@@ -284,7 +302,6 @@ class InConnection:
         else:
             packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
 
-        # print(util.hex_bytes(packet))
         self._send_packet4(packet)
 
 
