@@ -6,7 +6,7 @@ import gevent
 from gevent import Greenlet
 from gevent.queue import Queue
 
-from Pyrlang import term
+from Pyrlang import term, gen
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
@@ -106,7 +106,8 @@ class Node(Greenlet):
             :param message: The message
         """
         if not isinstance(receiver, term.Atom):
-            raise NodeException("_send_local_registered receiver must be an atom")
+            raise NodeException("_send_local_registered receiver must be an "
+                                "atom")
 
         if receiver.text_ == 'net_kernel':
             return self.handle_net_kernel_message(message)
@@ -137,21 +138,18 @@ class Node(Greenlet):
             net_adm:ping's for example. So we can satisfy this here for our node
             to become pingable
         """
-        if not isinstance(m[0], term.Atom):
+        gencall = gen.parse_gen_message(m)
+        if not isinstance(gencall, gen.GenIncomingMessage):
+            print("Node: gen_call to net_kernel:", gencall)
             return
 
         # Incoming gen_call packet to net_kernel, might be that net_adm:ping
-        if m[0].text_ == '$gen_call':
-            (sender, ref) = m[1]
-            msg = m[2]
+        msg = gencall.message_
 
-            if not isinstance(msg[0], term.Atom):
-                return
-
-            if msg[0].text_ == 'is_auth':
-                # other_node = msg[1]
-                # Respond with {Ref, 'yes'}
-                self._send_remote(sender, (ref, term.Atom('yes')))
+        if isinstance(msg[0], term.Atom) and msg[0].text_ == 'is_auth':
+            # Respond with {Ref, 'yes'}
+            reply = (gencall.ref_, term.Atom('yes'))
+            self._send_remote(gencall.sender_, reply)
 
     def send(self, sender: term.Pid,
              receiver: Union[term.Pid, term.Atom],
