@@ -135,7 +135,8 @@ class Node(Greenlet):
 
     def handle_net_kernel_message(self, m):
         """ Net_kernel is the registered process in Erlang responsible for
-            net_adm:ping's for example. So we can satisfy this here for our node
+            net_adm:ping's for example.
+            Ping sends is_auth request, so we can satisfy it for the node
             to become pingable
         """
         gencall = gen.parse_gen_message(m)

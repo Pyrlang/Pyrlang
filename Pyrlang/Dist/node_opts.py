@@ -23,12 +23,12 @@ DFLAG_BIG_CREATION = 0x40000
 
 DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_EXT_PIDS_PORTS |
-                  DFLAG_FUN_TAGS |
-                  DFLAG_NEW_FUN_TAGS |
+                  DFLAG_FUN_TAGS | DFLAG_NEW_FUN_TAGS |
                   DFLAG_EXPORT_PTR_TAG |
                   DFLAG_BIT_BINARIES |
                   DFLAG_NEW_FLOATS |
-                  DFLAG_MAP_TAG)
+                  DFLAG_MAP_TAG |
+                  DFLAG_DIST_MONITOR_NAME | DFLAG_DIST_MONITOR)
 
 
 class NodeOpts:

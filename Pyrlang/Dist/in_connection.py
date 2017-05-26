@@ -13,6 +13,8 @@ from Pyrlang.Dist.node_opts import NodeOpts
 # First element of control term in a 'p' message defines what it is
 CONTROL_TERM_SEND = 2
 CONTROL_TERM_REG_SEND = 6
+CONTROL_TERM_MONITOR_P = 19
+CONTROL_TERM_DEMONITOR_P = 20
 
 
 class DistributionError(Exception):
@@ -27,6 +29,9 @@ class InConnection:
     RECV_NAME = 1
     WAIT_CHALLENGE_REPLY = 2
     CONNECTED = 3
+
+    # Not sure if it is nice here, but is better than local import in the func
+    from Pyrlang.node import Node
 
     def __init__(self, dist, node_opts: NodeOpts):
         self.state_ = self.DISCONNECTED
@@ -85,8 +90,8 @@ class InConnection:
         """ Handler is called when the client has disconnected
         """
         self.state_ = self.DISCONNECTED
-        from Pyrlang.node import Node
-        Node.singleton.inbox_.put(('node_disconnected', self.peer_name_))
+        InConnection.Node.singleton.inbox_.put(
+            ('node_disconnected', self.peer_name_))
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
@@ -126,11 +131,11 @@ class InConnection:
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        #print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        # print("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
         # Maybe too early here? Actual connection is established moments later
-        from Pyrlang.node import Node
-        Node.singleton.inbox_.put(('node_connected', self.peer_name_, self))
+        InConnection.Node.singleton.inbox_.put(
+            ('node_connected', self.peer_name_, self))
 
         # Report
         self._send_packet2(b"sok")
@@ -148,7 +153,7 @@ class InConnection:
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        #print("challengereply: peer's challenge", peers_challenge)
+        # print("challengereply: peer's challenge", peers_challenge)
 
         my_cookie = self.node_opts_.cookie_
         if not self._check_digest(peer_digest, self.my_challenge_, my_cookie):
@@ -209,8 +214,7 @@ class InConnection:
         self._send_packet2(msg)
 
     @staticmethod
-    def _check_digest(peer_digest: bytes,
-                      peer_challenge: int,
+    def _check_digest(peer_digest: bytes, peer_challenge: int,
                       cookie: str) -> bool:
         """ Hash cookie + the challenge together producing a verification hash
         """
@@ -240,12 +244,20 @@ class InConnection:
                                     "tuple")
 
         ctrl_msg_type = control_term[0]
+
         if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
             # Registered send
-            from Pyrlang.node import Node
-            Node.singleton.send(receiver=control_term[3],
-                                sender=control_term[1],
-                                message=msg_term)
+            InConnection.Node.singleton.send(
+                receiver=control_term[3],
+                sender=control_term[1],
+                message=msg_term)
+
+        if ctrl_msg_type == CONTROL_TERM_MONITOR_P:
+            (_, sender, target, ref) = control_term
+
+        elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
+            (_, sender, target, ref) = control_term
+
         else:
             print("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
 

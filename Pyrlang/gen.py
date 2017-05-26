@@ -5,36 +5,10 @@
 from Pyrlang import term
 
 
-class GenIncomingMessage:
-    """ For those situations when gen message is not a call
-    """
-    def __init__(self, sender, ref, message):
+class GenBase:
+    def __init__(self, sender, ref):
         self.sender_ = sender
         self.ref_ = ref
-        self.message_ = message
-
-
-class GenIncomingCall:
-    """ A helper class which parses incoming gen:call args and gives assistance
-        with replying to the caller
-    """
-
-    def __init__(self, mod, fun, args, group_leader, sender, ref):
-        self.mod_ = mod
-        self.fun_ = fun
-        self.args_ = args
-        self.group_leader_ = group_leader
-        self.sender_ = sender
-        self.ref_ = ref
-
-    def get_args(self):
-        return self.args_.elements_
-
-    def get_mod_str(self):
-        return self.mod_.text_
-
-    def get_fun_str(self):
-        return self.fun_.text_
 
     def reply(self, local_pid, result):
         """ Reply with a gen:call result
@@ -55,6 +29,36 @@ class GenIncomingCall:
         Node.singleton.send(sender=local_pid,
                             receiver=self.sender_,
                             message=reply)
+
+
+class GenIncomingMessage(GenBase):
+    """ For those situations when gen message is not a call
+    """
+    def __init__(self, sender, ref, message):
+        GenBase.__init__(self, sender=sender, ref=ref)
+        self.message_ = message
+
+
+class GenIncomingCall(GenBase):
+    """ A helper class which parses incoming gen:call args and gives assistance
+        with replying to the caller
+    """
+
+    def __init__(self, mod, fun, args, group_leader, sender, ref):
+        GenBase.__init__(self, sender=sender, ref=ref)
+        self.mod_ = mod
+        self.fun_ = fun
+        self.args_ = args
+        self.group_leader_ = group_leader
+
+    def get_args(self):
+        return self.args_.elements_
+
+    def get_mod_str(self):
+        return self.mod_.text_
+
+    def get_fun_str(self):
+        return self.fun_.text_
 
 
 def parse_gen_call(msg):
