@@ -22,13 +22,25 @@ class NodeException(Exception):
 
 class Node(Greenlet):
     """ Implements an Erlang node which has a network name, a dictionary of 
-        processes and registers itself via EPMD. 
+        processes and registers itself via EPMD.
         Node handles the networking asynchronously.
-        
+
+        This is the root object of an Erlang node, it must be created first and
+        must outlive all other objects it manages, for them to be accessible
+        over the network.
+
         Usage example:
-        1. Create a node class with a name and a cookie
-        2. Give it time periodically to poll the sockets with node.poll(), 
-            or call node.infinite_loop()
+
+        1. Monkey patch with the help of Gevent: ``from gevent import monkey``
+            and then ``monkey.patch_all()``.
+
+        2. Create a node class with a name and a cookie
+            ``node = Pyrlang.Node("py@127.0.0.1", "COOKIE")``
+
+        3. Start it with ``node.start()``
+
+        4. Now anything that you do (for example an infinite loop with
+            ``gevent.sleep(1)`` in it, will give CPU time to the node.
     """
     singleton = None
 
@@ -40,12 +52,37 @@ class Node(Greenlet):
         Node.singleton = self
 
         self.inbox_ = Queue()
+        """ Message queue based on ``gevent.Queue``. It is periodically checked
+            in the ``_run`` method and the receive handler is called.
+        """
+
         self.pid_counter_ = 0
+        """ An internal counter used to generate unique process ids. """
+
         self.processes_ = {}
+        """ Process dictionary which stores all the existing ``Process`` objects
+            adressable by a pid. 
+            
+            .. note:: This creates a python reference to an
+                object preventing its automatic garbage collection. 
+                In the end of its lifetime an object must be explicitly removed 
+                from this dictionary using ``Process.exit`` method on the 
+                process.
+        """
+
         self.reg_names_ = {}
+        """ Registered objects dictionary, which maps atoms to pids. """
+
         self.is_exiting_ = False
         self.node_opts_ = NodeOpts(cookie=cookie)
+        """ An option object with feature support flags packed into an
+            integer.
+        """
+
         self.name_ = term.Atom(name)
+        """ Node name as seen on the network. Use full node names here:
+            ``name@hostname``
+        """
 
         self.dist_nodes_ = {}
         self.dist_ = ErlangDistribution(node=self, name=name)
@@ -69,7 +106,9 @@ class Node(Greenlet):
                 self.handle_one_inbox_message(msg)
             gevent.sleep(0.0)
 
-    def handle_one_inbox_message(self, m):
+    def handle_one_inbox_message(self, m: tuple):
+        """ Handler is called whenever a message arrives to the mailbox.
+        """
         # Send a ('node_connected', IP, Connection) to inform about the
         # connectivity with the other node
         if m[0] == 'node_connected':
@@ -82,9 +121,12 @@ class Node(Greenlet):
             del self.dist_nodes_[addr]
 
     def register_new_process(self, proc) -> term.Pid:
-        """ Generate a new pid and add the process to the process dictionary        
-            :param proc: A new born process 
-            :return: Pid for it (does not modify the process in place!)
+        """ Generate a new pid and add the process to the process dictionary.
+
+            :type proc: Pyrlang.Process
+            :param proc: A new born process
+            :return: A new pid (does not modify the process in place, so please
+                store the pid!)
         """
         pid = term.Pid(node=self.name_,
                        id=self.pid_counter_ // 0x7fffffff,
@@ -97,19 +139,23 @@ class Node(Greenlet):
     def register_name(self, proc: Process, name: term.Atom) -> None:
         """ Add a name into registrations table (automatically removed when the
             referenced process is removed)
-            :param proc: The process to register 
+
+            :param proc: The process to register
             :param name: The name to register with
         """
         self.reg_names_[name] = proc.pid_
 
     def stop(self) -> None:
-        """ Sets the mark that node is done, closes connections and leaves
-            the infinite_loop, if we were in it.
+        """ Sets the mark that the node is done, closes connections.
         """
         self.is_exiting_ = True
         self.dist_.disconnect()
 
     def where_is(self, ident) -> Union[Process, None]:
+        """ Look up a registered name or pid.
+
+            :return: A process or ``None``.
+        """
         if isinstance(ident, term.Atom) and ident in self.reg_names_:
             ident = self.reg_names_[ident]
 
@@ -118,7 +164,7 @@ class Node(Greenlet):
 
         return None
 
-    def _send_local_registered(self, receiver, message):
+    def _send_local_registered(self, receiver, message) -> None:
         """ Try find a named process by atom key, drop a message into its inbox_
             :param receiver: A name, atom, of the receiver process
             :param message: The message
@@ -133,8 +179,9 @@ class Node(Greenlet):
         else:
             WARN("Node: send to unregistered name %s ignored" % receiver)
 
-    def _send_local(self, receiver, message):
-        """ Try find a process by pid and drop a message into its inbox_
+    def _send_local(self, receiver, message) -> None:
+        """ Try find a process by pid and drop a message into its ``inbox_``.
+
             :param receiver:  Pid who will receive the message
             :param message:  The message
         """
@@ -150,9 +197,14 @@ class Node(Greenlet):
 
     def send(self, sender: term.Pid,
              receiver: Union[term.Pid, term.Atom],
-             message):
-        """ Determines whether receiver is an atom or a pid, and whether it is
-            a local or remote pid, then delivers it using different functions
+             message: tuple) -> None:
+        """ Deliver a message to a pid or to a registered name. The pid may be
+            located on another Erlang node.
+
+            :param sender: Currently unused
+            :param receiver: Message receiver, a pid or a name
+            :param message: Any value which will be placed into the receiver
+                inbox.
         """
         LOG("send to %s: %s" % (receiver, message))
 
@@ -167,19 +219,21 @@ class Node(Greenlet):
 
         raise NodeException("Don't know how to send to %s" % receiver)
 
-    def _send_remote(self, receiver, message):
+    def _send_remote(self, receiver, message) -> None:
         LOG("Node._send_remote %s <- %s" % (receiver, message))
         m = ('send', receiver, message)
         return self.dist_command(receiver_node=receiver.node_.text_,
                                  message=m)
 
-    def dist_command(self, receiver_node: str, message):
-        """ Place a tuple crafted by the caller into message box for Erlang
-            distribution socket. It will handle the message with a
-            'handle_one_inbox_message' call.
+    def dist_command(self, receiver_node: str, message: tuple) -> None:
+        """ Locate the connection to the given node (a string).
+            Place a tuple crafted by the caller into message box for Erlang
+            distribution socket. It will pick up and handle the message whenever
+            possible.
 
-        :param receiver_node: Name of the node whose connection is affected
-        :param message: A crafted tuple with some values
+            :param receiver_node: Name of a remote node
+            :param message: A crafted tuple with command name and some more
+                values
         """
         if receiver_node not in self.dist_nodes_:
             raise NodeException("Node not connected %s" % receiver_node)
@@ -187,7 +241,12 @@ class Node(Greenlet):
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)
 
-    def monitor_process(self, origin: term.Pid, target):
+    def monitor_process(self, origin: term.Pid,
+                        target: Union[term.Pid, term.Atom]):
+        """ Locate the process referenced by the target and place the origin
+            pid into its ``monitors_`` collection. When something happens to the
+            ``target``, a special message will be sent to the ``origin``.
+        """
         target_proc = self.where_is(target)
         LOG("MonitorP: org %s targ %s = %s" % (origin, target, target_proc))
         if target_proc is not None:
@@ -197,6 +256,10 @@ class Node(Greenlet):
             raise NodeException(msg)
 
     def demonitor_process(self, origin, target):
+        """ Locate the process ``target`` and remove the ``origin`` from its
+            ``monitors_`` collection. This does not trigger any notifications
+            or signals to the ``origin``.
+        """
         target_proc = self.where_is(target)
         if target_proc is not None:
             target_proc.monitors_.discard(origin)
