@@ -1,7 +1,7 @@
-term
-====
+net_kernel
+==========
 
-.. automodule:: Pyrlang.term
+.. automodule:: Pyrlang.net_kernel
     :members:
     :undoc-members:
     :show-inheritance:

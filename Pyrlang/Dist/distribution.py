@@ -8,8 +8,8 @@ from Pyrlang.Dist.epmd import ErlEpmd
 
 class ErlangDistribution:
     """ Implements network part of the EPMD registration and Erlang distribution
-        protocol. Extends functionality of ErlNode, so all functions take 
-        ErlNode as a parameter but don't store it to avoid creating a ref cycle    
+        protocol. Extends functionality of Node, so all functions take
+        Node as a parameter but don't store it to avoid creating a ref cycle.
     """
 
     def __init__(self, node, name: str) -> None:

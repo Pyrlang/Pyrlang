@@ -1,7 +1,7 @@
-term
+rex
 ====
 
-.. automodule:: Pyrlang.term
+.. automodule:: Pyrlang.rex
     :members:
     :undoc-members:
     :show-inheritance:

@@ -26,6 +26,13 @@ changes required.
     process
     term
 
+.. toctree::
+    :maxdepth: 1
+    :caption: Other modules
+
+    rex
+    net_kernel
+
 
 Indices and tables
 ==================

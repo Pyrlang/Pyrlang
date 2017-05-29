@@ -7,7 +7,8 @@ from Pyrlang.node import Node
 
 
 class NetKernel(Process):
-    """ A special process which handles one specific is_auth message for pings
+    """ A special process which registers itself as ``net_kernel`` and handles
+        one specific ``is_auth`` message, which is used by ``net_adm:ping``.
     """
 
     def __init__(self, node: Node) -> None:
