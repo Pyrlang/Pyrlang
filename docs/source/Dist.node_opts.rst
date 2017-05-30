@@ -1,5 +1,5 @@
-Dist.node_opts
-==============
+Dist.node_opts module
+=====================
 
 .. automodule:: Pyrlang.Dist.node_opts
     :members:

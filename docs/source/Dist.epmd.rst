@@ -1,5 +1,5 @@
-Dist.epmd
-=========
+Dist.epmd module
+================
 
 .. automodule:: Pyrlang.Dist.epmd
     :members:

@@ -1,5 +1,5 @@
-net_kernel
-==========
+net_kernel module
+=================
 
 .. automodule:: Pyrlang.net_kernel
     :members:

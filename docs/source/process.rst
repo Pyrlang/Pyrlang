@@ -1,5 +1,5 @@
-process
-=======
+process module
+==============
 
 .. automodule:: Pyrlang.process
     :members:

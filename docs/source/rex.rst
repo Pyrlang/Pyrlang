@@ -1,5 +1,5 @@
-rex
-====
+rex module
+==========
 
 .. automodule:: Pyrlang.rex
     :members:

@@ -1,5 +1,5 @@
-Dist.etf
-========
+Dist.etf module
+===============
 
 .. automodule:: Pyrlang.Dist.etf
     :members:

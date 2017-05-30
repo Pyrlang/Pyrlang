@@ -1,5 +1,5 @@
-node (begin here!)
-==================
+node module (begin here!)
+=========================
 
 .. automodule:: Pyrlang.node
     :members:

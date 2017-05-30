@@ -19,9 +19,10 @@ The library is designed to be dropped into existing code base with very few
 changes required.
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Contents:
 
+    getting_started
     node
     process
     term

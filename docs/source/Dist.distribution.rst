@@ -1,5 +1,5 @@
-Dist.distribution
-=================
+Dist.distribution module
+========================
 
 .. automodule:: Pyrlang.Dist.distribution
     :members:

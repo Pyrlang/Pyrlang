@@ -1,5 +1,5 @@
-Dist.in_connection
-==================
+Dist.in_connection module
+=========================
 
 .. automodule:: Pyrlang.Dist.in_connection
     :members:

@@ -6,7 +6,6 @@ import Pyrlang
 
 
 def main():
-    Pyrlang.init()
     node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
     node.start()
 

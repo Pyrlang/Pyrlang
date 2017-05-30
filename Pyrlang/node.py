@@ -180,6 +180,7 @@ class Node(Greenlet):
 
     def _send_local_registered(self, receiver, message) -> None:
         """ Try find a named process by atom key, drop a message into its inbox_
+
             :param receiver: A name, atom, of the receiver process
             :param message: The message
         """

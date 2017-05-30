@@ -1,5 +1,5 @@
-term
-====
+term module
+===========
 
 .. automodule:: Pyrlang.term
     :members:
