@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import struct
 
-from future.utils import python_2_unicode_compatible
+#from future.utils import python_2_unicode_compatible
 from builtins import chr
 
 from Pyrlang.Dist import util
@@ -29,7 +29,7 @@ ATOM_MARKER = "pyrlang.Atom"
 PID_MARKER = "pyrlang.Pid"
 
 
-@python_2_unicode_compatible
+#@python_2_unicode_compatible
 class Atom:
     """ Stores a string decoded from Erlang atom. Encodes back to atom.
         Can serve as a Python dictionary key.
