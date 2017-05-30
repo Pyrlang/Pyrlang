@@ -1,3 +1,7 @@
+""" Distribution class is not a separate running Greenlet, but rather a helper,
+    which is called upon.
+"""
+
 from __future__ import print_function
 import gevent
 from gevent.server import StreamServer
@@ -14,7 +18,11 @@ class ErlangDistribution:
 
     def __init__(self, node, name: str) -> None:
         self.name_ = name
+        """ Node name, a string. """
         self.creation_ = 0
+        """ Creation id used in pid generation. EPMD gives creation id to 
+            newly connected nodes. 
+        """
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler helper
@@ -44,9 +52,9 @@ class ErlangDistribution:
 
             gevent.sleep(5)
 
-    def disconnect(self):
-        """
-        :return:
+    def disconnect(self) -> None:
+        """ Finish EPMD connection, this will remove the node from the list of
+            available nodes on EPMD
         """
         self.epmd_.close()
 

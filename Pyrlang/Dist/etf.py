@@ -1,3 +1,6 @@
+""" Module implements encoder and decoder from ETF (Erlang External Term Format)
+    used by the network distribution layer.
+"""
 from __future__ import print_function
 
 import struct
@@ -43,7 +46,7 @@ def incomplete_data(where=""):
 
 
 def binary_to_term(data: bytes):
-    """ Strip 131 header and unpack if the data was compressed
+    """ Strip 131 header and unpack if the data was compressed.
     """
     if data[0] != ETF_VERSION_TAG:
         raise ETFDecodeException("Unsupported external term version")
@@ -63,9 +66,21 @@ def binary_to_term(data: bytes):
 
 
 def binary_to_term_2(data: bytes):
-    """ Proceed decoding after leading tag has been checked and removed
+    """ Proceed decoding after leading tag has been checked and removed.
+
+        Erlang lists are decoded into ``term.List`` object, whose ``elements_``
+        field contains the data, ``tail_`` field has the optional tail and a
+        helper function exists to assist with extracting an unicode string.
+
+        Atoms are decoded into ``term.Atom``. Pids and refs into ``term.Pid``
+        and ``term.Reference`` respectively. Maps are decoded into Python
+        ``dict``. Binaries and bit strings are decoded into ``term.Binary``
+        object, with optional last bits omitted.
+
         :param data: Bytes containing encoded term without 131 header
-        :return: Tuple (Value, TailBytes)
+        :return: Tuple (Value, TailBytes) The function consumes as much data as
+            possible and returns the tail. Tail can be used again to parse
+            another term if there was any.
     """
     tag = data[0]
 
@@ -323,6 +338,13 @@ def _pack_binary(data, last_byte_bits):
 
 
 def term_to_binary_2(val):
+    """ Erlang lists are decoded into term.List object, whose ``elements_``
+        field contains the data, ``tail_`` field has the optional tail and a
+        helper function exists to assist with extracting an unicode string.
+
+        :param val: Almost any Python value
+        :return: bytes object with encoded data, but without a 131 header byte.
+    """
     if type(val) == str:
         return _pack_str(val)
 
@@ -370,7 +392,10 @@ def term_to_binary_2(val):
 
 
 def term_to_binary(val):
+    """ Prepend the 131 header byte to encoded data.
+    """
     return bytes([ETF_VERSION_TAG]) + term_to_binary_2(val)
 
 
-__all__ = ['binary_to_term', 'term_to_binary']
+__all__ = ['binary_to_term', 'binary_to_term_2',
+           'term_to_binary', 'term_to_binary_2']

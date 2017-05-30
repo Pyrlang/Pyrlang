@@ -19,12 +19,23 @@ The library is designed to be dropped into existing code base with very few
 changes required.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: Contents:
 
     node
     process
     term
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Distribution Support
+
+    Dist.distribution
+    Dist.epmd
+    Dist.etf
+    Dist.node_opts
+    Dist.in_connection
+
 
 .. toctree::
     :maxdepth: 1

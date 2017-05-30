@@ -1,3 +1,7 @@
+""" The module represents EPMD connection and implements the protocol.
+    EPMD is a daemon application, part of Erlang/OTP which registers Erlang
+    nodes on the local machine and helps nodes finding each other.
+"""
 import struct
 import gevent
 import sys
@@ -15,22 +19,28 @@ PY3 = sys.version_info[0] >= 3
 
 
 class ErlEpmd:
-    """ Represents an EPMD client
+    """ An EPMD client connection which registers ourselves in EPMD and can
+        potentially send more commands (TODO).
     """
 
     def __init__(self) -> None:
         self.host_ = '127.0.0.1'
+        """ The local EPMD is always located on the local host. """
         self.port_ = 4369
 
         self.sock_ = None  # network socket
 
     def close(self):
+        """ Closing EPMD connection removes the node from available EPMD nodes
+            list.
+        """
         print("EPMD: Close")
         self.sock_.close()
         self.sock_ = None
 
     def connect(self) -> bool:
         """ A long running connection to EPMD
+
             :return: True
         """
         while True:
@@ -49,7 +59,11 @@ class ErlEpmd:
         return True
 
     def alive2(self, dist) -> bool:
-        # Say hello to our EPMD friend
+        """ Send initial hello (ALIVE2) to EPMD
+
+            :param dist: The distribution object from the node
+            :return: Success True or False
+        """
         self._req_alive2(nodetype=NODE_HIDDEN,
                          node_name=dist.name_,
                          in_port=dist.in_port_,
@@ -68,6 +82,7 @@ class ErlEpmd:
 
     def _read_alive2_reply(self) -> int:
         """ Read reply from ALIVE2 request, check the result code, read creation
+
             :return: Creation value if all is well, connection remains on.
                 On error returns -1
         """
