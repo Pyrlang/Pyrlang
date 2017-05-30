@@ -73,6 +73,7 @@ value from Python.
     gen_server:call({rex, 'py@127.0.0.1'},
                     {call, 'Pyrlang.logger', tty, ["Hello"], self()}).
 
+
 Send from Python
 ----------------
 
@@ -86,7 +87,42 @@ locally or remotely.
               receiver=term.Atom('my_erlang_process'),
               message=(123, 4.5678, [term.Atom('test')]))
 
-Note: Tuple format ``{Node, Name}`` for sending is not supported.
+.. note:: Tuple format ``{Node, Name}`` for sending is not supported.
 
-Note: Node is a singleton, you can find the node by referencing
+.. note:: Node is a singleton, you can find the node by referencing
     ``Node.singleton``. This may change in future.
+
+
+Implement a Gen_server-like Object
+----------------------------------
+
+It is not very hard to implement minimum interface required to be able to
+respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
+
+.. code-block:: python
+
+    from Pyrlang.process import Process
+
+    class MyProcess(Process):
+        def __init__(self, node) -> None:
+            Process.__init__(self, node)
+            node.register_name(self, term.Atom('my_process'))  # optional
+
+        def handle_one_inbox_message(self, msg) -> None:
+            gencall = gen.parse_gen_message(msg)
+            if isinstance(gencall, str):
+                print("MyProcess:", gencall)
+                return
+
+            # Handle the message in 'gencall' using its sender_, ref_ and
+            # message_ fields
+
+            if EVERYTHING_IS_OK:
+                # Send a reply
+                gencall.reply(local_pid=self.pid_,
+                              result=SOME_RESULT_HERE)
+
+            else:
+                # Send an error exception which will crash Erlang caller
+                gencall.reply_exit(local_pid=self.pid_,
+                                   reason=SOME_ERROR_HERE)
