@@ -276,7 +276,9 @@ class InConnection:
 
     @staticmethod
     def on_passthrough_message(control_term, msg_term):
-        """ On incoming 'p' message with control and data, handle it """
+        """ On incoming 'p' message with control and data, handle it.
+            :raises DistributionError: when 'p' message is not a tuple
+        """
         LOG("Passthrough msg %s\n%s" % (control_term, msg_term))
 
         if type(control_term) != tuple:

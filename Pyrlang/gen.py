@@ -40,7 +40,7 @@ class GenBase:
 
 class GenIncomingMessage(GenBase):
     """ A helper class which contains elements from a generic incoming
-        ``gen_server`` message. 
+        ``gen_server`` message.
         For those situations when gen message is not a call, or is an incoming
         ``gen_server`` call.
     """

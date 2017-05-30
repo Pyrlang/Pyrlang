@@ -53,6 +53,9 @@ class ETFEncodeException(Exception):
 
 
 def incomplete_data(where=""):
+    """ This is called from many places to report incomplete data while
+        decoding.
+    """
     if where:
         raise ETFDecodeException("Incomplete data")
     else:
@@ -61,6 +64,9 @@ def incomplete_data(where=""):
 
 def binary_to_term(data: bytes):
     """ Strip 131 header and unpack if the data was compressed.
+
+        :raises ETFDecodeException: when the tag is not 131, when compressed
+            data is incomplete or corrupted
     """
     if data[0] != ETF_VERSION_TAG:
         raise ETFDecodeException("Unsupported external term version")
@@ -95,6 +101,7 @@ def binary_to_term_2(data: bytes):
         :return: Tuple (Value, TailBytes) The function consumes as much data as
             possible and returns the tail. Tail can be used again to parse
             another term if there was any.
+        :raises ETFDecodeException: on various errors or on an unsupported tag
     """
     tag = data[0]
 

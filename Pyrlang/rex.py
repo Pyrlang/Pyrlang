@@ -33,8 +33,9 @@ class Rex(Process):
         node.register_name(self, term.Atom('rex'))
 
     def handle_one_inbox_message(self, msg) -> None:
-        """ Function overrides ``Process.handle_one_inbox_message`` and expects
-            a ``$gen_call`` styled message.
+        """ Function overrides
+            :py:meth:`~Pyrlang.process.Process.handle_one_inbox_message`
+            and expects a ``$gen_call`` styled message.
             The result or exception are delivered back to the sender via
             message passing.
 
