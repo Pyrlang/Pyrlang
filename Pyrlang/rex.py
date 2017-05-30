@@ -38,8 +38,8 @@ class Rex(Process):
             The result or exception are delivered back to the sender via
             message passing.
 
-        :param msg: A tuple with Atom ``$gen_call`` as the first element
-        :return: None
+            :param msg: A tuple with Atom ``$gen_call`` as the first element
+            :return: None
         """
         gencall = gen.parse_gen_call(msg)
         if isinstance(gencall, str):
@@ -54,9 +54,10 @@ class Rex(Process):
 
             # Call the thing
             val = pfun(*args)
+
             # Send a reply
             gencall.reply(local_pid=self.pid_,
-                          result=(gencall.ref_, val))
+                          result=val)
 
         except Exception as excpt:
             # Send an error

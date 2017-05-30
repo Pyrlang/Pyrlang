@@ -39,8 +39,8 @@ class NetKernel(Process):
         msg = gencall.message_
 
         if isinstance(msg[0], term.Atom) and msg[0].text_ == 'is_auth':
-            # Respond with {Ref, 'yes'}
-            gencall.reply(local_pid=self.pid_, result=term.Atom('yes'))
+            gencall.reply(local_pid=self.pid_,
+                          result=term.Atom('yes'))
         else:
             print("NetKernel: unknown message", msg)
 
