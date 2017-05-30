@@ -36,8 +36,9 @@ on Erlang side you can use ``net_adm:ping``.
 
     net_adm:ping('py@127.0.0.1').
 
-Also you could send a message to ``{'py@127.0.0.1', Name}``, where Name is
-a pid or some registered name, which is exists on the Python side.
+Also you could send a message to ``{Node, Name}``, where ``Node`` is an
+atom like ``'py@127.0.0.1'``, and ``Name`` is a pid or some registered name,
+which exists on the Python side.
 
 .. code-block:: erlang
 
@@ -71,3 +72,21 @@ value from Python.
 
     gen_server:call({rex, 'py@127.0.0.1'},
                     {call, 'Pyrlang.logger', tty, ["Hello"], self()}).
+
+Send from Python
+----------------
+
+You can send messages in the reverse direction too!
+``Node.send(_sender, receiver, message)`` function is there to deliver messages
+locally or remotely.
+
+.. code-block:: python
+
+    node.send(sender=None,  # argument unused
+              receiver=term.Atom('my_erlang_process'),
+              message=(123, 4.5678, [term.Atom('test')]))
+
+Note: Tuple format ``{Node, Name}`` for sending is not supported.
+
+Note: Node is a singleton, you can find the node by referencing
+    ``Node.singleton``. This may change in future.
