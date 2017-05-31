@@ -49,6 +49,9 @@ class Process(Greenlet):
 
         self.is_exiting_ = False
         self.monitors_ = set()
+        """ Who monitors us. Either local or remote processes. """
+        self.monitor_targets_ = set()
+        """ Who we monitor. """
 
     def _run(self):
         while not self.is_exiting_:

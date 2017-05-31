@@ -15,6 +15,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import traceback
+
 from Pyrlang import term, gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
@@ -31,6 +33,12 @@ class Rex(Process):
     def __init__(self, node: Node) -> None:
         Process.__init__(self, node)
         node.register_name(self, term.Atom('rex'))
+
+        self.traceback_depth_ = 5
+        """ This being non-zero enables formatting exception tracebacks with the
+            given depth. Traceback is attached as a 'traceback' field in the
+            exception, that is sent to the caller. Default: 5
+        """
 
     def handle_one_inbox_message(self, msg) -> None:
         """ Function overrides
@@ -62,6 +70,9 @@ class Rex(Process):
 
         except Exception as excpt:
             # Send an error
+            if self.traceback_depth_ > 0:
+                excpt.traceback = traceback.format_exc(self.traceback_depth_)
+
             gencall.reply_exit(local_pid=self.pid_,
                                reason=excpt)
 

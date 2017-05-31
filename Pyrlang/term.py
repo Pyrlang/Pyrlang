@@ -114,6 +114,9 @@ class Pid:
         self.serial_ = serial
         self.creation_ = creation
 
+    def is_local_to(self, node):
+        return self.node_ == node.name_
+
     def __repr__(self) -> str:
         return "Pid<%d.%d.%d>@%s" % (self.creation_, self.id_, self.serial_,
                                      self.node_.text_)

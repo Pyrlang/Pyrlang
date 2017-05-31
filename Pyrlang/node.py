@@ -20,7 +20,8 @@ import gevent
 from gevent import Greenlet
 from gevent.queue import Queue
 
-from Pyrlang import term, logger
+from Pyrlang import logger
+from Pyrlang.term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
@@ -55,6 +56,9 @@ class Node(Greenlet):
 
         4. Now anything that you do (for example an infinite loop with
             ``gevent.sleep(1)`` in it, will give CPU time to the node.
+
+        .. note:: Node is a singleton, you can find the current node by
+            referencing ``Node.singleton``. This may change in future.
     """
     singleton = None
 
@@ -93,7 +97,7 @@ class Node(Greenlet):
             integer.
         """
 
-        self.name_ = term.Atom(name)
+        self.name_ = Atom(name)
         """ Node name as seen on the network. Use full node names here:
             ``name@hostname``
         """
@@ -104,12 +108,14 @@ class Node(Greenlet):
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
         from Pyrlang.rex import Rex
-        Rex(self).start()
+        self.rex_ = Rex(self)
+        self.rex_.start()
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
         from Pyrlang.net_kernel import NetKernel
-        NetKernel(self).start()
+        self.net_kernel_ = NetKernel(self)
+        self.net_kernel_.start()
 
     def _run(self):
         self.dist_.connect(self)
@@ -134,7 +140,7 @@ class Node(Greenlet):
             (_, addr) = m
             del self.dist_nodes_[addr]
 
-    def register_new_process(self, proc) -> term.Pid:
+    def register_new_process(self, proc) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
 
             :type proc: Pyrlang.Process
@@ -142,15 +148,15 @@ class Node(Greenlet):
             :return: A new pid (does not modify the process in place, so please
                 store the pid!)
         """
-        pid = term.Pid(node=self.name_,
-                       id=self.pid_counter_ // 0x7fffffff,
-                       serial=self.pid_counter_ % 0x7fffffff,
-                       creation=self.dist_.creation_)
+        pid = Pid(node=self.name_,
+                  id=self.pid_counter_ // 0x7fffffff,
+                  serial=self.pid_counter_ % 0x7fffffff,
+                  creation=self.dist_.creation_)
         self.pid_counter_ += 1
         self.processes_[pid] = proc
         return pid
 
-    def register_name(self, proc: Process, name: term.Atom) -> None:
+    def register_name(self, proc: Process, name: Atom) -> None:
         """ Add a name into registrations table (automatically removed when the
             referenced process is removed)
 
@@ -170,10 +176,10 @@ class Node(Greenlet):
 
             :return: A process or ``None``.
         """
-        if isinstance(ident, term.Atom) and ident in self.reg_names_:
+        if isinstance(ident, Atom) and ident in self.reg_names_:
             ident = self.reg_names_[ident]
 
-        if isinstance(ident, term.Pid) and ident in self.processes_:
+        if isinstance(ident, Pid) and ident in self.processes_:
             return self.processes_[ident]
 
         return None
@@ -184,7 +190,7 @@ class Node(Greenlet):
             :param receiver: A name, atom, of the receiver process
             :param message: The message
         """
-        if not isinstance(receiver, term.Atom):
+        if not isinstance(receiver, Atom):
             raise NodeException("_send_local_registered receiver must be an "
                                 "atom")
 
@@ -200,7 +206,7 @@ class Node(Greenlet):
             :param receiver:  Pid who will receive the message
             :param message:  The message
         """
-        if not isinstance(receiver, term.Pid):
+        if not isinstance(receiver, Pid):
             raise NodeException("send's receiver must be a pid")
 
         dst = self.where_is(receiver)
@@ -210,34 +216,49 @@ class Node(Greenlet):
         else:
             WARN("Node._send_local: pid %s does not exist" % receiver)
 
-    def send(self, sender: term.Pid,
-             receiver: Union[term.Pid, term.Atom],
+    def send(self, sender: Pid,
+             receiver: Union[Pid, Atom, tuple],
              message: tuple) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
             :param sender: Currently unused
-            :param receiver: Message receiver, a pid or a name
+            :type receiver: Pid or Atom or tuple[Atom, Pid or Atom]
+            :param receiver: Message receiver, a pid, or a name, or a tuple with
+                node name and a receiver on the remote node.
             :param message: Any value which will be placed into the receiver
                 inbox.
         """
         LOG("send to %s: %s" % (receiver, message))
 
-        if isinstance(receiver, term.Pid):
-            if self.name_ == receiver.node_:
+        if isinstance(receiver, tuple):
+            (r_node, r_name) = receiver
+            if r_node == self.name_:  # atom compare
+                # re-route locally
+                return self.send(sender, r_name, message)
+            else:
+                # route remotely
+                return self._send_remote(dst_node=str(r_node),
+                                         receiver=r_name,
+                                         message=message)
+
+        if isinstance(receiver, Pid):
+            if receiver.is_local_to(self):
                 return self._send_local(receiver, message)
             else:
-                return self._send_remote(receiver, message)
+                return self._send_remote(dst_node=str(receiver.node_),
+                                         receiver=receiver,
+                                         message=message)
 
-        if isinstance(receiver, term.Atom):
+        if isinstance(receiver, Atom):
             return self._send_local_registered(receiver, message)
 
         raise NodeException("Don't know how to send to %s" % receiver)
 
-    def _send_remote(self, receiver, message) -> None:
+    def _send_remote(self, dst_node: str, receiver, message) -> None:
         LOG("Node._send_remote %s <- %s" % (receiver, message))
         m = ('send', receiver, message)
-        return self.dist_command(receiver_node=receiver.node_.text_,
+        return self.dist_command(receiver_node=dst_node,
                                  message=m)
 
     def dist_command(self, receiver_node: str, message: tuple) -> None:
@@ -251,17 +272,23 @@ class Node(Greenlet):
                 values
         """
         if receiver_node not in self.dist_nodes_:
+            # TODO: Attempt to connect to the node
             raise NodeException("Node not connected %s" % receiver_node)
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)
 
-    def monitor_process(self, origin: term.Pid,
-                        target: Union[term.Pid, term.Atom]):
+    def monitor_process(self, origin, target):
         """ Locate the process referenced by the target and place the origin
             pid into its ``monitors_`` collection. When something happens to the
             ``target``, a special message will be sent to the ``origin``.
-        """
+
+            :type origin: Pid
+            :param origin: The (possibly remote) process who will be monitoring
+                the target from now
+            :type target: Pid or Atom
+            :param target: Name or pid of a monitor target process
+       """
         target_proc = self.where_is(target)
         LOG("MonitorP: org %s targ %s = %s" % (origin, target, target_proc))
         if target_proc is not None:
@@ -270,10 +297,21 @@ class Node(Greenlet):
             msg = "Monitor target %s does not exist" % target
             raise NodeException(msg)
 
+        # if the origin is local, register monitor in it
+        if origin.is_local_to(self):
+            origin_p = self.where_is(origin)
+            origin_p.monitor_targets_.add(target_proc.pid_)
+
     def demonitor_process(self, origin, target):
         """ Locate the process ``target`` and remove the ``origin`` from its
             ``monitors_`` collection. This does not trigger any notifications
             or signals to the ``origin``.
+
+            :type origin: Pid
+            :param origin: The process who was monitoring the target previously
+            :type target: Pid or Atom
+            :param target: Name or pid of a monitor target process, possibly
+                it does not exist
         """
         target_proc = self.where_is(target)
         if target_proc is not None:
@@ -281,6 +319,11 @@ class Node(Greenlet):
         else:
             msg = "Demonitor target %s does not exist" % target
             raise NodeException(msg)
+
+        # if the origin is local, unregister monitor from it
+        if origin.is_local_to(self):
+            origin_p = self.where_is(origin)
+            origin_p.monitor_targets_.discard(target_proc.pid_)
 
 
 __all__ = ['Node']
