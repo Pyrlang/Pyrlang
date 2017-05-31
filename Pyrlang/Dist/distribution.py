@@ -17,12 +17,14 @@
 """
 
 from __future__ import print_function
+
 import gevent
 from gevent.server import StreamServer
 
 from Pyrlang import logger
-from Pyrlang.Dist import util, helpers
+from Pyrlang.Dist import helpers
 from Pyrlang.Dist.epmd import EPMDClient, EPMDConnectionError
+from Pyrlang.Dist.out_connection import OutConnection
 
 LOG = logger.nothing
 WARN = logger.nothing
@@ -88,8 +90,7 @@ class ErlangDistribution:
         try:
             host_port = EPMDClient.query_node(remote_node)
             (handler, sock) = helpers.connect_with(
-                protocol_class=OutConnection
-            )
+                protocol_class=OutConnection)
 
         except EPMDConnectionError as e:
             ERROR("Dist:", e)

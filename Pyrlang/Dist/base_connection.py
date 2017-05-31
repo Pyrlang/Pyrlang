@@ -16,17 +16,27 @@
 """
 
 from __future__ import print_function
+
+import struct
 from abc import abstractmethod
 from typing import Union
 
+from _md5 import md5
 from gevent.queue import Queue
 
 from Pyrlang import logger
-from Pyrlang.Dist import util
+from Pyrlang.Dist import util, etf
 from Pyrlang.Dist.node_opts import NodeOpts
 
 LOG = logger.nothing
 ERROR = logger.tty
+
+# First element of control term in a 'p' message defines what it is
+CONTROL_TERM_SEND = 2
+CONTROL_TERM_REG_SEND = 6
+CONTROL_TERM_MONITOR_P = 19
+CONTROL_TERM_DEMONITOR_P = 20
+CONTROL_TERM_MONITOR_P_EXIT = 21
 
 
 class BaseConnection:
@@ -44,7 +54,9 @@ class BaseConnection:
         self.socket_ = None
         self.addr_ = None
 
+        # TODO: Pass as argument and save node instead of dist
         self.dist_ = dist  # reference to distribution object
+
         self.node_opts_ = node_opts
         self.inbox_ = Queue()  # refer to util.make_handler_in which reads this
         """ Inbox is used to ask the connection to do something. """
@@ -112,6 +124,90 @@ class BaseConnection:
         from Pyrlang.node import Node
         Node.singleton.inbox_.put(
             ('node_disconnected', self.peer_name_))
+
+    def _send_packet2(self, content: bytes):
+        """ Send a handshake-time status message with a 2 byte length prefix
+        """
+        msg = struct.pack(">H", len(content)) + content
+        self.socket_.sendall(msg)
+
+    def _send_packet4(self, content: bytes):
+        """ Send a connection-time status message with a 4 byte length prefix
+        """
+        msg = struct.pack(">I", len(content)) + content
+        self.socket_.sendall(msg)
+
+    @staticmethod
+    def on_passthrough_message(control_term, msg_term):
+        """ On incoming 'p' message with control and data, handle it.
+            :raises DistributionError: when 'p' message is not a tuple
+        """
+        LOG("Passthrough msg %s\n%s" % (control_term, msg_term))
+
+        if type(control_term) != tuple:
+            raise DistributionError("In a 'p' message control term must be a "
+                                    "tuple")
+
+        ctrl_msg_type = control_term[0]
+
+        from Pyrlang import node
+        the_node = node.Node.singleton
+
+        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
+            return the_node.send(sender=control_term[1],
+                                 receiver=control_term[3],
+                                 message=msg_term)
+
+        elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
+            (_, sender, target, ref) = control_term
+            return the_node.monitor_process(origin=sender,
+                                            target=target)
+
+        elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
+            (_, sender, target, ref) = control_term
+            return the_node.demonitor_process(origin=sender,
+                                              target=target)
+
+        else:
+            ERROR("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
+
+    def handle_one_inbox_message(self, m):
+        # Send a ('send', Dst, Msg) to deliver a message to the other side
+        if m[0] == 'send':
+            (_, dst, msg) = m
+            ctrl = self._control_term_send(dst)
+            LOG("Connection: control msg %s; %s" % (ctrl, msg))
+            return self._control_message(ctrl, msg)
+
+        elif m[0] == 'monitor_p_exit':
+            (_, from_pid, to_pid, ref, reason) = m
+            ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
+                    from_pid, to_pid, ref, reason)
+            LOG("Monitor proc exit: %s with %s" % (from_pid, reason))
+            return self._control_message(ctrl, None)
+
+        ERROR("Connection: Unhandled message to InConnection %s" % m)
+
+    @staticmethod
+    def _control_term_send(dst):
+        return CONTROL_TERM_SEND, term.Atom(''), dst
+
+    def _control_message(self, ctrl, msg):
+        """ Pack a control message and a regular message (can be None) together
+            and send them over the connection
+        """
+        if msg is None:
+            packet = b'p' + etf.term_to_binary(ctrl)
+        else:
+            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+
+        self._send_packet4(packet)
+
+    @staticmethod
+    def make_digest(challenge: int, cookie: str) -> bytes:
+        result = md5(bytes(cookie, "ascii")
+                     + bytes(str(challenge), "ascii")).digest()
+        return result
 
 
 def protocol_error(msg) -> False:

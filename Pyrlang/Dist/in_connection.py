@@ -16,20 +16,14 @@
     by another node with the help of EPMD).
 """
 from __future__ import print_function
+
 import random
 import struct
-from hashlib import md5
-from Pyrlang import term, logger
+
+from Pyrlang import logger
 from Pyrlang.Dist import util, etf, dist_protocol
 from Pyrlang.Dist.base_connection import BaseConnection, protocol_error
 from Pyrlang.Dist.node_opts import NodeOpts
-
-# First element of control term in a 'p' message defines what it is
-CONTROL_TERM_SEND = 2
-CONTROL_TERM_REG_SEND = 6
-CONTROL_TERM_MONITOR_P = 19
-CONTROL_TERM_DEMONITOR_P = 20
-CONTROL_TERM_MONITOR_P_EXIT = 21
 
 LOG = logger.nothing
 ERROR = logger.tty
@@ -53,8 +47,7 @@ class InConnection(BaseConnection):
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
 
-            :param data: The packet after the header with length has been
-                removed.
+            :param data: The packet after the header had been removed
         """
         if self.state_ == self.RECV_NAME:
             return self.on_packet_recvname(data)
@@ -142,18 +135,6 @@ class InConnection(BaseConnection):
 
         return True
 
-    def _send_packet2(self, content: bytes):
-        """ Send a handshake-time status message with a 2 byte length prefix
-        """
-        msg = struct.pack(">H", len(content)) + content
-        self.socket_.sendall(msg)
-
-    def _send_packet4(self, content: bytes):
-        """ Send a connection-time status message with a 4 byte length prefix
-        """
-        msg = struct.pack(">I", len(content)) + content
-        self.socket_.sendall(msg)
-
     def _send_challenge(self, my_challenge):
         LOG("Sending challenge (our number is %d)" % my_challenge,
             self.dist_.name_)
@@ -175,84 +156,12 @@ class InConnection(BaseConnection):
             "peer digest", peer_digest)
         return peer_digest == expected_digest
 
-    @staticmethod
-    def make_digest(challenge: int, cookie: str) -> bytes:
-        result = md5(bytes(cookie, "ascii")
-                     + bytes(str(challenge), "ascii")).digest()
-        return result
-
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):
         """ After cookie has been verified, send the confirmation by digesting
             our cookie with the remote challenge
         """
         digest = InConnection.make_digest(peers_challenge, cookie)
         self._send_packet2(b'a' + digest)
-
-    @staticmethod
-    def on_passthrough_message(control_term, msg_term):
-        """ On incoming 'p' message with control and data, handle it.
-            :raises DistributionError: when 'p' message is not a tuple
-        """
-        LOG("Passthrough msg %s\n%s" % (control_term, msg_term))
-
-        if type(control_term) != tuple:
-            raise DistributionError("In a 'p' message control term must be a "
-                                    "tuple")
-
-        ctrl_msg_type = control_term[0]
-
-        from Pyrlang import node
-        the_node = node.Node.singleton
-
-        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
-            return the_node.send(sender=control_term[1],
-                                 receiver=control_term[3],
-                                 message=msg_term)
-
-        elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
-            (_, sender, target, ref) = control_term
-            return the_node.monitor_process(origin=sender,
-                                            target=target)
-
-        elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
-            (_, sender, target, ref) = control_term
-            return the_node.demonitor_process(origin=sender,
-                                              target=target)
-
-        else:
-            ERROR("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
-
-    def handle_one_inbox_message(self, m):
-        # Send a ('send', Dst, Msg) to deliver a message to the other side
-        if m[0] == 'send':
-            (_, dst, msg) = m
-            ctrl = self._control_term_send(dst)
-            LOG("Connection: control msg %s; %s" % (ctrl, msg))
-            return self._control_message(ctrl, msg)
-
-        elif m[0] == 'monitor_p_exit':
-            (_, from_pid, to_pid, ref, reason) = m
-            ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
-                    from_pid, to_pid, ref, reason)
-            LOG("Monitor proc exit: %s with %s" % (from_pid, reason))
-            return self._control_message(ctrl, None)
-
-        ERROR("Connection: Unhandled message to InConnection %s" % m)
-
-    @staticmethod
-    def _control_term_send(dst):
-        return CONTROL_TERM_SEND, term.Atom(''), dst
-
-    def _control_message(self, ctrl, msg):
-        """ Pack a control message and a regular message (can be None) together
-            and send them over the connection
-        """
-        if msg is None:
-            packet = b'p' + etf.term_to_binary(ctrl)
-        else:
-            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
-
-        self._send_packet4(packet)
 
 
 __all__ = ['InConnection']
