@@ -19,12 +19,9 @@ from __future__ import print_function
 import random
 import struct
 from hashlib import md5
-from typing import Union
-
-from gevent.queue import Queue
-
 from Pyrlang import term, logger
-from Pyrlang.Dist import epmd, util, etf, dist_protocol
+from Pyrlang.Dist import util, etf, dist_protocol
+from Pyrlang.Dist.base_connection import BaseConnection, protocol_error
 from Pyrlang.Dist.node_opts import NodeOpts
 
 # First element of control term in a 'p' message defines what it is
@@ -42,90 +39,16 @@ class DistributionError(Exception):
     pass
 
 
-class InConnection:
+class InConnection(BaseConnection):
     """ Handles incoming connections from other nodes.
 
         Behaves like a ``Greenlet`` but the actual Greenlet run procedure and
         the recv loop around this protocol are located in the
-        ``util.make_handler`` helper function.
+        ``util.make_handler_in`` helper function.
     """
-    DISCONNECTED = 0
-    RECV_NAME = 1
-    WAIT_CHALLENGE_REPLY = 2
-    CONNECTED = 3
 
     def __init__(self, dist, node_opts: NodeOpts):
-        self.state_ = self.DISCONNECTED
-        self.packet_len_size_ = 2
-        """ Packet size header is variable, 2 bytes before handshake is finished
-            and 4 bytes afterwards.
-        """
-        self.socket_ = None
-        self.addr_ = None
-
-        self.dist_ = dist  # reference to distribution object
-        self.node_opts_ = node_opts
-        self.inbox_ = Queue()  # refer to util.make_handler which reads this
-        """ Inbox is used to ask the connection to do something. """
-
-        self.peer_distr_version_ = (None, None)
-        """ Protocol version range supported by the remote peer. Erlang/OTP 
-            versions 19-20 supports protocol version 7, older Erlangs down to 
-            R6B support version 5. """
-        self.peer_flags_ = 0
-        self.peer_name_ = None
-        self.my_challenge_ = None
-
-    def on_connected(self, sockt, address):
-        """ Handler invoked from the recv loop (in ``util.make_handler``)
-            when the connection has been accepted and established.
-        """
-        self.state_ = self.RECV_NAME
-        self.socket_ = sockt
-        self.addr_ = address
-
-    def consume(self, data: bytes) -> Union[bytes, None]:
-        """ Attempt to consume first part of data as a packet
-
-            :param data: The accumulated data from the socket which we try to
-                partially or fully consume
-            :return: Unconsumed data, incomplete following packet maybe or
-                nothing. Returning None requests to close the connection
-        """
-        if len(data) < self.packet_len_size_:
-            # Not ready yet, keep reading
-            return data
-
-        # Dist protocol switches from 2 byte packet length to 4 at some point
-        if self.packet_len_size_ == 2:
-            pkt_size = util.u16(data, 0)
-            offset = 2
-        else:
-            pkt_size = util.u32(data, 0)
-            offset = 4
-
-        if len(data) < self.packet_len_size_ + pkt_size:
-            # Length is already visible but the data is not here yet
-            return data
-
-        packet = data[offset:(offset + pkt_size)]
-        # LOG('Dist packet:', util.hex_bytes(packet))
-
-        if self.on_packet(packet):
-            return data[(offset + pkt_size):]
-
-        # Protocol error has occured and instead we return None to request
-        # connection close (see util.py)
-        return None
-
-    def on_connection_lost(self):
-        """ Handler is called when the client has disconnected
-        """
-        self.state_ = self.DISCONNECTED
-
-        from Pyrlang.node import Node
-        Node.singleton.inbox_.put(
-            ('node_disconnected', self.peer_name_))
+        BaseConnection.__init__(self, dist, node_opts)
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
@@ -142,21 +65,17 @@ class InConnection:
         elif self.state_ == self.CONNECTED:
             return self.on_packet_connected(data)
 
-    @staticmethod
-    def _error(msg) -> False:
-        ERROR("Distribution protocol error:", msg)
-        return False
-
     def on_packet_recvname(self, data) -> bool:
         """ Handle RECV_NAME command, the first packet in a new connection. """
         if data[0] != ord('n'):
-            return self._error("Unexpected packet (expecting RECV_NAME)")
+            return protocol_error("Unexpected packet (expecting RECV_NAME)")
 
         # Read peer distribution version and compare to ours
         peer_max_min = (data[1], data[2])
         if dist_protocol.dist_version_check(peer_max_min):
-            return self._error("Dist protocol version have: %s got: %s"
-                               % (str(epmd.DIST_VSN_PAIR), str(peer_max_min)))
+            return protocol_error(
+                "Dist protocol version have: %s got: %s"
+                % (str(dist_protocol.DIST_VSN_PAIR), str(peer_max_min)))
         self.peer_distr_version_ = peer_max_min
 
         self.peer_flags_ = util.u32(data[3:7])
@@ -180,7 +99,8 @@ class InConnection:
 
     def on_packet_challengereply(self, data):
         if data[0] != ord('r'):
-            return self._error("Unexpected packet (expecting CHALLENGE_REPLY)")
+            return protocol_error(
+                "Unexpected packet (expecting CHALLENGE_REPLY)")
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
@@ -188,7 +108,8 @@ class InConnection:
 
         my_cookie = self.node_opts_.cookie_
         if not self._check_digest(peer_digest, self.my_challenge_, my_cookie):
-            return self._error("Disallowed node connection (check the cookie)")
+            return protocol_error(
+                "Disallowed node connection (check the cookie)")
 
         self._send_challenge_ack(peers_challenge, my_cookie)
         self.packet_len_size_ = 4
@@ -217,7 +138,7 @@ class InConnection:
             self.on_passthrough_message(control_term, msg_term)
 
         else:
-            return self._error("Unexpected dist message type: %s" % msg_type)
+            return protocol_error("Unexpected dist message type: %s" % msg_type)
 
         return True
 
@@ -238,7 +159,7 @@ class InConnection:
             self.dist_.name_)
         msg = b'n' \
               + struct.pack(">HII",
-                            epmd.DIST_VSN,
+                            dist_protocol.DIST_VSN,
                             self.node_opts_.dflags_,
                             my_challenge) \
               + bytes(self.dist_.name_, "latin1")

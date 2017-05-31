@@ -21,7 +21,7 @@ import gevent
 from gevent.server import StreamServer
 
 from Pyrlang import logger
-from Pyrlang.Dist import util
+from Pyrlang.Dist import util, helpers
 from Pyrlang.Dist.epmd import EPMDClient, EPMDConnectionError
 
 LOG = logger.nothing
@@ -45,14 +45,14 @@ class ErlangDistribution:
         """
 
         # Listener for Incoming connections from other nodes
-        # Create handler using make_handler helper
+        # Create handler using make_handler_in helper
         proto_kwargs = {"node_opts": node.node_opts_,
                         "dist": self}
 
         from Pyrlang.Dist.in_connection import InConnection
-        handler = util.make_handler(receiver_class=InConnection,
-                                    args=[],
-                                    kwargs=proto_kwargs)
+        handler = helpers.make_handler_in(receiver_class=InConnection,
+                                          args=[],
+                                          kwargs=proto_kwargs)
 
         self.in_srv_ = StreamServer(listener=('127.0.0.1', 0),
                                     handle=handler)
@@ -86,8 +86,10 @@ class ErlangDistribution:
             :return: Success or failure
         """
         try:
-            (r_host, r_port) = EPMDClient.query_node(remote_node)
-            print(r_host, r_port)
+            host_port = EPMDClient.query_node(remote_node)
+            (handler, sock) = helpers.connect_with(
+                protocol_class=OutConnection
+            )
 
         except EPMDConnectionError as e:
             ERROR("Dist:", e)

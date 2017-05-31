@@ -36,6 +36,8 @@ changes required.
     Dist.etf
     Dist.node_opts
     Dist.in_connection
+    Dist.out_connection
+    Dist.helpers
 
 
 .. toctree::

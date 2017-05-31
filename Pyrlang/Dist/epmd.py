@@ -189,6 +189,9 @@ class EPMDClient:
         resp = EPMDClient._fire_forget_query(r_ip, port_please2)
 
         # RESP_PORT2
+        # Response Error structure
+        # 1     1
+        # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
             ERROR("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
                   % (r_ip, resp))
@@ -197,6 +200,12 @@ class EPMDClient:
         if resp[1] != 0:
             ERROR("EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
             raise EPMDConnectionError("PORT_PLEASE2 error %d" % resp[1])
+
+        # Response structure
+        # 1     1       2       1           1           2               ...
+        # 119   Result  PortNo  NodeType    Protocol    HighestVersion  ...
+        # 2             2       Nlen        2       Elen
+        # LowestVersion Nlen    NodeName    Elen    >Extra
 
         r_port = util.u16(resp, 2)
         # node_type = resp[4]
