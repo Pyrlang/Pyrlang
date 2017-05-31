@@ -28,9 +28,21 @@ class OutConnection(BaseConnection):
         Behaves like a ``Greenlet`` but the actual recv loop around this
         protocol is located in the ``util.connect_with`` helper function.
     """
+    DISCONNECTED = 'disconn'
+    CONNECTED = 'conn'
+    RECV_STATUS = 'recv_status'
 
     def __init__(self, dist, node_opts: NodeOpts):
         BaseConnection.__init__(self, dist, node_opts)
+        self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
         pass
+
+    def on_connected(self, sockt, address):
+        BaseConnection.on_connected(self, sockt=sockt, address=address)
+        self.state_ = self.RECV_STATUS
+
+    def on_connection_lost(self):
+        BaseConnection.on_connection_lost(self)
+        self.state_ = self.DISCONNECTED

@@ -29,10 +29,6 @@ LOG = logger.nothing
 ERROR = logger.tty
 
 
-class DistributionError(Exception):
-    pass
-
-
 class InConnection(BaseConnection):
     """ Handles incoming connections from other nodes.
 
@@ -41,8 +37,22 @@ class InConnection(BaseConnection):
         ``util.make_handler_in`` helper function.
     """
 
+    DISCONNECTED = 'disconn'
+    CONNECTED = 'conn'
+    RECV_NAME = 'recvname'
+    WAIT_CHALLENGE_REPLY = 'wait_c_reply'
+
     def __init__(self, dist, node_opts: NodeOpts):
         BaseConnection.__init__(self, dist, node_opts)
+        self.state_ = self.DISCONNECTED
+
+    def on_connected(self, sockt, address):
+        BaseConnection.on_connected(self, sockt=sockt, address=address)
+        self.state_ = self.RECV_NAME
+
+    def on_connection_lost(self):
+        BaseConnection.on_connection_lost(self)
+        self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet

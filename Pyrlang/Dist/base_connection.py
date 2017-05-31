@@ -21,10 +21,10 @@ import struct
 from abc import abstractmethod
 from typing import Union
 
-from _md5 import md5
+from hashlib import md5
 from gevent.queue import Queue
 
-from Pyrlang import logger
+from Pyrlang import logger, term
 from Pyrlang.Dist import util, etf
 from Pyrlang.Dist.node_opts import NodeOpts
 
@@ -39,14 +39,12 @@ CONTROL_TERM_DEMONITOR_P = 20
 CONTROL_TERM_MONITOR_P_EXIT = 21
 
 
-class BaseConnection:
-    DISCONNECTED = 0
-    RECV_NAME = 1
-    WAIT_CHALLENGE_REPLY = 2
-    CONNECTED = 3
+class DistributionError(Exception):
+    pass
 
+
+class BaseConnection:
     def __init__(self, dist, node_opts: NodeOpts):
-        self.state_ = self.DISCONNECTED
         self.packet_len_size_ = 2
         """ Packet size header is variable, 2 bytes before handshake is finished
             and 4 bytes afterwards. """
@@ -74,7 +72,6 @@ class BaseConnection:
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
             when the connection has been accepted and established.
         """
-        self.state_ = self.RECV_NAME
         self.socket_ = sockt
         self.addr_ = address
 
@@ -119,8 +116,6 @@ class BaseConnection:
     def on_connection_lost(self):
         """ Handler is called when the client has disconnected
         """
-        self.state_ = self.DISCONNECTED
-
         from Pyrlang.node import Node
         Node.singleton.inbox_.put(
             ('node_disconnected', self.peer_name_))
