@@ -61,6 +61,7 @@ class Node(Greenlet):
             referencing ``Node.singleton``. This may change in future.
     """
     singleton = None
+    """ Access this to find the current node. This may change in future. """
 
     def __init__(self, name: str, cookie: str) -> None:
         Greenlet.__init__(self)
@@ -105,6 +106,10 @@ class Node(Greenlet):
         self.dist_nodes_ = {}
         self.dist_ = ErlangDistribution(node=self, name=name)
 
+        # This is important before we can begin spawning processes
+        # to get the correct node creation
+        self.dist_.connect(self)
+
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
         from Pyrlang.rex import Rex
@@ -118,8 +123,6 @@ class Node(Greenlet):
         self.net_kernel_.start()
 
     def _run(self):
-        self.dist_.connect(self)
-
         while not self.is_exiting_:
             while not self.inbox_.empty():
                 msg = self.inbox_.get_nowait()
@@ -143,8 +146,8 @@ class Node(Greenlet):
     def register_new_process(self, proc) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
 
-            :type proc: Pyrlang.Process
-            :param proc: A new born process
+            :type proc: Process
+            :param proc: A new process which needs a pid
             :return: A new pid (does not modify the process in place, so please
                 store the pid!)
         """
@@ -156,11 +159,13 @@ class Node(Greenlet):
         self.processes_[pid] = proc
         return pid
 
-    def register_name(self, proc: Process, name: Atom) -> None:
+    def register_name(self, proc, name) -> None:
         """ Add a name into registrations table (automatically removed when the
             referenced process is removed)
 
+            :type proc: Process
             :param proc: The process to register
+            :type name: Atom
             :param name: The name to register with
         """
         self.reg_names_[name] = proc.pid_
@@ -174,7 +179,7 @@ class Node(Greenlet):
     def where_is(self, ident) -> Union[Process, None]:
         """ Look up a registered name or pid.
 
-            :return: A process or ``None``.
+            :rtype: Process or None
         """
         if isinstance(ident, Atom) and ident in self.reg_names_:
             ident = self.reg_names_[ident]
@@ -216,18 +221,18 @@ class Node(Greenlet):
         else:
             WARN("Node._send_local: pid %s does not exist" % receiver)
 
-    def send(self, sender: Pid,
-             receiver: Union[Pid, Atom, tuple],
-             message: tuple) -> None:
+    def send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
             :param sender: Currently unused
+            :type sender: Pid
             :type receiver: Pid or Atom or tuple[Atom, Pid or Atom]
             :param receiver: Message receiver, a pid, or a name, or a tuple with
                 node name and a receiver on the remote node.
             :param message: Any value which will be placed into the receiver
-                inbox.
+                inbox. Pyrlang processes use tuples but that is not enforced
+                for your own processes.
         """
         LOG("send to %s: %s" % (receiver, message))
 
@@ -272,8 +277,8 @@ class Node(Greenlet):
                 values
         """
         if receiver_node not in self.dist_nodes_:
-            # TODO: Attempt to connect to the node
-            raise NodeException("Node not connected %s" % receiver_node)
+            if not self.dist_.connect_to_node(remote_node=receiver_node):
+                raise NodeException("Node not connected %s" % receiver_node)
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)

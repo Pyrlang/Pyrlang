@@ -24,7 +24,7 @@ from typing import Union
 from gevent.queue import Queue
 
 from Pyrlang import term, logger
-from Pyrlang.Dist import epmd, util, etf
+from Pyrlang.Dist import epmd, util, etf, dist_protocol
 from Pyrlang.Dist.node_opts import NodeOpts
 
 # First element of control term in a 'p' message defines what it is
@@ -147,24 +147,17 @@ class InConnection:
         ERROR("Distribution protocol error:", msg)
         return False
 
-    @staticmethod
-    def _dist_version_check(pdv: tuple):
-        """ Check peer version against our version
-            :type pdv: (MAX,MIN) - peer dist version, supported by the peer
-        """
-        return pdv[0] >= epmd.DIST_VSN >= pdv[1]
-
     def on_packet_recvname(self, data) -> bool:
         """ Handle RECV_NAME command, the first packet in a new connection. """
         if data[0] != ord('n'):
             return self._error("Unexpected packet (expecting RECV_NAME)")
 
         # Read peer distribution version and compare to ours
-        pdv = (data[1], data[2])
-        if self._dist_version_check(pdv):
+        peer_max_min = (data[1], data[2])
+        if dist_protocol.dist_version_check(peer_max_min):
             return self._error("Dist protocol version have: %s got: %s"
-                               % (str(epmd.DIST_VSN_PAIR), str(pdv)))
-        self.peer_distr_version_ = pdv
+                               % (str(epmd.DIST_VSN_PAIR), str(peer_max_min)))
+        self.peer_distr_version_ = peer_max_min
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")

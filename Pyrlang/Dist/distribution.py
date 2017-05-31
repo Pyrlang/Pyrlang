@@ -20,8 +20,13 @@ from __future__ import print_function
 import gevent
 from gevent.server import StreamServer
 
+from Pyrlang import logger
 from Pyrlang.Dist import util
-from Pyrlang.Dist.epmd import ErlEpmd
+from Pyrlang.Dist.epmd import EPMDClient, EPMDConnectionError
+
+LOG = logger.nothing
+WARN = logger.nothing
+ERROR = logger.tty
 
 
 class ErlangDistribution:
@@ -33,6 +38,7 @@ class ErlangDistribution:
     def __init__(self, node, name: str) -> None:
         self.name_ = name
         """ Node name, a string. """
+
         self.creation_ = 0
         """ Creation id used in pid generation. EPMD gives creation id to 
             newly connected nodes. 
@@ -54,7 +60,7 @@ class ErlangDistribution:
         self.in_port_ = self.in_srv_.server_port
         print("Dist: Listening for dist connections on port", self.in_port_)
 
-        self.epmd_ = ErlEpmd()
+        self.epmd_ = EPMDClient()
 
     def connect(self, node) -> bool:
         """ Looks up EPMD daemon and connects to it trying to discover other 
@@ -71,6 +77,23 @@ class ErlangDistribution:
             available nodes on EPMD
         """
         self.epmd_.close()
+
+    def connect_to_node(self, remote_node: str) -> bool:
+        """ Query EPMD where is the node, and initiate dist connection. Blocks
+            the Greenlet until the connection is made or have failed.
+
+            :param remote_node: String with node 'name@ip'
+            :return: Success or failure
+        """
+        try:
+            (r_host, r_port) = EPMDClient.query_node(remote_node)
+            print(r_host, r_port)
+
+        except EPMDConnectionError as e:
+            ERROR("Dist:", e)
+            return False
+
+        return True
 
 
 __all__ = ['ErlangDistribution']
