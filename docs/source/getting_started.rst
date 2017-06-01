@@ -31,7 +31,7 @@ Connect nodes
 
 .. note:: You can initiate the connection from either Erlang or Python side
     automatically by sending to a remote name using tuple format
-    ``{Node, Name}`` or sending to a remote pid (if you have it).
+    ``{Name, Node}`` or sending to a remote pid (if you have it).
 
 You can initiate the connection between nodes from Erlang side. To do this,
 on Erlang side you can use ``net_adm:ping``.
@@ -40,7 +40,7 @@ on Erlang side you can use ``net_adm:ping``.
 
     net_adm:ping('py@127.0.0.1').
 
-Also you could send a message to ``{Node, Name}``, where ``Node`` is an
+Also you could send a message to ``{Name, Node}``, where ``Node`` is an
 atom like ``'py@127.0.0.1'``, and ``Name`` is a pid or some registered name,
 which exists on the Python side.
 
@@ -107,7 +107,7 @@ The node connection will be established automatically.
               message=Atom('hello'))
 
 You can send messages to a remote named process, for this use tuple send format
-like ``{Node, Name}``. Sender pid is REQUIRED and must be provided,
+like ``{Name, Node}``. Sender pid is REQUIRED and must be provided,
 even if it is a fake pid (see example below how to create a fake pid).
 
 To try this, open an Erlang shell and register shell with the name ``'shell'``:
@@ -165,6 +165,12 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
                 if msg is None:
                     break
                 print("Incoming", msg)
+
+Now sending from Erlang is easy:
+
+.. code-block:: erlang
+
+    (erl@127.0.0.1) 1> {my_process, 'py@127.0.0.1'} ! hello.
 
 
 Implement a Gen_server-like Object

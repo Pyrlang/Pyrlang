@@ -246,7 +246,7 @@ class Node(Greenlet):
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        LOG("send to %s: %s" % (receiver, message))
+        LOG("send -> %s: %s" % (receiver, message))
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
