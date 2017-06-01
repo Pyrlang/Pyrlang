@@ -10,7 +10,8 @@ def main():
     node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
     node.start()
 
-    node.send(None, (Atom('erl@127.0.0.1'), Atom('rex')), Atom('hello'))
+    pid = node.register_new_process(None)
+    node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
 
     while True:
         # Sleep gives other greenlets time to run

@@ -44,6 +44,7 @@ changes required.
     :maxdepth: 1
     :caption: Other modules
 
+    mailbox
     rex
     net_kernel
     gen

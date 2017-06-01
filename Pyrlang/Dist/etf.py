@@ -71,7 +71,6 @@ def binary_to_term(data: bytes):
     if data[0] != ETF_VERSION_TAG:
         raise ETFDecodeException("Unsupported external term version")
 
-    # TODO: Compressed tag
     if data[1] == TAG_COMPRESSED:
         do = decompressobj()
         decomp_size = util.u32(data, 2)

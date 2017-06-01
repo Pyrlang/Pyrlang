@@ -16,7 +16,8 @@ from __future__ import print_function
 
 import gevent
 from gevent import Greenlet
-from gevent.queue import Queue
+
+from Pyrlang import mailbox
 
 
 class Process(Greenlet):
@@ -33,7 +34,7 @@ class Process(Greenlet):
         """
         Greenlet.__init__(self)
 
-        self.inbox_ = Queue()
+        self.inbox_ = mailbox.Mailbox()
         """ Message queue (gevent.Queue). Messages are detected by the ``_run``
             loop and handled one by one in ``handle_one_inbox_message()``. 
         """
@@ -55,10 +56,15 @@ class Process(Greenlet):
 
     def _run(self):
         while not self.is_exiting_:
-            while not self.inbox_.empty():
-                msg = self.inbox_.get_nowait()
-                self.handle_one_inbox_message(msg)
+            self.handle_inbox()
             gevent.sleep(0.0)
+
+    def handle_inbox(self):
+        while True:
+            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            if msg is None:
+                break
+            self.handle_one_inbox_message(msg)
 
     def handle_one_inbox_message(self, msg):
         """ Override this method to handle new incoming messages. """

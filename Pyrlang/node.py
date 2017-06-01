@@ -20,13 +20,13 @@ import gevent
 from gevent import Greenlet
 from gevent.queue import Queue
 
-from Pyrlang import logger
+from Pyrlang import logger, mailbox
 from Pyrlang.term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
 
-LOG = logger.nothing
+LOG = logger.tty
 WARN = logger.nothing
 ERROR = logger.tty
 
@@ -70,7 +70,7 @@ class Node(Greenlet):
             raise NodeException("Singleton Node was already created")
         Node.singleton = self
 
-        self.inbox_ = Queue()
+        self.inbox_ = mailbox.Mailbox()
         """ Message queue based on ``gevent.Queue``. It is periodically checked
             in the ``_run`` method and the receive handler is called.
         """
@@ -124,21 +124,26 @@ class Node(Greenlet):
 
     def _run(self):
         while not self.is_exiting_:
-            while not self.inbox_.empty():
-                msg = self.inbox_.get_nowait()
-                self.handle_one_inbox_message(msg)
+            self.handle_inbox()
             gevent.sleep(0.0)
+
+    def handle_inbox(self):
+        while True:
+            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            if msg is None:
+                break
+            self.handle_one_inbox_message(msg)
 
     def handle_one_inbox_message(self, m: tuple):
         """ Handler is called whenever a message arrives to the mailbox.
         """
-        # Send a ('node_connected', IP, Connection) to inform about the
+        # Send a ('node_connected', NodeName, Connection) to inform about the
         # connectivity with the other node
         if m[0] == 'node_connected':
             (_, addr, connection) = m
             self.dist_nodes_[addr] = connection
 
-        # Send a ('node_disconnected', IP) to forget the connection
+        # Send a ('node_disconnected', NodeName) to forget the connection
         elif m[0] == 'node_disconnected':
             (_, addr) = m
             del self.dist_nodes_[addr]
@@ -225,7 +230,7 @@ class Node(Greenlet):
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
-            :param sender: Currently unused
+            :param sender: Message sender
             :type sender: Pid
             :type receiver: Pid or Atom or tuple[Atom, Pid or Atom]
             :param receiver: Message receiver, a pid, or a name, or a tuple with
@@ -243,7 +248,8 @@ class Node(Greenlet):
                 return self.send(sender, r_name, message)
             else:
                 # route remotely
-                return self._send_remote(dst_node=str(r_node),
+                return self._send_remote(sender=sender,
+                                         dst_node=str(r_node),
                                          receiver=r_name,
                                          message=message)
 
@@ -251,7 +257,8 @@ class Node(Greenlet):
             if receiver.is_local_to(self):
                 return self._send_local(receiver, message)
             else:
-                return self._send_remote(dst_node=str(receiver.node_),
+                return self._send_remote(sender=sender,
+                                         dst_node=str(receiver.node_),
                                          receiver=receiver,
                                          message=message)
 
@@ -260,9 +267,9 @@ class Node(Greenlet):
 
         raise NodeException("Don't know how to send to %s" % receiver)
 
-    def _send_remote(self, dst_node: str, receiver, message) -> None:
+    def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
         LOG("Node._send_remote %s <- %s" % (receiver, message))
-        m = ('send', receiver, message)
+        m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)
 
@@ -283,9 +290,23 @@ class Node(Greenlet):
                 values
         """
         if receiver_node not in self.dist_nodes_:
-            if not self.dist_.connect_to_node(this_node=self,
-                                              remote_node=receiver_node):
+            LOG("Node: connect to node", receiver_node)
+            handler = self.dist_.connect_to_node(
+                this_node=self,
+                remote_node=receiver_node)
+
+            if handler is None:
                 raise NodeException("Node not connected %s" % receiver_node)
+
+            # block until connected, and get the connected message
+            LOG("Node: wait for 'node_connected'")
+            # msg = self.inbox_.receive_wait(
+            #     filter_fn=lambda m: m[0] == 'node_connected'
+            # )
+            while receiver_node not in self.dist_nodes_:
+                gevent.sleep(0.1)
+
+            LOG("Node: connected")
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)

@@ -14,11 +14,13 @@
 
 from __future__ import print_function
 import traceback
+
+import gevent
 import gevent.select as select
 from gevent import socket
 
 
-def _handle_socket_read(receiver, sock):
+def _handle_socket_read(handler, sock):
     collected = b''
     while True:
         # a full packet before calling on_packet in the handler class
@@ -33,7 +35,7 @@ def _handle_socket_read(receiver, sock):
                 # Try and consume repeatedly if multiple messages arrived
                 # in the same packet
                 while True:
-                    collected1 = receiver.consume(collected)
+                    collected1 = handler.consume(collected)
                     if collected1 is None:
                         print("Protocol requested to disconnect the socket")
                         break
@@ -42,13 +44,14 @@ def _handle_socket_read(receiver, sock):
 
                     collected = collected1
             else:
-                while not receiver.inbox_.empty():
-                    msg = receiver.inbox_.get_nowait()
-                    receiver.handle_one_inbox_message(msg)
-                    # Longer sleep when there's no data
+                handler.handle_inbox()
+
         except select.error:
             # Disconnected probably or another error
             break
+
+    sock.close()
+    handler.on_connection_lost()
 
 
 def make_handler_in(receiver_class, args, kwargs):
@@ -107,17 +110,13 @@ def connect_with(protocol_class, host_port: tuple,
     print("Connection to %s established" % str(host_port))
 
     try:
-        _handle_socket_read(handler, sock)
+        g = gevent.spawn(_handle_socket_read, handler, sock)
+        g.start()
 
     except Exception as e:
         print("\nException: %s" % e)
         traceback.print_exc()
         print()
-
-    finally:
-        print("Client disconnected", host_port)
-        sock.close()
-        handler.on_connection_lost()
 
     return handler, sock
 

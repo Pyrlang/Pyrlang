@@ -116,7 +116,7 @@ class InConnection(BaseConnection):
         self._send_challenge_ack(peers_challenge, my_cookie)
         self.packet_len_size_ = 4
         self.state_ = self.CONNECTED
-        self.node_.inbox_.put(('node_connected', self.peer_name_, self))
+        self.report_dist_connected()
 
         # TODO: start timer with node_opts_.network_tick_time_
 

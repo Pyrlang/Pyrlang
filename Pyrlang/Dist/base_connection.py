@@ -22,9 +22,7 @@ from abc import abstractmethod
 from hashlib import md5
 from typing import Union
 
-from gevent.queue import Queue
-
-from Pyrlang import logger, term
+from Pyrlang import logger, mailbox, term
 from Pyrlang.Dist import util, etf
 
 LOG = logger.nothing
@@ -59,7 +57,8 @@ class BaseConnection:
         self.socket_ = None
         self.addr_ = None
 
-        self.inbox_ = Queue()  # refer to util.make_handler_in which reads this
+        # refer to util.make_handler_in which reads this
+        self.inbox_ = mailbox.Mailbox()
         """ Inbox is used to ask the connection to do something. """
 
         self.peer_distr_version_ = (None, None)
@@ -120,9 +119,10 @@ class BaseConnection:
     def on_connection_lost(self):
         """ Handler is called when the client has disconnected
         """
-        from Pyrlang.node import Node
-        Node.singleton.inbox_.put(
-            ('node_disconnected', self.peer_name_))
+        if self.peer_name_ is not None:
+            from Pyrlang.node import Node
+            Node.singleton.inbox_.put(
+                ('node_disconnected', self.peer_name_))
 
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
@@ -134,7 +134,7 @@ class BaseConnection:
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        # LOG("Dist: pkt out", content)
+        LOG("Dist: pkt out", content)
         msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
@@ -172,11 +172,18 @@ class BaseConnection:
         else:
             ERROR("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
 
+    def handle_inbox(self):
+        while True:
+            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            if msg is None:
+                break
+            self.handle_one_inbox_message(msg)
+
     def handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
-            (_, dst, msg) = m
-            ctrl = self._control_term_send(dst)
+            (_, from_pid, dst, msg) = m
+            ctrl = self._control_term_send(from_pid=from_pid, dst=dst)
             LOG("Connection: control msg %s; %s" % (ctrl, msg))
             return self._control_message(ctrl, msg)
 
@@ -190,8 +197,11 @@ class BaseConnection:
         ERROR("Connection: Unhandled message to InConnection %s" % m)
 
     @staticmethod
-    def _control_term_send(dst):
-        return CONTROL_TERM_SEND, term.Atom(''), dst
+    def _control_term_send(from_pid, dst):
+        if isinstance(dst, term.Atom):
+            return CONTROL_TERM_REG_SEND, from_pid, term.Atom(''), dst
+        else:
+            return CONTROL_TERM_SEND, term.Atom(''), dst
 
     def _control_message(self, ctrl, msg):
         """ Pack a control message and a regular message (can be None) together
@@ -240,6 +250,7 @@ class BaseConnection:
                 (msg_term, tail) = etf.binary_to_term(tail)
             else:
                 msg_term = None
+
             self.on_passthrough_message(control_term, msg_term)
 
         else:
@@ -247,5 +258,11 @@ class BaseConnection:
                 "Unexpected dist message type: %s" % msg_type)
 
         return True
+
+    def report_dist_connected(self):
+        assert(self.peer_name_ is not None)
+        LOG("Dist: connected to", self.peer_name_)
+        self.node_.inbox_.put(('node_connected', self.peer_name_, self))
+
 
 __all__ = ['BaseConnection', 'DistributionError']
