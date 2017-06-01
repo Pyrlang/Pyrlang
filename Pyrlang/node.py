@@ -151,8 +151,9 @@ class Node(Greenlet):
     def register_new_process(self, proc) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
 
-            :type proc: Process
-            :param proc: A new process which needs a pid
+            :type proc: Process or None
+            :param proc: A new process which needs a pid, or None if you only
+                need a fake pid
             :return: A new pid (does not modify the process in place, so please
                 store the pid!)
         """
@@ -161,7 +162,9 @@ class Node(Greenlet):
                   serial=self.pid_counter_ % 0x7fffffff,
                   creation=self.dist_.creation_)
         self.pid_counter_ += 1
-        self.processes_[pid] = proc
+
+        if proc is not None:
+            self.processes_[pid] = proc
         return pid
 
     def register_name(self, proc, name) -> None:

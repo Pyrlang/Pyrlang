@@ -74,8 +74,8 @@ value from Python.
                     {call, 'Pyrlang.logger', tty, ["Hello"], self()}).
 
 
-Send from Python
-----------------
+Send from Python (local)
+------------------------
 
 You can send messages in the reverse direction too!
 ``Node.send(_sender, receiver, message)`` function is there to deliver messages
@@ -87,10 +87,31 @@ locally or remotely.
               receiver=term.Atom('my_erlang_process'),
               message=(123, 4.5678, [term.Atom('test')]))
 
-.. note:: Tuple format ``{Node, Name}`` for sending is not supported.
-
 .. note:: Node is a singleton, you can find the node by referencing
     ``Node.singleton``. This may change in future.
+
+Send from Python (remote)
+-------------------------
+
+You can send messages to a remote pid. Sender pid is unused and can be None.
+The node connection will be established automatically.
+
+.. code-block:: python
+
+    node.send(sender=None,
+              receiver=receiver_pid,
+              message=Atom('hello'))
+
+You can send messages to a remote named process, for this use tuple send format
+like ``{Node, Name}``. For this sender pid is REQUIRED and must be provided,
+even if it is a fake (see example below how to create a fake pid).
+
+.. code-block:: python
+
+    pid = node.register_new_process(None)
+    node.send(sender=pid,
+              receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+              message=Atom('hello'))
 
 
 Implement a Gen_server-like Object
@@ -98,6 +119,13 @@ Implement a Gen_server-like Object
 
 It is not very hard to implement minimum interface required to be able to
 respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
+
+Process class has a ``_run`` function which calls ``self.handle_inbox()``
+repeatedly.
+:py:class:`~Pyrlang.mailbox.Mailbox`
+class offers ``receive_wait(filter_fn)``
+for selective receive with a wait, ``receive(filter_fn)`` for instant mailbox
+check selectively and simple ``get()`` and ``get_nowait()`` functions.
 
 .. code-block:: python
 
@@ -107,6 +135,14 @@ respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
         def __init__(self, node) -> None:
             Process.__init__(self, node)
             node.register_name(self, term.Atom('my_process'))  # optional
+
+        def handle_inbox(self):
+            while True:
+                # Do a selective receive but the filter says always True
+                msg = self.inbox_.receive(filter_fn=lambda _: True)
+                if msg is None:
+                    break
+                self.handle_one_inbox_message(msg)
 
         def handle_one_inbox_message(self, msg) -> None:
             gencall = gen.parse_gen_message(msg)

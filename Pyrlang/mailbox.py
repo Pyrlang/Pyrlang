@@ -18,7 +18,7 @@ from gevent.queue import Queue
 
 from Pyrlang import logger
 
-LOG = logger.tty
+LOG = logger.nothing
 ERROR = logger.tty
 
 
