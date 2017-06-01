@@ -266,6 +266,12 @@ class Node(Greenlet):
         return self.dist_command(receiver_node=dst_node,
                                  message=m)
 
+    def get_cookie(self):
+        """ Get string cookie value for this node.
+            TODO: Cookie per connection?
+        """
+        return self.node_opts_.cookie_
+
     def dist_command(self, receiver_node: str, message: tuple) -> None:
         """ Locate the connection to the given node (a string).
             Place a tuple crafted by the caller into message box for Erlang
@@ -277,7 +283,8 @@ class Node(Greenlet):
                 values
         """
         if receiver_node not in self.dist_nodes_:
-            if not self.dist_.connect_to_node(remote_node=receiver_node):
+            if not self.dist_.connect_to_node(this_node=self,
+                                              remote_node=receiver_node):
                 raise NodeException("Node not connected %s" % receiver_node)
 
         conn = self.dist_nodes_[receiver_node]

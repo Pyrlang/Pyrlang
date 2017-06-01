@@ -19,14 +19,13 @@ from __future__ import print_function
 
 import struct
 from abc import abstractmethod
+from hashlib import md5
 from typing import Union
 
-from hashlib import md5
 from gevent.queue import Queue
 
 from Pyrlang import logger, term
 from Pyrlang.Dist import util, etf
-from Pyrlang.Dist.node_opts import NodeOpts
 
 LOG = logger.nothing
 ERROR = logger.tty
@@ -44,7 +43,15 @@ class DistributionError(Exception):
 
 
 class BaseConnection:
-    def __init__(self, dist, node_opts: NodeOpts):
+    def __init__(self, node):
+        """ Create connection handler object.
+
+            :type node: Pyrlang.Node
+            :param node: Erlang node reference
+        """
+        self.node_ = node
+        """ Reference to the running Erlang node. (XXX forms a ref cycle) """
+
         self.packet_len_size_ = 2
         """ Packet size header is variable, 2 bytes before handshake is finished
             and 4 bytes afterwards. """
@@ -52,10 +59,6 @@ class BaseConnection:
         self.socket_ = None
         self.addr_ = None
 
-        # TODO: Pass as argument and save node instead of dist
-        self.dist_ = dist  # reference to distribution object
-
-        self.node_opts_ = node_opts
         self.inbox_ = Queue()  # refer to util.make_handler_in which reads this
         """ Inbox is used to ask the connection to do something. """
 
@@ -67,6 +70,7 @@ class BaseConnection:
         self.peer_flags_ = 0
         self.peer_name_ = None
         self.my_challenge_ = None
+        self.state_ = None
 
     def on_connected(self, sockt, address):
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
@@ -123,12 +127,14 @@ class BaseConnection:
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
+        # LOG("Dist: pkt out", content)
         msg = struct.pack(">H", len(content)) + content
         self.socket_.sendall(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
+        # LOG("Dist: pkt out", content)
         msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
@@ -204,10 +210,42 @@ class BaseConnection:
                      + bytes(str(challenge), "ascii")).digest()
         return result
 
+    def protocol_error(self, msg) -> False:
+        ERROR("Dist protocol error: %s (state %s)" % (msg, self.state_))
+        return False
 
-def protocol_error(msg) -> False:
-    ERROR("Distribution protocol error:", msg)
-    return False
+    @staticmethod
+    def check_digest(digest: bytes, challenge: int, cookie: str) -> bool:
+        """ Hash cookie + the challenge together producing a verification hash
+            and return if they match against the offered 'digest'.
+        """
+        expected_digest = BaseConnection.make_digest(challenge, cookie)
+        # LOG("Check digest: expected digest", expected_digest,
+        #  "peer digest", digest)
+        return digest == expected_digest
 
+    def on_packet_connected(self, data):
+        """ Handle incoming dist packets in the connected state. """
+        # TODO: Update timeout timer, that we have connectivity still
+        if data == b'':
+            self._send_packet4(b'')
+            return True  # this was a keepalive
 
-__all__ = ['protocol_error', 'BaseConnection']
+        msg_type = chr(data[0])
+
+        if msg_type == "p":
+            (control_term, tail) = etf.binary_to_term(data[1:])
+
+            if tail != b'':
+                (msg_term, tail) = etf.binary_to_term(tail)
+            else:
+                msg_term = None
+            self.on_passthrough_message(control_term, msg_term)
+
+        else:
+            return self.protocol_error(
+                "Unexpected dist message type: %s" % msg_type)
+
+        return True
+
+__all__ = ['BaseConnection', 'DistributionError']

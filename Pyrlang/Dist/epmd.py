@@ -184,7 +184,6 @@ class EPMDClient:
 
         port_please2 = bytes([REQ_PORT_PLEASE2]) \
             + bytes(r_name, "utf8")  # not sure if latin-1 here
-        print(port_please2)
 
         resp = EPMDClient._fire_forget_query(r_ip, port_please2)
 

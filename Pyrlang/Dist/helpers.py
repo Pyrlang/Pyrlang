@@ -18,14 +18,14 @@ import gevent.select as select
 from gevent import socket
 
 
-def _handle_socket_read(receiver, socket):
+def _handle_socket_read(receiver, sock):
     collected = b''
     while True:
         # a full packet before calling on_packet in the handler class
-        ready = select.select([socket], [], [], 0.0)
+        ready = select.select([sock], [], [], 0.0)
         try:
             if ready[0]:
-                data = socket.recv(4096)
+                data = sock.recv(4096)
                 # print("data in: %s" % hex_bytes(data))
 
                 collected += data
@@ -63,14 +63,14 @@ def make_handler_in(receiver_class, args, kwargs):
         :return: A handler function suitable for passing to StreamServer
     """
 
-    def _handle_connect_disconnect(socket, address):
+    def _handle_connect_disconnect(sock, address):
         print("Client connected", address)
 
         receiver = receiver_class(*args, **kwargs)
-        receiver.on_connected(socket, address)
+        receiver.on_connected(sock, address)
 
         try:
-            _handle_socket_read(receiver, socket)
+            _handle_socket_read(receiver, sock)
 
         except Exception as e:
             print("\nException: %s" % e)
@@ -79,14 +79,14 @@ def make_handler_in(receiver_class, args, kwargs):
 
         finally:
             print("Client disconnected", address)
-            socket.close()
+            sock.close()
             receiver.on_connection_lost()
 
     return _handle_connect_disconnect
 
 
 def connect_with(protocol_class, host_port: tuple,
-                 args: list, kwargs: list):
+                 args: list, kwargs: dict):
     """ Helper which creates a new connection and feeds the data stream into
         a protocol handler class.
 
@@ -100,13 +100,14 @@ def connect_with(protocol_class, host_port: tuple,
     """
 
     sock = socket.create_connection(address=host_port)
-    handler = protocol_class(*args, **kwargs)
-    handler.on_connected(socket, host_port)
 
-    print("Connection to %s established" % host_port)
+    handler = protocol_class(*args, **kwargs)
+    handler.on_connected(sock, host_port)
+
+    print("Connection to %s established" % str(host_port))
 
     try:
-        _handle_socket_read(handler, socket)
+        _handle_socket_read(handler, sock)
 
     except Exception as e:
         print("\nException: %s" % e)

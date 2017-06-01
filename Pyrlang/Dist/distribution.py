@@ -48,8 +48,7 @@ class ErlangDistribution:
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler_in helper
-        proto_kwargs = {"node_opts": node.node_opts_,
-                        "dist": self}
+        proto_kwargs = {"node": node}
 
         from Pyrlang.Dist.in_connection import InConnection
         handler = helpers.make_handler_in(receiver_class=InConnection,
@@ -80,19 +79,25 @@ class ErlangDistribution:
         """
         self.epmd_.close()
 
-    def connect_to_node(self, remote_node: str) -> bool:
+    def connect_to_node(self, this_node, remote_node: str) -> bool:
         """ Query EPMD where is the node, and initiate dist connection. Blocks
             the Greenlet until the connection is made or have failed.
 
+            :type this_node: Pyrlang.Node
+            :param this_node: Reference to Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: Success or failure
         """
         try:
             host_port = EPMDClient.query_node(remote_node)
             (handler, sock) = helpers.connect_with(
-                protocol_class=OutConnection)
+                protocol_class=OutConnection,
+                host_port=host_port,
+                args=[],
+                kwargs={"node": this_node}
+            )
 
-        except EPMDConnectionError as e:
+        except Exception as e:
             ERROR("Dist:", e)
             return False
 
