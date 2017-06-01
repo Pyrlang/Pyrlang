@@ -78,11 +78,11 @@ value from Python.
                     {call, 'Pyrlang.logger', tty, ["Hello"], self()}).
 
 
-Send from Python (local)
+Send from Python locally
 ------------------------
 
-You can send messages in the reverse direction too!
-``Node.send(_sender, receiver, message)`` function is there to deliver messages
+You can send messages using the method
+``Node.send(_sender, receiver, message)``, which can deliver messages
 locally or remotely.
 
 .. code-block:: python
@@ -94,8 +94,8 @@ locally or remotely.
 .. note:: Node is a singleton, you can find the node by referencing
     ``Node.singleton``. This may change in future.
 
-Send from Python (remote)
--------------------------
+Send from Python to a remote
+----------------------------
 
 You can send messages to a remote pid. Sender pid is unused and can be None.
 The node connection will be established automatically.
@@ -110,6 +110,15 @@ You can send messages to a remote named process, for this use tuple send format
 like ``{Node, Name}``. Sender pid is REQUIRED and must be provided,
 even if it is a fake pid (see example below how to create a fake pid).
 
+To try this, open an Erlang shell and register shell with the name ``'shell'``:
+
+.. code-block:: erlang
+
+    (erl@127.0.0.1) 1> erlang:register(shell, self())
+
+Now we can try and send the message from Python (node connection will be
+established automatically):
+
 .. code-block:: python
 
     pid = node.register_new_process(None)  # create a fake pid
@@ -117,6 +126,12 @@ even if it is a fake pid (see example below how to create a fake pid).
               receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
               message=Atom('hello'))
 
+.. code-block:: erlang
+
+    (erl@127.0.0.1) 2> flush().
+    Shell got hello
+    ok
+    (erl@127.0.0.1) 3>
 
 Send to a Python object
 -----------------------
@@ -132,7 +147,7 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. note:: Because registering a process in the process dictionary introduces
     an extra reference to your object, be sure to tell it explicitly
-    about this: call ``self.exit(reason=None)`` (defined in Process class).
+    to unregister: call ``self.exit(reason=None)`` (defined in Process class).
 
 .. code-block:: python
 
