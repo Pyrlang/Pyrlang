@@ -167,6 +167,10 @@ class Node(Greenlet):
             self.processes_[pid] = proc
         return pid
 
+    def on_exit_process(self, pid, reason):
+        LOG("Process %s exited with %s", pid, reason)
+        del self.processes_[pid]
+
     def register_name(self, proc, name) -> None:
         """ Add a name into registrations table (automatically removed when the
             referenced process is removed)

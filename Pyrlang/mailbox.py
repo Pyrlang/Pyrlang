@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import queue
+from typing import Callable
 
 import gevent
 from gevent.queue import Queue
@@ -36,18 +37,25 @@ class Mailbox:
 
     def get(self):
         """ Receives ANY message whatever is the first in the queue. Blocks the
-            greenlet if the queue is empty.
+            greenlet if the queue is empty. Other greenlets will continue
+            to run.
         """
         return self.queue_.get()
 
     def get_nowait(self):
-        """ Receives ANY message whatever is the first.
+        """ Receives ANY message whatever is the first or raises.
 
             :raises queue.Empty: If the queue is empty
         """
         return self.queue_.get_nowait()
 
-    def receive_wait(self, filter_fn: callable):
+    def receive_wait(self, filter_fn: Callable):
+        """ Repeatedly call receive(filter) until the result is found. Other
+            greenlets can continue to run cooperatively.
+
+            :param filter_fn: A callable which checks if message is desired
+                (and returns True) or should be skipped (and returns False)
+        """
         while True:
             LOG(self.queue_.queue)
 
@@ -55,12 +63,14 @@ class Mailbox:
             if m is not None:
                 return m
 
-            LOG("receive wait...")
-            gevent.sleep(3.0)
+            gevent.sleep(0.0)
 
-    def receive(self, filter_fn: callable):
-        """ Apply filter repeatedly to messages in the inbox.
+    def receive(self, filter_fn: Callable):
+        """ Apply filter to all messages in the inbox, first message for which
+            filter returns True will be returned.
 
+            :param filter_fn: A callable which checks if message is desired
+                (and returns True) or should be skipped (and returns False)
             :returns: Message, if the filter returned True, otherwise ``None``
                 if no message matches or the mailbox was empty
         """

@@ -26,8 +26,12 @@ Start the Node
         main()
 
 
-Connect from Erlang
--------------------
+Connect nodes
+-------------
+
+.. note:: You can initiate the connection from either Erlang or Python side
+    automatically by sending to a remote name using tuple format
+    ``{Node, Name}`` or sending to a remote pid (if you have it).
 
 You can initiate the connection between nodes from Erlang side. To do this,
 on Erlang side you can use ``net_adm:ping``.
@@ -103,15 +107,49 @@ The node connection will be established automatically.
               message=Atom('hello'))
 
 You can send messages to a remote named process, for this use tuple send format
-like ``{Node, Name}``. For this sender pid is REQUIRED and must be provided,
-even if it is a fake (see example below how to create a fake pid).
+like ``{Node, Name}``. Sender pid is REQUIRED and must be provided,
+even if it is a fake pid (see example below how to create a fake pid).
 
 .. code-block:: python
 
-    pid = node.register_new_process(None)
+    pid = node.register_new_process(None)  # create a fake pid
     node.send(sender=pid,
               receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
               message=Atom('hello'))
+
+
+Send to a Python object
+-----------------------
+
+A python object inherited from :py:class:`~Pyrlang.process.Process` will be
+a Greenlet (i.e. running in parallel with the rest of the system).
+A process is able to register itself (optional) with a name and handle
+incoming messages.
+
+Messages sent to a pid or name will be automatically routed to such a
+process and arrive into its ``self.inbox_``. The Process base class will
+constantly call ``self.handle_inbox()`` so you can check the messages yourself.
+
+.. note:: Because registering a process in the process dictionary introduces
+    an extra reference to your object, be sure to tell it explicitly
+    about this: call ``self.exit(reason=None)`` (defined in Process class).
+
+.. code-block:: python
+
+    from Pyrlang.process import Process
+
+    class MyProcess(Process):
+        def __init__(self, node) -> None:
+            Process.__init__(self, node)
+            node.register_name(self, term.Atom('my_process'))  # optional
+
+        def handle_inbox(self):
+            while True:
+                # Do a selective receive but the filter says always True
+                msg = self.inbox_.receive(filter_fn=lambda _: True)
+                if msg is None:
+                    break
+                print("Incoming", msg)
 
 
 Implement a Gen_server-like Object

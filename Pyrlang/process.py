@@ -33,6 +33,8 @@ class Process(Greenlet):
             :param node: 
         """
         Greenlet.__init__(self)
+        self.node_ = node
+        """ Convenience field to see the Node. """
 
         self.inbox_ = mailbox.Mailbox()
         """ Message queue (gevent.Queue). Messages are detected by the ``_run``
@@ -70,13 +72,11 @@ class Process(Greenlet):
         """ Override this method to handle new incoming messages. """
         print("%s: Handling msg %s" % (self.pid_, msg))
 
-    def exit(self, reason):
+    def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and
             monitors and unregisters the object from the node process
             dictionary.
         """
         # TODO: Inform links and monitors
 
-        from Pyrlang.node import Node
-        Node.singleton.on_exit_process(self.pid_, reason)
-
+        self.node_.on_exit_process(self.pid_, reason)
