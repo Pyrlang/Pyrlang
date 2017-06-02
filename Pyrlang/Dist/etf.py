@@ -380,9 +380,12 @@ def _pack_int(val):
 
 
 # TODO: maybe move this into atom class
-def _pack_atom(text: str) -> bytes:
+def _pack_atom(text: str, encoding: str) -> bytes:
     # TODO: probably should be latin1 not utf8?
-    return bytes([TAG_ATOM_EXT]) + util.to_u16(len(text)) + bytes(text, "utf8")
+    return bytes([TAG_ATOM_EXT if encoding.startswith("latin")
+                  else TAG_ATOM_UTF8_EXT]) \
+           + util.to_u16(len(text)) \
+           + bytes(text, encoding)
 
 
 # TODO: maybe move this into pid class
@@ -461,10 +464,10 @@ def term_to_binary_2(val):
         return _pack_float(val)
 
     elif val is None:
-        return _pack_atom('undefined')
+        return _pack_atom('undefined', 'latin-1')
 
     elif isinstance(val, term.Atom):
-        return _pack_atom(val.text_)
+        return _pack_atom(val.text_, val.enc_)
 
     elif isinstance(val, term.Pid):
         return _pack_pid(val)

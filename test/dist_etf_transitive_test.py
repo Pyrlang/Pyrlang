@@ -11,9 +11,13 @@ from Pyrlang import term
 class TestETFEncode(unittest.TestCase):
     def test_encode_atom(self):
         """ Try an atom 'hello' """
-        data = etf.term_to_binary(term.Atom('hello'))
-        expected = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
-        self.assertEqual(data, expected)
+        data1 = etf.term_to_binary(term.Atom('hello', encoding="latin-1"))
+        expected1 = bytes([131, ord('d'), 0, 5, 104, 101, 108, 108, 111])
+        self.assertEqual(data1, expected1)
+
+        data2 = etf.term_to_binary(term.Atom('hello', encoding="utf8"))
+        expected2 = bytes([131, ord('v'), 0, 5, 104, 101, 108, 108, 111])
+        self.assertEqual(data2, expected2)
 
     def test_encode_map(self):
         """ Try encode a map #{1 => 2} """
