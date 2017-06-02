@@ -14,6 +14,14 @@
 
 """ Module implements encoder and decoder from ETF (Erlang External Term Format)
     used by the network distribution layer.
+
+    Encoding terms takes optional 'options' argument. Default is ``None`` but
+    it can be a dictionary with the following optional keys:
+
+    *   "binaries_as_bytes", default False. Ignores bit tail of bit strings and
+        returns all Erlang binaries as Python bytes.
+    *   "atoms_as_strings", default False. Always converts atoms to Python
+        strings. This is potentially faster than using the Atom wrapper class.
 """
 from __future__ import print_function
 
@@ -66,9 +74,11 @@ def incomplete_data(where=""):
         raise ETFDecodeException("Incomplete data at " + where)
 
 
-def binary_to_term(data: bytes):
+def binary_to_term(data: bytes, options: dict = {}):
     """ Strip 131 header and unpack if the data was compressed.
 
+        :param data: The incoming encoded data with the 131 byte
+        :param options: See description on top of the module
         :raises ETFDecodeException: when the tag is not 131, when compressed
             data is incomplete or corrupted
     """
@@ -83,12 +93,12 @@ def binary_to_term(data: bytes):
             # Data corruption?
             raise ETFDecodeException("Compressed size mismatch with actual")
 
-        return binary_to_term_2(decomp)
+        return binary_to_term_2(decomp, options)
 
-    return binary_to_term_2(data[1:])
+    return binary_to_term_2(data[1:], options)
 
 
-def _bytes_to_atom(name: bytes, encoding: str = 'utf8'):
+def _bytes_to_atom(name: bytes, encoding: str, options: dict):
     """ Recognize familiar atom values. """
     if name == b'true':
         return True
@@ -97,10 +107,14 @@ def _bytes_to_atom(name: bytes, encoding: str = 'utf8'):
     if name == b'undefined':
         return None
 
-    return term.Atom(name.decode(encoding))
+    if options.get("atoms_as_strings", False):
+        return name.decode(encoding)
+
+    return term.Atom(text=name.decode(encoding),
+                     encoding=encoding)
 
 
-def binary_to_term_2(data: bytes):
+def binary_to_term_2(data: bytes, options: dict = {}):
     """ Proceed decoding after leading tag has been checked and removed.
 
         Erlang lists are decoded into ``term.List`` object, whose ``elements_``
@@ -112,6 +126,7 @@ def binary_to_term_2(data: bytes):
         ``dict``. Binaries and bit strings are decoded into ``term.Binary``
         object, with optional last bits omitted.
 
+        :param options: See description on top of the module
         :param data: Bytes containing encoded term without 131 header
         :return: Tuple (Value, TailBytes) The function consumes as much data as
             possible and returns the tail. Tail can be used again to parse
@@ -131,7 +146,7 @@ def binary_to_term_2(data: bytes):
 
         name = data[3:len_expected]
         enc = 'latin-1' if tag == TAG_ATOM_EXT else 'utf8'
-        return _bytes_to_atom(name, enc), data[len_expected:]
+        return _bytes_to_atom(name, enc, options), data[len_expected:]
 
     if tag == [TAG_SMALL_ATOM_EXT, TAG_SMALL_ATOM_UTF8_EXT]:
         len_data = len(data)
@@ -142,7 +157,7 @@ def binary_to_term_2(data: bytes):
         name = data[2:len_expected]
 
         enc = 'latin-1' if tag == TAG_SMALL_ATOM_EXT else 'utf8'
-        return term.Atom(name.decode(enc)), data[len_expected:]
+        return _bytes_to_atom(name, enc, options), data[len_expected:]
 
     if tag == TAG_NIL_EXT:
         return [], data[1:]
@@ -260,6 +275,9 @@ def binary_to_term_2(data: bytes):
         if len_expected > len_data:
             return incomplete_data("decoding data for a binary")
 
+        if options.get("binaries_as_bytes", False):
+            return data[5:len_expected], data[len_expected:]
+
         bin1 = term.Binary(data=data[5:len_expected])
         return bin1, data[len_expected:]
 
@@ -271,6 +289,9 @@ def binary_to_term_2(data: bytes):
         lbb = data[5]
         if len_expected > len_data:
             return incomplete_data("decoding data for a bit-binary")
+
+        if options.get("binaries_as_bytes", False):
+            return data[6:len_expected], data[len_expected:]
 
         bin1 = term.Binary(data=data[6:len_expected],
                            last_byte_bits=lbb)

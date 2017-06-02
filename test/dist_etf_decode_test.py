@@ -12,10 +12,18 @@ class TestETFDecode(unittest.TestCase):
     def test_decode_atom(self):
         """ Try an atom 'hello' """
         b1 = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
-        (t1, tail) = etf.binary_to_term(b1)
+        (t1, tail1) = etf.binary_to_term(b1)
         self.assertTrue(isinstance(t1, term.Atom))
         self.assertEqual(t1.text_, "hello")
-        self.assertEqual(tail, b'')
+        self.assertEqual(tail1, b'')
+
+    def test_decode_atom_as_string(self):
+        """ Try an atom 'hello' to a Python string """
+        b1 = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
+        (t2, tail2) = etf.binary_to_term(b1, {"atoms_as_strings": True})
+        self.assertTrue(isinstance(t2, str))
+        self.assertEqual(t2, "hello")
+        self.assertEqual(tail2, b'')
 
     def test_decode_str(self):
         """ Try a simple ASCII string """
@@ -77,6 +85,14 @@ class TestETFDecode(unittest.TestCase):
         self.assertTrue(isinstance(val, term.Fun))
         self.assertEqual(tail, b'')
 
+    def test_decode_binary(self):
+        """ Decode binary to term.Binary and to Python bytes and compare. """
+        data1 = bytes([131, 109, 0, 0, 0, 1, 34])
+        (val1, tail1) = etf.binary_to_term(data1)
+        (val2, tail2) = etf.binary_to_term(data1, {"binaries_as_bytes": True})
+        self.assertEqual(val1.bytes_, val2)
+        self.assertEqual(tail1, b'')
+        self.assertEqual(tail2, b'')
 
 if __name__ == '__main__':
     unittest.main()

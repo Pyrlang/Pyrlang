@@ -40,8 +40,9 @@ class Atom:
     def __str__(self):
         return self.text_
 
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, encoding: str = 'utf8') -> None:
         self.text_ = text
+        self.enc_ = encoding
 
     def equals(self, other) -> bool:
         return isinstance(other, Atom) and self.text_ == other.text_
