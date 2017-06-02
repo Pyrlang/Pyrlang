@@ -40,8 +40,12 @@ TAG_NIL_EXT = 106
 TAG_STRING_EXT = 107
 TAG_LIST_EXT = 108
 TAG_BINARY_EXT = 109
+TAG_NEW_FUN_EXT = 112
 TAG_NEW_REF_EXT = 114
+TAG_SMALL_ATOM_EXT = 115
 TAG_MAP_EXT = 116
+TAG_ATOM_UTF8_EXT = 118
+TAG_SMALL_ATOM_UTF8_EXT = 119
 
 
 class ETFDecodeException(Exception):
@@ -84,6 +88,18 @@ def binary_to_term(data: bytes):
     return binary_to_term_2(data[1:])
 
 
+def _bytes_to_atom(name: bytes, encoding: str = 'utf8'):
+    """ Recognize familiar atom values. """
+    if name == b'true':
+        return True
+    if name == b'false':
+        return False
+    if name == b'undefined':
+        return None
+
+    return term.Atom(name.decode(encoding))
+
+
 def binary_to_term_2(data: bytes):
     """ Proceed decoding after leading tag has been checked and removed.
 
@@ -104,7 +120,7 @@ def binary_to_term_2(data: bytes):
     """
     tag = data[0]
 
-    if tag == TAG_ATOM_EXT:
+    if tag in [TAG_ATOM_EXT, TAG_ATOM_UTF8_EXT]:
         len_data = len(data)
         if len_data < 3:
             return incomplete_data("decoding length for an atom name")
@@ -114,14 +130,19 @@ def binary_to_term_2(data: bytes):
             return incomplete_data("decoding text for an atom")
 
         name = data[3:len_expected]
-        if name == b'true':
-            return True, data[len_expected:]
-        if name == b'false':
-            return False, data[len_expected:]
-        if name == b'undefined':
-            return None, data[len_expected:]
+        enc = 'latin-1' if tag == TAG_ATOM_EXT else 'utf8'
+        return _bytes_to_atom(name, enc), data[len_expected:]
 
-        return term.Atom(name.decode('utf8')), data[len_expected:]
+    if tag == [TAG_SMALL_ATOM_EXT, TAG_SMALL_ATOM_UTF8_EXT]:
+        len_data = len(data)
+        if len_data < 2:
+            return incomplete_data("decoding length for a small-atom name")
+
+        len_expected = util.u16(data, 1) + 2
+        name = data[2:len_expected]
+
+        enc = 'latin-1' if tag == TAG_SMALL_ATOM_EXT else 'utf8'
+        return term.Atom(name.decode(enc)), data[len_expected:]
 
     if tag == TAG_NIL_EXT:
         return [], data[1:]
@@ -197,7 +218,10 @@ def binary_to_term_2(data: bytes):
         serial = util.u32(tail, 4)
         creation = tail[8]
 
-        pid = term.Pid(node=node, id=id1, serial=serial, creation=creation)
+        pid = term.Pid(node=node,
+                       id=id1,
+                       serial=serial,
+                       creation=creation)
         return pid, tail[9:]
 
     if tag == TAG_NEW_REF_EXT:
@@ -209,7 +233,9 @@ def binary_to_term_2(data: bytes):
         id_len = 4 * term_len
         id1 = tail[1:id_len + 1]
 
-        ref = term.Reference(node=node, creation=creation, id=id1)
+        ref = term.Reference(node=node,
+                             creation=creation,
+                             id=id1)
         return ref, tail[id_len + 1:]
 
     if tag == TAG_MAP_EXT:
@@ -246,12 +272,39 @@ def binary_to_term_2(data: bytes):
         if len_expected > len_data:
             return incomplete_data("decoding data for a bit-binary")
 
-        bin1 = term.Binary(data=data[6:len_expected], last_byte_bits=lbb)
+        bin1 = term.Binary(data=data[6:len_expected],
+                           last_byte_bits=lbb)
         return bin1, data[len_expected:]
 
     if tag == TAG_NEW_FLOAT_EXT:
         (result,) = struct.unpack(">d", data[1:9])
         return result, data[10:]
+
+    if tag == TAG_NEW_FUN_EXT:
+        # size = util.u32(data, 1)
+        arity = data[5]
+        uniq = data[6:22]
+        index = util.u32(data, 22)
+        num_free = util.u32(data, 26)
+        (mod, tail) = binary_to_term_2(data[30:])
+        (old_index, tail) = binary_to_term_2(tail)
+        (old_uniq, tail) = binary_to_term_2(tail)
+        (pid, tail) = binary_to_term_2(tail)
+
+        free_vars = []
+        while num_free > 0:
+            (v, tail) = binary_to_term_2(tail)
+            free_vars.append(v)
+            num_free -= 1
+
+        return term.Fun(mod=mod,
+                        arity=arity,
+                        pid=pid,
+                        index=index,
+                        uniq=uniq,
+                        old_index=old_index,
+                        old_uniq=old_uniq,
+                        free=free_vars), tail
 
     raise ETFDecodeException("Unknown tag %d" % data[0])
 

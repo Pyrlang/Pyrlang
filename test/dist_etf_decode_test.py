@@ -66,5 +66,17 @@ class TestETFDecode(unittest.TestCase):
         self.assertEqual(val, 3.14159265358979)
         self.assertEqual(tail, b'')
 
+    def test_decode_fun(self):
+        data = bytes([131, 112, 0, 0, 0, 72, 0, 37, 73, 174, 126, 251, 115,
+                      143, 183, 98, 224, 72, 249, 253, 111, 254, 159, 0, 0,
+                      0, 0, 0, 0, 0, 1, 100, 0, 5, 116, 101, 115, 116, 49,
+                      97, 0, 98, 1, 42, 77, 115, 103, 100, 0, 13, 110, 111,
+                      110, 111, 100, 101, 64, 110, 111, 104, 111, 115, 116,
+                      0, 0, 0, 58, 0, 0, 0, 0, 0, 97, 123])
+        (val, tail) = etf.binary_to_term(data)
+        self.assertTrue(isinstance(val, term.Fun))
+        self.assertEqual(tail, b'')
+
+
 if __name__ == '__main__':
     unittest.main()

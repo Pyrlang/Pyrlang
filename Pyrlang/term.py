@@ -198,4 +198,31 @@ class Binary:
         return not self.equals(other)
 
 
-__all__ = ['Atom', 'Pid', 'Binary', 'Reference', 'List']
+class Fun:
+    """ Represents a pointer to a function in Erlang, with some variable
+        values captured. Not callable from Python. """
+    def __init__(self, mod, arity, pid, index, uniq, old_index, old_uniq, free):
+        self.pid_ = pid
+        """ Pid of the Erlang process which created the function. """
+
+        self.arity_ = arity
+
+        self.module_ = mod
+        """ Atom which contains the code for this function. """
+
+        self.old_index_ = old_index
+        self.index_ = index
+        """ Internal index, an integer, in the module's internal fun table.
+            Has no meaning in Python. """
+
+        self.old_uniq_ = old_uniq
+        """ An integer with the hash value of the function parse. """
+
+        self.uniq_ = uniq
+        """ An md5 hash of the significant parts of the BEAM file. """
+
+        self.free_ = free
+        """ A list of values: frozen captured variables. """
+
+
+__all__ = ['Atom', 'Pid', 'Binary', 'Reference', 'List', 'Fun']
