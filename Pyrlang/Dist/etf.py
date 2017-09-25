@@ -48,6 +48,8 @@ TAG_NIL_EXT = 106
 TAG_STRING_EXT = 107
 TAG_LIST_EXT = 108
 TAG_BINARY_EXT = 109
+TAG_SMALL_BIG_EXT = 110
+TAG_LARGE_BIG_EXT = 111
 TAG_NEW_FUN_EXT = 112
 TAG_NEW_REF_EXT = 114
 TAG_SMALL_ATOM_EXT = 115
@@ -300,6 +302,26 @@ def binary_to_term_2(data: bytes, options: dict = {}):
     if tag == TAG_NEW_FLOAT_EXT:
         (result,) = struct.unpack(">d", data[1:9])
         return result, data[10:]
+
+    if tag == TAG_SMALL_BIG_EXT:
+        nbytes = data[1]
+        # Data is encoded little-endian as bytes (least significant first)
+        in_bytes = data[3:(3+nbytes)]
+        # NOTE: int.from_bytes is Python 3.2+
+        result = int.from_bytes(in_bytes, byteorder='little')
+        if data[2] != 0:
+            result = -result
+        return result, data[3+nbytes:]
+
+    if tag == TAG_LARGE_BIG_EXT:
+        nbytes = util.u32(data, 1)
+        # Data is encoded little-endian as bytes (least significant first)
+        in_bytes = data[6:(6+nbytes)]
+        # NOTE: int.from_bytes is Python 3.2+
+        result = int.from_bytes(in_bytes, byteorder='little')
+        if data[2] != 0:
+            result = -result
+        return result, data[6+nbytes:]
 
     if tag == TAG_NEW_FUN_EXT:
         # size = util.u32(data, 1)
