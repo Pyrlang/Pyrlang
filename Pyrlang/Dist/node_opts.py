@@ -49,15 +49,19 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_BIT_BINARIES |
                   DFLAG_NEW_FLOATS |
                   DFLAG_MAP_TAG |
-                  DFLAG_DIST_MONITOR_NAME | DFLAG_DIST_MONITOR)
+                  DFLAG_UTF8_ATOMS |
+                  DFLAG_DIST_MONITOR_NAME |
+                  DFLAG_DIST_MONITOR)
 """ Default flags value represents current Pyrlang library features
     as a combination of feature bits.
 """
+
 
 class NodeOpts:
     """ A class holding an integer with features that are supported
         by this node, and the network cookie.
     """
+
     def __init__(self, cookie: str, dflags: int = DEFAULT_DFLAGS) -> None:
         self.dflags_ = dflags
         self.cookie_ = cookie

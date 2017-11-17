@@ -29,7 +29,7 @@ ATOM_MARKER = "pyrlang.Atom"
 PID_MARKER = "pyrlang.Pid"
 
 
-#@python_2_unicode_compatible
+# @python_2_unicode_compatible
 class Atom:
     """ Stores a string decoded from Erlang atom. Encodes back to atom.
         Can serve as a Python dictionary key.
