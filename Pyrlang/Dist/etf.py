@@ -150,12 +150,12 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         enc = 'latin-1' if tag == TAG_ATOM_EXT else 'utf8'
         return _bytes_to_atom(name, enc, options), data[len_expected:]
 
-    if tag == [TAG_SMALL_ATOM_EXT, TAG_SMALL_ATOM_UTF8_EXT]:
+    if tag in [TAG_SMALL_ATOM_EXT, TAG_SMALL_ATOM_UTF8_EXT]:
         len_data = len(data)
         if len_data < 2:
             return incomplete_data("decoding length for a small-atom name")
 
-        len_expected = util.u16(data, 1) + 2
+        len_expected = data[1] + 2
         name = data[2:len_expected]
 
         enc = 'latin-1' if tag == TAG_SMALL_ATOM_EXT else 'utf8'
