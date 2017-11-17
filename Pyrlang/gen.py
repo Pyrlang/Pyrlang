@@ -68,6 +68,7 @@ class GenIncomingCall(GenBase):
 
     def get_args(self):
         """ Returns parsed args for the RPC call. """
+        if isinstance(self.args_, list): return self.args_
         return self.args_.elements_
 
     def get_mod_str(self):
