@@ -427,15 +427,51 @@ def _pack_ref(val) -> bytes:
     return data
 
 
-def _serialize_object(obj):
+def _is_a_simple_object(obj):
+    """ Check whether a value can be simply encoded by term_to_binary and
+        does not require class unwrapping by `serialize_object`.
+    """
+    return type(obj) == str \
+           or type(obj) == list \
+           or type(obj) == tuple \
+           or type(obj) == dict \
+           or type(obj) == int \
+           or type(obj) == float \
+           or isinstance(obj, term.Atom) \
+           or isinstance(obj, term.Pid) \
+           or isinstance(obj, term.Reference) \
+           or isinstance(obj, term.Binary) \
+           or isinstance(obj, term.List)
+
+
+def _serialize_object(obj, cd: set=None):
+    """ Given an arbitraty Python object creates a tuple (ClassName, {Fields}).
+        A fair effort is made to avoid infinite recursion on cyclic objects.
+        :param obj: Arbitrary object to encode
+        :param cd: A set with ids of object, for cycle detection
+        :return: A 2-tuple ((ClassName, {Fields}) or None, CycleDetect value)
+    """
+    if cd is None:
+        cd = set()
+
+    # if cyclic encoding detected, ignore this value
+    if id(obj) in cd:
+        return None, cd
+
+    cd.add(id(obj))
+
     object_name = type(obj).__name__
     fields = {}
     for key in dir(obj):
         val = getattr(obj, key)
         if not callable(val) and not key.startswith("_"):
-            fields[term.Atom(key)] = val
+            if _is_a_simple_object(val):
+                fields[term.Atom(key)] = val
+            else:
+                (ser, cd) = _serialize_object(val, cd=cd)
+                fields[term.Atom(key)] = ser
 
-    return term.Atom(object_name), fields
+    return (term.Atom(object_name), fields), cd
 
 
 def _pack_str(val):
@@ -503,7 +539,8 @@ def term_to_binary_2(val):
     elif isinstance(val, term.Binary):
         return _pack_binary(val.bytes_, val.last_byte_bits_)
 
-    return term_to_binary_2(_serialize_object(val))
+    ser, _ = _serialize_object(val)
+    return term_to_binary_2(ser)
     # obj_data = term_to_binary_2(_serialize_object(val))
     # print(util.hex_bytes(obj_data))
     # return obj_data
