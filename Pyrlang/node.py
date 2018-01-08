@@ -129,7 +129,10 @@ class Node(Greenlet):
 
     def handle_inbox(self):
         while True:
-            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            # Block, but then gevent will allow other green-threads to
+            # run, so rather than unnecessarily consuming CPU block
+            msg = self.inbox_.get()
+            #msg = self.inbox_.receive(filter_fn=lambda _: True)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)
