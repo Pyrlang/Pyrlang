@@ -36,7 +36,12 @@ def _handle_socket_read(handler, sock):
         # python node would not be able to send replies faster than 10 msec
         # to Erlang node, but this is an acceptable delay condering the
         # idle python node cpu consumption issue mentioned above.
-        ready = select.select([sock], [], [], 0.01)
+
+        # update: set lower timeout of 1 millisecond but do a select for
+        # longer time 1 second further down below to save cpu cycles
+        # when there are no messages.
+        # This is a HACK
+        ready = select.select([sock], [], [], 0.001)
         try:
             if ready[0]:
                 data = sock.recv(4096)
@@ -57,6 +62,9 @@ def _handle_socket_read(handler, sock):
                     collected = collected1
             else:
                 handler.handle_inbox()
+                # HACK to keep idle CPU down to 0.3% while
+                # trying to maintain lower latency
+                select.select([sock], [], [], 1.0)
 
         except select.error:
             # Disconnected probably or another error
