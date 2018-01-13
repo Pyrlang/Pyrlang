@@ -1,8 +1,8 @@
 PY=python3
 
-.PHONY: test run
-run:
-	$(PY) test1.py
+.PHONY: test example1
+example1:
+	$(PY) examples/simple_node.py
 
 test:
 	$(PY) test/dist_etf_decode_test.py && \

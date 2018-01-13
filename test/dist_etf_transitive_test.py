@@ -6,6 +6,7 @@ sys.path.insert(0, '.')
 
 from Pyrlang.Dist import etf
 from Pyrlang import Term
+from Pyrlang.Term.bitstring import BitString
 
 
 class TestETFEncode(unittest.TestCase):
@@ -57,10 +58,12 @@ class TestETFEncode(unittest.TestCase):
         self.assertEqual(tail, b'')
 
     def test_binary_bits(self):
-        """ Encode and decode binary bits immediately and compare results """
+        """ Encode and decode binary bits immediately and compare results.
+            Erlang value is: <<3:2>>
+        """
         data1 = bytes([131, 77, 0, 0, 0, 1, 2, 192])
-        (val1, tail) = etf.binary_to_term(data1)
-        data2 = etf.term_to_binary(val1)
+        ((val1, lbbits1), tail) = etf.binary_to_term(data1)
+        data2 = etf.term_to_binary(BitString(val1, lbbits1))
         self.assertEqual(data1, data2)
         self.assertEqual(tail, b'')
 

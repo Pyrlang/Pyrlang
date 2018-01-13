@@ -35,11 +35,13 @@ Features
 | String               | term.List                   | Has a method `as_unicode()` to get the string                                         |
 | Atom                 | term.Atom or string         | Can use str() or access text_ field directly. Can decode both UTF8 and Latin-1 atoms. |
 | Regular Erlang list  | Python list                 | Use helper functions in `Term.list` module to convert to string                       |
-| Improper Erlang list | (list, AnyTerm)             | A tuple with list and the tail element of the improper list                           |         
+| Improper Erlang list | (list, AnyTerm)             | A tuple with list and the tail element of the improper list                           |
+|                      |                             | Returning an improper list to Erlang requires use of `ImproperList` helper object     |         
 | Tuple                | Python tuple                |                                                                                       |
 | Map                  | Python dict                 |                                                                                       |
 | Binary               | Python bytes                |                                                                                       |
 | Bitstring            | (bytes, int)                | A tuple of bytes and `last_byte_bits:int` defining incomplete last byte               |
+|                      |                             | Returning a bitstring to Erlang requires use of BitString object                      |
 | Pid, reference       | term.Pid and term.Reference | Always long external Pids and Refs with a node name in them                           |
 | Lambda (fun)         | term.Fun                    | A class which holds parsed fun fields, not usable or useful in Python                 |
 |                      | Any other object            | Any unknown Python object will be encoded as {'Classname', #{field1 => value1...}}    |
@@ -47,6 +49,10 @@ Features
 
 Building
 --------
+
+Install requirements via: `pip3 install -r requirements.txt`, this will also
+pull requirements for Sphinx documentation generator (not needed if you only
+use the library).
 
 Requires `gevent` and `greenlet` (dependency of `gevent`) libraries which 
 run on both Python 2 and 3. Running `make` will run a simple test which starts

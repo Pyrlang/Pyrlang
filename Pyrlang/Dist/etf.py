@@ -30,8 +30,9 @@ from zlib import decompressobj
 from Pyrlang.Dist import util
 from Pyrlang.Term.atom import Atom
 from Pyrlang.Term.fun import Fun
-from Pyrlang.Term.list import NIL
+from Pyrlang.Term.list import NIL, ImproperList
 from Pyrlang.Term.pid import Pid
+from Pyrlang.Term.bitstring import BitString
 from Pyrlang.Term import reference
 
 ETF_VERSION_TAG = 131
@@ -436,9 +437,7 @@ def _is_a_simple_object(obj):
            or type(obj) == float \
            or isinstance(obj, Atom) \
            or isinstance(obj, Pid) \
-           or isinstance(obj, Reference) \
-           or isinstance(obj, Binary) \
-           or isinstance(obj, term_list.ImproperList)
+           or isinstance(obj, reference.Reference)
 
 
 def _serialize_object(obj, cd: set=None):
@@ -503,7 +502,7 @@ def term_to_binary_2(val):
     elif type(val) == list:
         return _pack_list(val, [])
 
-    elif isinstance(val, term_list.ImproperList):
+    elif isinstance(val, ImproperList):
         return _pack_list(val.elements_, val.tail_)
 
     elif type(val) == tuple:
@@ -527,14 +526,14 @@ def term_to_binary_2(val):
     elif isinstance(val, Pid):
         return _pack_pid(val)
 
-    elif isinstance(val, Reference):
+    elif isinstance(val, reference.Reference):
         return _pack_ref(val)
 
     elif type(val) == bytes:
         return _pack_binary(val, 8)
 
-    elif isinstance(val, Binary):
-        return _pack_binary(val.bytes_, val.last_byte_bits_)
+    elif isinstance(val, BitString):
+        return _pack_binary(val.value_, val.last_byte_bits_)
 
     ser, _ = _serialize_object(val)
     return term_to_binary_2(ser)

@@ -24,6 +24,6 @@ from Pyrlang.Term.reference import Reference
 from Pyrlang.Term.fun import Fun
 
 
-__all__ = ['Node', 'Process', 'Mailbox',
+__all__ = ['Node', 'NodeException', 'Process', 'Mailbox',
            'Term',
            'Atom', 'Pid', 'Reference', 'Fun']

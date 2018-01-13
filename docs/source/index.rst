@@ -27,7 +27,7 @@ changes required.
 
     node
     process
-    term
+    Term
 
 .. toctree::
     :maxdepth: 1

@@ -92,7 +92,8 @@ class OutConnection(BaseConnection):
               bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
               util.to_u32(self.node_.node_opts_.dflags_) + \
               bytes(str(self.node_.name_), "latin-1")
-        LOG("Dist-out: Send_name", pkt)
+        LOG("Dist-out: send_name {pkt} (name={name})"
+            .format(name=self.node_.name_, pkt=pkt))
         self._send_packet2(pkt)
 
     def on_packet_recvstatus(self, data):

@@ -139,7 +139,7 @@ class EPMDClient:
     @staticmethod
     def _make_req_alive2(nodetype: int, name0: str, in_port: int,
                          dist_vsn: tuple, extra0: str):
-        extra = bytes(string=extra0, encoding="latin1")
+        extra = bytes(extra0, "latin1")
         name = bytes(name0.split("@")[0], "utf8")
 
         # Here let's tell EPMD that we've arrived, our protocols and our name

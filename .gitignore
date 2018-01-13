@@ -101,5 +101,5 @@ ENV/
 .mypy_cache/
 
 # intelliJ
-/.idea
+/.idea/*
 *.iml

@@ -18,5 +18,4 @@ from Pyrlang.Term.atom import Atom
 from Pyrlang.Term.pid import Pid
 from Pyrlang.Term.list import NIL
 from Pyrlang.Term.reference import Reference
-from Pyrlang.Term.binary import Binary
 from Pyrlang.Term.fun import Fun

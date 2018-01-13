@@ -19,8 +19,20 @@ import array
 NIL = [] # type: List
 
 
+class ImproperList:
+    """ A simple data holder used to pass improper lists back to Erlang.
+        An Erlang improper list looks like `[1, 2, 3 | 4]` where 4 takes
+        tail slot of last list cell instead of `NIL`. This is a rare data type
+        and very likely you will not ever need it.
+    """
+    def __init__(self, elements, tail):
+        self.elements_ = elements
+        self.tail_ = tail
+
+
 def list_to_unicode_str(lst):
-    return array.array('B', lst).tounicode()
+    """ Convert list of large integers to a unicode string. """
+    return "".join(map(chr, lst))
 
 
 def list_to_str(lst):

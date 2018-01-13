@@ -1,7 +1,7 @@
-term module
-===========
+Term package
+============
 
-.. automodule:: Pyrlang.term
+.. automodule:: Pyrlang.Term
     :members:
     :undoc-members:
     :show-inheritance:

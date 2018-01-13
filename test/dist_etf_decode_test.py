@@ -6,6 +6,7 @@ sys.path.insert(0, '.')
 
 from Pyrlang.Dist import etf
 from Pyrlang import Term
+from Pyrlang.Term.list import list_to_unicode_str
 
 
 class TestETFDecode(unittest.TestCase):
@@ -38,9 +39,9 @@ class TestETFDecode(unittest.TestCase):
         b1 = bytes([131, 108, 0, 0, 0, 3, 98, 0, 0, 38, 34, 97, 32, 98, 0, 0,
                     38, 35, 106])
         (t1, tail) = etf.binary_to_term(b1)
-        self.assertTrue(isinstance(t1, Term.List))
+        self.assertTrue(isinstance(t1, list))
         self.assertEqual(tail, b'')
-        self.assertEqual(t1.as_unicode(), u"☢ ☣")
+        self.assertEqual(list_to_unicode_str(t1), u"☢ ☣")
 
     def test_decode_pid(self):
         """ Try a pid """
@@ -86,13 +87,13 @@ class TestETFDecode(unittest.TestCase):
         self.assertEqual(tail, b'')
 
     def test_decode_binary(self):
-        """ Decode binary to term.Binary and to Python bytes and compare. """
+        """ Decode binary to term.Binary and to Python bytes and compare.
+            Binary is <<34>>.
+        """
         data1 = bytes([131, 109, 0, 0, 0, 1, 34])
         (val1, tail1) = etf.binary_to_term(data1)
-        (val2, tail2) = etf.binary_to_term(data1, {"binaries_as_bytes": True})
-        self.assertEqual(val1.bytes_, val2)
+        self.assertEqual(val1, b'"')
         self.assertEqual(tail1, b'')
-        self.assertEqual(tail2, b'')
 
 if __name__ == '__main__':
     unittest.main()
