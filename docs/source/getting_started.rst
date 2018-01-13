@@ -157,20 +157,35 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. code-block:: python
 
-    from Pyrlang.process import Process
+    import gevent
+    from gevent import monkey
+    monkey.patch_all()
+    import Pyrlang
+    from Pyrlang import Atom
+    from Pyrlang import Process
+
 
     class MyProcess(Process):
         def __init__(self, node) -> None:
             Process.__init__(self, node)
-            node.register_name(self, term.Atom('my_process'))  # optional
+            node.register_name(self, Atom('my_process'))  # optional
+            print("registering process - 'my_process'")
 
-        def handle_inbox(self):
-            while True:
-                # Do a selective receive but the filter says always True
-                msg = self.inbox_.receive(filter_fn=lambda _: True)
-                if msg is None:
-                    break
-                print("Incoming", msg)
+        def handle_one_inbox_message(self, msg):
+            print("Incoming", msg)
+
+
+    def main():
+        node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
+        node.start()
+        # this automatically schedules itself to run via gevent
+        mp = MyProcess(node)
+        while True:
+            gevent.sleep(0.1)
+
+
+    if __name__ == "__main__":
+        main()
 
 Now sending from Erlang is easy:
 

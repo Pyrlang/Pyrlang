@@ -53,22 +53,30 @@ class Process(Greenlet):
         """
 
         self.is_exiting_ = False
+
         self.monitors_ = set() # type: Set[Pid]
         """ Who monitors us. Either local or remote processes. """
+
         self.monitor_targets_ = set() # type: Set[Pid]
         """ Who we monitor. """
+
+        self.start() # greenlet has to be scheduled for run
 
     def _run(self):
         while not self.is_exiting_:
             self.handle_inbox()
-            gevent.sleep(0.0)
+            gevent.sleep(0)
 
     def handle_inbox(self):
+        """ Do not override `handle_inbox`, instead go for
+            `handle_one_inbox_message`
+        """
         while True:
             # Block, but then gevent will allow other green-threads to
             # run, so rather than unnecessarily consuming CPU block
             msg = self.inbox_.get()
             #msg = self.inbox_.receive(filter_fn=lambda _: True)
+            print("%s: handle_inbox %s" % (self, msg))
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)

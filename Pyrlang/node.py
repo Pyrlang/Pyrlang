@@ -213,6 +213,7 @@ class Node(Greenlet):
 
         receiver_obj = self.where_is(receiver)
         if receiver_obj is not None:
+            LOG("Node: send local reg=%s receiver=%s msg=%s" % (receiver, receiver_obj, message))
             receiver_obj.inbox_.put(message)
         else:
             WARN("Node: send to unregistered name %s ignored" % receiver)
