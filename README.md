@@ -34,10 +34,12 @@ Features
 | Float                | Python float                |                                                                                       |
 | String               | term.List                   | Has a method `as_unicode()` to get the string                                         |
 | Atom                 | term.Atom or string         | Can use str() or access text_ field directly. Can decode both UTF8 and Latin-1 atoms. |
-| List                 | term.List or Python list    |                                                                                       |
+| Regular Erlang list  | Python list                 | Use helper functions in `Term.list` module to convert to string                       |
+| Improper Erlang list | (list, AnyTerm)             | A tuple with list and the tail element of the improper list                           |         
 | Tuple                | Python tuple                |                                                                                       |
 | Map                  | Python dict                 |                                                                                       |
-| Binary, bit string   | term.Binary or Python bytes | A class which holds bytes and optional count for last byte bits                       |
+| Binary               | Python bytes                |                                                                                       |
+| Bitstring            | (bytes, int)                | A tuple of bytes and `last_byte_bits:int` defining incomplete last byte               |
 | Pid, reference       | term.Pid and term.Reference | Always long external Pids and Refs with a node name in them                           |
 | Lambda (fun)         | term.Fun                    | A class which holds parsed fun fields, not usable or useful in Python                 |
 |                      | Any other object            | Any unknown Python object will be encoded as {'Classname', #{field1 => value1...}}    |

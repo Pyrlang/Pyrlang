@@ -2,7 +2,7 @@
     A generic incoming message looks like ``{$gen_call, {From, Ref}, Message}``.
 """
 
-from Pyrlang import term
+from Pyrlang import Term
 
 
 class GenBase:
@@ -92,7 +92,7 @@ def parse_gen_call(msg):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], term.Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Term.Atom) or msg[0].text_ != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, _call_mfa_gl) = msg
@@ -105,10 +105,10 @@ def parse_gen_call(msg):
     # A gen_call call tuple has 5 elements, otherwise see below
     (call, m, f, args, group_leader) = _call_mfa_gl
 
-    if not isinstance(m, term.Atom):
+    if not isinstance(m, Term.Atom):
         return "Module must be an atom: %s" % str(m)
 
-    if not isinstance(f, term.Atom):
+    if not isinstance(f, Term.Atom):
         return "Function must be an atom: %s" % str(f)
 
     return GenIncomingCall(mod=m,
@@ -130,7 +130,7 @@ def parse_gen_message(msg):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], term.Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Term.Atom) or msg[0].text_ != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, gcmsg) = msg

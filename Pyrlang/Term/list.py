@@ -12,4 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.Dist.distribution import ErlangDistribution
+from typing import List
+
+import array
+
+NIL = [] # type: List
+
+
+def list_to_unicode_str(lst):
+    return array.array('B', lst).tounicode()
+
+
+def list_to_str(lst):
+    return array.array('B', lst).tostring()

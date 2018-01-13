@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ from __future__ import print_function
 
 import traceback
 
-from Pyrlang import term, gen
+from Pyrlang import Term, gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
 
@@ -32,7 +32,7 @@ class Rex(Process):
 
     def __init__(self, node: Node) -> None:
         Process.__init__(self, node)
-        node.register_name(self, term.Atom('rex'))
+        node.register_name(self, Term.Atom('rex'))
 
         self.traceback_depth_ = 5
         """ This being non-zero enables formatting exception tracebacks with the

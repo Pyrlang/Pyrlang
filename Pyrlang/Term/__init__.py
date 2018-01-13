@@ -12,4 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.Dist.distribution import ErlangDistribution
+""" Package `Term` implements Erlang term wrappers which hide Erlang details.
+"""
+from Pyrlang.Term.atom import Atom
+from Pyrlang.Term.pid import Pid
+from Pyrlang.Term.list import NIL
+from Pyrlang.Term.reference import Reference
+from Pyrlang.Term.binary import Binary
+from Pyrlang.Term.fun import Fun

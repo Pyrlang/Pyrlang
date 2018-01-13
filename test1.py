@@ -1,13 +1,13 @@
 import gevent
+
 from gevent import monkey
 monkey.patch_all()
 
-import Pyrlang
-from Pyrlang import Atom
+from Pyrlang import Node, Atom
 
 
 def main():
-    node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
+    node = Node("py@127.0.0.1", "COOKIE")
     node.start()
 
     pid = node.register_new_process(None)

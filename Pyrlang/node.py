@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
 
 from __future__ import print_function
 
-from typing import Union
-
 import gevent
 from gevent import Greenlet
-from gevent.queue import Queue
+
+from typing import Dict, Union
 
 from Pyrlang import logger, mailbox
-from Pyrlang.term import *
+from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
@@ -71,40 +70,37 @@ class Node(Greenlet):
             raise NodeException("Singleton Node was already created")
         Node.singleton = self
 
+        # Message queue based on ``gevent.Queue``. It is periodically checked
+        # in the ``_run`` method and the receive handler is called.
         self.inbox_ = mailbox.Mailbox()
-        """ Message queue based on ``gevent.Queue``. It is periodically checked
-            in the ``_run`` method and the receive handler is called.
-        """
 
+        # An internal counter used to generate unique process ids
         self.pid_counter_ = 0
-        """ An internal counter used to generate unique process ids. """
 
-        self.processes_ = {}
-        """ Process dictionary which stores all the existing ``Process`` objects
-            adressable by a pid. 
-            
-            .. note:: This creates a python reference to an
-                object preventing its automatic garbage collection. 
-                In the end of its lifetime an object must be explicitly removed 
-                from this dictionary using ``Process.exit`` method on the 
-                process.
-        """
+        # Process dictionary which stores all the existing ``Process`` objects
+        # adressable by a pid.
+        #
+        # .. note:: This creates a python reference to an
+        #     object preventing its automatic garbage collection.
+        #     In the end of its lifetime an object must be explicitly removed
+        #     from this dictionary using ``Process.exit`` method on the
+        #     process.
+        self.processes_ = {} # type: Dict[Pid, Process]
 
-        self.reg_names_ = {}
-        """ Registered objects dictionary, which maps atoms to pids. """
+        # Registered objects dictionary, which maps atoms to pids
+        self.reg_names_ = {} # type: Dict[Atom, Pid]
 
         self.is_exiting_ = False
+
+        # An option object with feature support flags packed into an
+        # integer.
         self.node_opts_ = NodeOpts(cookie=cookie)
-        """ An option object with feature support flags packed into an
-            integer.
-        """
 
+        # Node name as seen on the network. Use full node names here:
+        # ``name@hostname``
         self.name_ = Atom(name)
-        """ Node name as seen on the network. Use full node names here:
-            ``name@hostname``
-        """
 
-        self.dist_nodes_ = {}
+        self.dist_nodes_ = {} # type: Dict[str, Node]
         self.dist_ = ErlangDistribution(node=self, name=name)
 
         # This is important before we can begin spawning processes
@@ -133,7 +129,7 @@ class Node(Greenlet):
             # Block, but then gevent will allow other green-threads to
             # run, so rather than unnecessarily consuming CPU block
             msg = self.inbox_.get()
-            #msg = self.inbox_.receive(filter_fn=lambda _: True)
+            # msg = self.inbox_.receive(filter_fn=lambda _: True)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)
@@ -161,15 +157,15 @@ class Node(Greenlet):
             :return: A new pid (does not modify the process in place, so please
                 store the pid!)
         """
-        pid = Pid(node=self.name_,
-                  id=self.pid_counter_ // 0x7fffffff,
-                  serial=self.pid_counter_ % 0x7fffffff,
-                  creation=self.dist_.creation_)
+        pid1 = Pid(node=self.name_,
+                   id=self.pid_counter_ // 0x7fffffff,
+                   serial=self.pid_counter_ % 0x7fffffff,
+                   creation=self.dist_.creation_)
         self.pid_counter_ += 1
 
         if proc is not None:
-            self.processes_[pid] = proc
-        return pid
+            self.processes_[pid1] = proc
+        return pid1
 
     def on_exit_process(self, pid, reason):
         LOG("Process %s exited with %s", pid, reason)
@@ -370,4 +366,4 @@ class Node(Greenlet):
             origin_p.monitor_targets_.discard(target_proc.pid_)
 
 
-__all__ = ['Node']
+__all__ = ['Node', 'NodeException']

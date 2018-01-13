@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@ from __future__ import print_function
 
 import gevent
 from gevent import Greenlet
+from typing import Set
 
 from Pyrlang import mailbox
+from Pyrlang.Term.pid import Pid
 
 
 class Process(Greenlet):
@@ -51,9 +53,9 @@ class Process(Greenlet):
         """
 
         self.is_exiting_ = False
-        self.monitors_ = set()
+        self.monitors_ = set() # type: Set[Pid]
         """ Who monitors us. Either local or remote processes. """
-        self.monitor_targets_ = set()
+        self.monitor_targets_ = set() # type: Set[Pid]
         """ Who we monitor. """
 
     def _run(self):

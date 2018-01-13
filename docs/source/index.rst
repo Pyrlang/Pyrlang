@@ -23,6 +23,7 @@ changes required.
     :caption: Contents:
 
     getting_started
+    data_types
 
     node
     process

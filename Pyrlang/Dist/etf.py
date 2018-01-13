@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@
     Encoding terms takes optional 'options' argument. Default is ``None`` but
     it can be a dictionary with the following optional keys:
 
-    *   "binaries_as_bytes", default False. Ignores bit tail of bit strings and
-        returns all Erlang binaries as Python bytes.
     *   "atoms_as_strings", default False. Always converts atoms to Python
         strings. This is potentially faster than using the Atom wrapper class.
 """
@@ -29,8 +27,12 @@ import struct
 
 from zlib import decompressobj
 
-from Pyrlang import term
 from Pyrlang.Dist import util
+from Pyrlang.Term.atom import Atom
+from Pyrlang.Term.fun import Fun
+from Pyrlang.Term.list import NIL
+from Pyrlang.Term.pid import Pid
+from Pyrlang.Term import reference
 
 ETF_VERSION_TAG = 131
 
@@ -112,21 +114,21 @@ def _bytes_to_atom(name: bytes, encoding: str, options: dict):
     if options.get("atoms_as_strings", False):
         return name.decode(encoding)
 
-    return term.Atom(text=name.decode(encoding),
-                     encoding=encoding)
+    return Atom(text=name.decode(encoding),
+                encoding=encoding)
 
 
-def binary_to_term_2(data: bytes, options: dict = {}):
+def binary_to_term_2(data: bytes, options: dict = None):
     """ Proceed decoding after leading tag has been checked and removed.
 
         Erlang lists are decoded into ``term.List`` object, whose ``elements_``
         field contains the data, ``tail_`` field has the optional tail and a
         helper function exists to assist with extracting an unicode string.
 
-        Atoms are decoded into ``term.Atom``. Pids and refs into ``term.Pid``
-        and ``term.Reference`` respectively. Maps are decoded into Python
-        ``dict``. Binaries and bit strings are decoded into ``term.Binary``
-        object, with optional last bits omitted.
+        Atoms are decoded into ``Atom``. Pids and refs into ``Pid``
+        and ``Reference`` respectively. Maps are decoded into Python
+        ``dict``. Binaries and bit strings are decoded into ``bytes``
+        object and bitstrings into a pair of ``(bytes, last_byte_bits:int)``.
 
         :param options: See description on top of the module
         :param data: Bytes containing encoded term without 131 header
@@ -135,6 +137,8 @@ def binary_to_term_2(data: bytes, options: dict = {}):
             another term if there was any.
         :raises ETFDecodeException: on various errors or on an unsupported tag
     """
+    if options is None:
+        options = {}
     tag = data[0]
 
     if tag in [TAG_ATOM_EXT, TAG_ATOM_UTF8_EXT]:
@@ -180,44 +184,44 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         if len(data) < 5:
             return incomplete_data("decoding length for a list")
         len_expected = util.u32(data, 1)
-        result = term.List()
+        result_l = []
         tail = data[5:]
         while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
-            result.append(term1)
+            result_l.append(term1)
             len_expected -= 1
 
         # Read list tail and set it
         list_tail, tail = binary_to_term_2(tail)
-        result.set_tail(list_tail)
-
-        return result, tail
+        if list_tail == NIL:
+            return result_l, tail
+        return (result_l, list_tail), tail
 
     if tag == TAG_SMALL_TUPLE_EXT:
         if len(data) < 2:
             return incomplete_data("decoding length for a small tuple")
         len_expected = data[1]
-        result = []
+        result_t = []
         tail = data[2:]
         while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
-            result.append(term1)
+            result_t.append(term1)
             len_expected -= 1
 
-        return tuple(result), tail
+        return tuple(result_t), tail
 
     if tag == TAG_LARGE_TUPLE_EXT:
         if len(data) < 5:
             return incomplete_data("decoding length for a large tuple")
         len_expected = util.u32(data, 1)
-        result = []
+        result_lt = []
         tail = data[5:]
         while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
-            result.append(term1)
+            result_lt.append(term1)
             len_expected -= 1
 
-        return tuple(result), tail
+        return tuple(result_lt), tail
 
     if tag == TAG_SMALL_INT:
         if len(data) < 2:
@@ -235,10 +239,10 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         serial = util.u32(tail, 4)
         creation = tail[8]
 
-        pid = term.Pid(node=node,
-                       id=id1,
-                       serial=serial,
-                       creation=creation)
+        pid = Pid(node=node,
+                  id=id1,
+                  serial=serial,
+                  creation=creation)
         return pid, tail[9:]
 
     if tag == TAG_NEW_REF_EXT:
@@ -250,24 +254,24 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         id_len = 4 * term_len
         id1 = tail[1:id_len + 1]
 
-        ref = term.Reference(node=node,
-                             creation=creation,
-                             id=id1)
+        ref = reference.Reference(node=node,
+                                  creation=creation,
+                                  refid=id1)
         return ref, tail[id_len + 1:]
 
     if tag == TAG_MAP_EXT:
         if len(data) < 5:
             return incomplete_data("decoding length for a map")
         len_expected = util.u32(data, 1)
-        result = {}
+        result_m = {}
         tail = data[5:]
         while len_expected > 0:
             term1, tail = binary_to_term_2(tail)
             term2, tail = binary_to_term_2(tail)
-            result[term1] = term2
+            result_m[term1] = term2
             len_expected -= 1
 
-        return result, tail
+        return result_m, tail
 
     if tag == TAG_BINARY_EXT:
         len_data = len(data)
@@ -277,11 +281,8 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         if len_expected > len_data:
             return incomplete_data("decoding data for a binary")
 
-        if options.get("binaries_as_bytes", False):
-            return data[5:len_expected], data[len_expected:]
-
-        bin1 = term.Binary(data=data[5:len_expected])
-        return bin1, data[len_expected:]
+        # Returned as Python `bytes`
+        return data[5:len_expected], data[len_expected:]
 
     if tag == TAG_BIT_BINARY_EXT:
         len_data = len(data)
@@ -292,36 +293,32 @@ def binary_to_term_2(data: bytes, options: dict = {}):
         if len_expected > len_data:
             return incomplete_data("decoding data for a bit-binary")
 
-        if options.get("binaries_as_bytes", False):
-            return data[6:len_expected], data[len_expected:]
-
-        bin1 = term.Binary(data=data[6:len_expected],
-                           last_byte_bits=lbb)
-        return bin1, data[len_expected:]
+        # Returned as tuple `(bytes, last_byte_bits:int)`
+        return (data[6:len_expected], lbb), data[len_expected:]
 
     if tag == TAG_NEW_FLOAT_EXT:
-        (result,) = struct.unpack(">d", data[1:9])
-        return result, data[10:]
+        (result_f,) = struct.unpack(">d", data[1:9])
+        return result_f, data[10:]
 
     if tag == TAG_SMALL_BIG_EXT:
         nbytes = data[1]
         # Data is encoded little-endian as bytes (least significant first)
         in_bytes = data[3:(3+nbytes)]
         # NOTE: int.from_bytes is Python 3.2+
-        result = int.from_bytes(in_bytes, byteorder='little')
+        result_bi = int.from_bytes(in_bytes, byteorder='little')
         if data[2] != 0:
-            result = -result
-        return result, data[3+nbytes:]
+            result_bi = -result_bi
+        return result_bi, data[3+nbytes:]
 
     if tag == TAG_LARGE_BIG_EXT:
         nbytes = util.u32(data, 1)
         # Data is encoded little-endian as bytes (least significant first)
         in_bytes = data[6:(6+nbytes)]
         # NOTE: int.from_bytes is Python 3.2+
-        result = int.from_bytes(in_bytes, byteorder='little')
+        result_lbi = int.from_bytes(in_bytes, byteorder='little')
         if data[2] != 0:
-            result = -result
-        return result, data[6+nbytes:]
+            result_lbi = -result_lbi
+        return result_lbi, data[6+nbytes:]
 
     if tag == TAG_NEW_FUN_EXT:
         # size = util.u32(data, 1)
@@ -340,14 +337,14 @@ def binary_to_term_2(data: bytes, options: dict = {}):
             free_vars.append(v)
             num_free -= 1
 
-        return term.Fun(mod=mod,
-                        arity=arity,
-                        pid=pid,
-                        index=index,
-                        uniq=uniq,
-                        old_index=old_index,
-                        old_uniq=old_uniq,
-                        free=free_vars), tail
+        return Fun(mod=mod,
+                   arity=arity,
+                   pid=pid,
+                   index=index,
+                   uniq=uniq,
+                   old_index=old_index,
+                   old_uniq=old_uniq,
+                   free=free_vars), tail
 
     raise ETFDecodeException("Unknown tag %d" % data[0])
 
@@ -437,11 +434,11 @@ def _is_a_simple_object(obj):
            or type(obj) == dict \
            or type(obj) == int \
            or type(obj) == float \
-           or isinstance(obj, term.Atom) \
-           or isinstance(obj, term.Pid) \
-           or isinstance(obj, term.Reference) \
-           or isinstance(obj, term.Binary) \
-           or isinstance(obj, term.List)
+           or isinstance(obj, Atom) \
+           or isinstance(obj, Pid) \
+           or isinstance(obj, Reference) \
+           or isinstance(obj, Binary) \
+           or isinstance(obj, term_list.ImproperList)
 
 
 def _serialize_object(obj, cd: set=None):
@@ -466,12 +463,12 @@ def _serialize_object(obj, cd: set=None):
         val = getattr(obj, key)
         if not callable(val) and not key.startswith("_"):
             if _is_a_simple_object(val):
-                fields[term.Atom(key)] = val
+                fields[Atom(key)] = val
             else:
                 (ser, cd) = _serialize_object(val, cd=cd)
-                fields[term.Atom(key)] = ser
+                fields[Atom(key)] = ser
 
-    return (term.Atom(object_name), fields), cd
+    return (Atom(object_name), fields), cd
 
 
 def _pack_str(val):
@@ -506,7 +503,7 @@ def term_to_binary_2(val):
     elif type(val) == list:
         return _pack_list(val, [])
 
-    elif isinstance(val, term.List):
+    elif isinstance(val, term_list.ImproperList):
         return _pack_list(val.elements_, val.tail_)
 
     elif type(val) == tuple:
@@ -524,19 +521,19 @@ def term_to_binary_2(val):
     elif val is None:
         return _pack_atom('undefined', 'latin-1')
 
-    elif isinstance(val, term.Atom):
+    elif isinstance(val, Atom):
         return _pack_atom(val.text_, val.enc_)
 
-    elif isinstance(val, term.Pid):
+    elif isinstance(val, Pid):
         return _pack_pid(val)
 
-    elif isinstance(val, term.Reference):
+    elif isinstance(val, Reference):
         return _pack_ref(val)
 
     elif type(val) == bytes:
         return _pack_binary(val, 8)
 
-    elif isinstance(val, term.Binary):
+    elif isinstance(val, Binary):
         return _pack_binary(val.bytes_, val.last_byte_bits_)
 
     ser, _ = _serialize_object(val)

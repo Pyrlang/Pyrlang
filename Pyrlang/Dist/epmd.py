@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ class EPMDClient:
         """ The local EPMD is always located on the local host. """
         self.port_ = EPMD_DEFAULT_PORT
 
-        self.sock_ = None  # network socket
+        self.sock_ = None  # type: socket
 
     def close(self):
         """ Closing EPMD connection removes the node from available EPMD nodes
@@ -137,10 +137,10 @@ class EPMDClient:
         return -1
 
     @staticmethod
-    def _make_req_alive2(nodetype: int, name: str, in_port: int,
-                         dist_vsn: tuple, extra: str):
-        extra = bytes(extra, "latin1")
-        name = bytes(name.split("@")[0], "utf8")
+    def _make_req_alive2(nodetype: int, name0: str, in_port: int,
+                         dist_vsn: tuple, extra0: str):
+        extra = bytes(string=extra0, encoding="latin1")
+        name = bytes(name0.split("@")[0], "utf8")
 
         # Here let's tell EPMD that we've arrived, our protocols and our name
         msg1 = struct.pack(">BH BB HH",

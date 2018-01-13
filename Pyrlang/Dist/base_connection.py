@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ from abc import abstractmethod
 from hashlib import md5
 from typing import Union
 
-from Pyrlang import logger, mailbox, term
+from Pyrlang import logger, mailbox, Term
 from Pyrlang.Dist import util, etf
 
 LOG = logger.nothing
@@ -198,10 +198,10 @@ class BaseConnection:
 
     @staticmethod
     def _control_term_send(from_pid, dst):
-        if isinstance(dst, term.Atom):
-            return CONTROL_TERM_REG_SEND, from_pid, term.Atom(''), dst
+        if isinstance(dst, Term.Atom):
+            return CONTROL_TERM_REG_SEND, from_pid, Term.Atom(''), dst
         else:
-            return CONTROL_TERM_SEND, term.Atom(''), dst
+            return CONTROL_TERM_SEND, Term.Atom(''), dst
 
     def _control_message(self, ctrl, msg):
         """ Pack a control message and a regular message (can be None) together
@@ -220,7 +220,7 @@ class BaseConnection:
                      + bytes(str(challenge), "ascii")).digest()
         return result
 
-    def protocol_error(self, msg) -> False:
+    def protocol_error(self, msg) -> bool:
         ERROR("Dist protocol error: %s (state %s)" % (msg, self.state_))
         return False
 

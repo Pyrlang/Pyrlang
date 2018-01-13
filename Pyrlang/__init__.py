@@ -1,4 +1,4 @@
-# Copyright 2017, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.node import *
-from Pyrlang.process import *
-from Pyrlang.term import *
-from Pyrlang.mailbox import *
+from Pyrlang.mailbox import Mailbox
+from Pyrlang.node import Node, NodeException
+from Pyrlang.process import Process
+
+from Pyrlang import Term
+from Pyrlang.Term.atom import Atom
+from Pyrlang.Term.pid import Pid
+from Pyrlang.Term.list import NIL
+from Pyrlang.Term.reference import Reference
+from Pyrlang.Term.fun import Fun
 
 
-__all__ = ['init',
-           'Node', 'Process', 'Atom', 'Pid', 'Reference',
-           'List', 'Mailbox']
+__all__ = ['Node', 'Process', 'Mailbox',
+           'Term',
+           'Atom', 'Pid', 'Reference', 'Fun']

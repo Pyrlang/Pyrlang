@@ -5,17 +5,17 @@ import sys
 sys.path.insert(0, '.')
 
 from Pyrlang.Dist import etf
-from Pyrlang import term
+from Pyrlang import Term
 
 
 class TestETFEncode(unittest.TestCase):
     def test_encode_atom(self):
         """ Try an atom 'hello' """
-        data1 = etf.term_to_binary(term.Atom('hello', encoding="latin-1"))
+        data1 = etf.term_to_binary(Term.Atom('hello', encoding="latin-1"))
         expected1 = bytes([131, ord('d'), 0, 5, 104, 101, 108, 108, 111])
         self.assertEqual(data1, expected1)
 
-        data2 = etf.term_to_binary(term.Atom('hello', encoding="utf8"))
+        data2 = etf.term_to_binary(Term.Atom('hello', encoding="utf8"))
         expected2 = bytes([131, ord('v'), 0, 5, 104, 101, 108, 108, 111])
         self.assertEqual(data2, expected2)
 
