@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(name='Pyrlang',
-      version='0.0.1',
-      description='Python Distribution Utilities',
+      version='0.2',
+      description='Erlang Node implemented in Python3',
       author='Erlang Solutions Ltd and S2HC Sweden AB',
-      author_email='pyrlang@s2hc.com',
-      url='https://www.pyrlang.com/about/not_built_yet/',
+      author_email='dmytro.lytovchenko@gmail.com,pyrlang@s2hc.com',
+      url='http://pyrlang.readthedocs.io/',
       packages=find_packages(),
       install_requires=['gevent == 1.2.1']
       )
