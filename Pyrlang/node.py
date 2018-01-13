@@ -330,7 +330,7 @@ class Node(Greenlet):
             :param target: Name or pid of a monitor target process
        """
         target_proc = self.where_is(target)
-        LOG("MonitorP: org %s targ %s = %s" % (origin, target, target_proc))
+        LOG("MonitorP: orig=%s targ=%s -> %s" % (origin, target, target_proc))
         if target_proc is not None:
             target_proc.monitors_.add(origin)
         else:

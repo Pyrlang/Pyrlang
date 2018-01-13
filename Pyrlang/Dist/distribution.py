@@ -55,7 +55,7 @@ class ErlangDistribution:
                                           args=[],
                                           kwargs=proto_kwargs)
 
-        self.in_srv_ = StreamServer(listener=('127.0.0.1', 0),
+        self.in_srv_ = StreamServer(listener=('0.0.0.0', 0),
                                     handle=handler)
         self.in_srv_.start()
         self.in_port_ = self.in_srv_.server_port

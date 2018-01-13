@@ -18,6 +18,10 @@ Start the Node
         node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
         node.start()
 
+        # Attempt to send something will initiate a connection before sending
+        pid = node.register_new_process(None)
+        node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
+
         while True:
             # Sleep gives other greenlets time to run
             gevent.sleep(0.1)

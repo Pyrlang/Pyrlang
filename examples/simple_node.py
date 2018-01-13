@@ -20,6 +20,7 @@ def main():
     node = Node("py@127.0.0.1", "COOKIE")
     node.start()
 
+    # Attempt to send something will initiate a connection before sending
     pid = node.register_new_process(None)
     node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
 
