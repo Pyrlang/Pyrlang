@@ -27,7 +27,18 @@ changes required.
 
     node
     process
-    Term
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Erlang Data Types Support
+
+    Term.atom
+    Term.bitstring
+    Term.erl_typing
+    Term.fun
+    Term.list
+    Term.pid
+    Term.reference
 
 .. toctree::
     :maxdepth: 1

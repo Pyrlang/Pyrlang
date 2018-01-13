@@ -22,6 +22,8 @@ def main():
 
     # Attempt to send something will initiate a connection before sending
     pid = node.register_new_process(None)
+    # To be able to send to Erlang shell by name first give it a registered
+    # name: `erlang:register(shell, self()).`
     node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
 
     while True:
