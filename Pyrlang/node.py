@@ -27,6 +27,7 @@ from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
 
 LOG = logger.tty
+DEBUG = logger.nothing
 WARN = logger.nothing
 ERROR = logger.tty
 
@@ -129,7 +130,10 @@ class Node(Greenlet):
 
     def handle_inbox(self):
         while True:
-            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            # Block, but then gevent will allow other green-threads to
+            # run, so rather than unnecessarily consuming CPU block
+            msg = self.inbox_.get()
+            #msg = self.inbox_.receive(filter_fn=lambda _: True)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)
@@ -228,7 +232,7 @@ class Node(Greenlet):
 
         dst = self.where_is(receiver)
         if dst is not None:
-            LOG("Node._send_local: pid %s <- %s" % (receiver, message))
+            DEBUG("Node._send_local: pid %s <- %s" % (receiver, message))
             dst.inbox_.put(message)
         else:
             WARN("Node._send_local: pid %s does not exist" % receiver)
@@ -246,7 +250,7 @@ class Node(Greenlet):
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        LOG("send -> %s: %s" % (receiver, message))
+        DEBUG("send -> %s: %s" % (receiver, message))
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
@@ -275,7 +279,7 @@ class Node(Greenlet):
         raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
-        LOG("Node._send_remote %s <- %s" % (receiver, message))
+        DEBUG("Node._send_remote %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)

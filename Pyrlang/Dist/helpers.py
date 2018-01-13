@@ -24,7 +24,24 @@ def _handle_socket_read(handler, sock):
     collected = b''
     while True:
         # a full packet before calling on_packet in the handler class
-        ready = select.select([sock], [], [], 0.0)
+        # Ideally instead of 10 msec timeout, this should have been
+        # infinity (that is None), but post that change the messaging
+        # stops working because it is possible that this would
+        # block other actions, like handling messages on the queues.
+        # TODO: find a better solution.
+        # Additionally, anything lower than 10 msec would unnecessarily consume
+        # CPU, because epoll_wait() will have a time out 1 msec if the timeout
+        # here is set to 0.0, which is bad for idle python nodes.
+        # Note that setting a value of 0.01 or 10 msec would imply that
+        # python node would not be able to send replies faster than 10 msec
+        # to Erlang node, but this is an acceptable delay condering the
+        # idle python node cpu consumption issue mentioned above.
+
+        # update: set lower timeout of 1 millisecond but do a select for
+        # longer time 1 second further down below to save cpu cycles
+        # when there are no messages.
+        # This is a HACK
+        ready = select.select([sock], [], [], 0.001)
         try:
             if ready[0]:
                 data = sock.recv(4096)
@@ -45,6 +62,9 @@ def _handle_socket_read(handler, sock):
                     collected = collected1
             else:
                 handler.handle_inbox()
+                # HACK to keep idle CPU down to 0.3% while
+                # trying to maintain lower latency
+                select.select([sock], [], [], 1.0)
 
         except select.error:
             # Disconnected probably or another error
