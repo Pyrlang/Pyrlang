@@ -18,12 +18,13 @@ from Pyrlang.process import Process
 
 from Pyrlang import Term
 from Pyrlang.Term.atom import Atom
+from Pyrlang.Term.bitstring import BitString
 from Pyrlang.Term.pid import Pid
-from Pyrlang.Term.list import NIL
+from Pyrlang.Term.list import NIL, ImproperList
 from Pyrlang.Term.reference import Reference
 from Pyrlang.Term.fun import Fun
 
 
 __all__ = ['Node', 'NodeException', 'Process', 'Mailbox',
            'Term',
-           'Atom', 'Pid', 'Reference', 'Fun']
+           'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference']
