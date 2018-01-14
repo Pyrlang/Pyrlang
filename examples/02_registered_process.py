@@ -7,7 +7,10 @@
 #   message and will call `handle_one_inbox_message` which is overridden here.
 # 4. There is no way to know sender unless you add return address into the msg.
 #
-# Erlang command -> {my_process, 'py@127.0.0.1'} ! hello.
+# Requires:     Erlang running on the same host as:
+#               `erl -name erl@127.0.0.1 -setcookie COOKIE`
+# Run:          from project root run `make example2`
+# Erl command:  {my_process, 'py@127.0.0.1'} ! hello.
 #
 
 import sys

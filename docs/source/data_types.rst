@@ -23,7 +23,7 @@ cons cell. Regular lists map directly to Python lists or strings and
 check elements ranges and assume that is a printable string.
 
 An improper list has some other value than ``[] NIL`` as its last cell tail.
-Pyrlang parses these as a tuple ``(bytes, tail)``.
+Pyrlang parses these as a tuple ``(list, tail)``.
 To be able to send an improper list back to Erlang, use the ``ImproperList``
 class located in ``Pyrlang.Term.list``.
 

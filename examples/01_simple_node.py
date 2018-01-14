@@ -1,9 +1,10 @@
 #
 # Start a simple node and connect to an Erlang/Elixir node.
 # This Python node is visible as `py@127.0.0.1`.
-# Requires: Erlang running on the same host as:
-#           `erl -name erl@127.0.0.1 -setcookie COOKIE`
-# Run: from project root run `make example1`
+#
+# Requires:     Erlang running on the same host as:
+#               `erl -name erl@127.0.0.1 -setcookie COOKIE`
+# Run:          from project root run `make example1`
 #
 import sys
 sys.path.insert(0, ".")
