@@ -22,6 +22,7 @@ changes required.
     :maxdepth: 2
     :caption: Contents:
 
+    examples
     getting_started
     data_types
 

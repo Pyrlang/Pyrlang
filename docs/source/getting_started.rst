@@ -2,6 +2,7 @@ Getting Started
 ===============
 
 You might have come here to see some examples. Very well...
+But have a quick look at :doc:`examples` page too!
 
 Start the Node
 --------------

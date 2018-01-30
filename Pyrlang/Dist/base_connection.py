@@ -28,9 +28,21 @@ from Pyrlang.Dist import util, etf
 LOG = logger.nothing
 ERROR = logger.tty
 
+# Distribution protocol delivers pairs of (control_term, message).
+# http://erlang.org/doc/apps/erts/erl_dist_protocol.html
 # First element of control term in a 'p' message defines what it is
+CONTROL_TERM_LINK = 1  # TODO
 CONTROL_TERM_SEND = 2
+CONTROL_TERM_EXIT = 3  # TODO
+CONTROL_TERM_UNLINK = 4  # TODO
+CONTROL_TERM_NODE_LINK = 5  # TODO
 CONTROL_TERM_REG_SEND = 6
+CONTROL_TERM_GROUP_LEADER = 7  # TODO
+CONTROL_TERM_EXIT2 = 8  # TODO
+CONTROL_TERM_SEND_TT = 12  # TODO
+CONTROL_TERM_EXIT_TT = 13  # TODO
+CONTROL_TERM_REG_SEND_TT = 16  # TODO
+CONTROL_TERM_EXIT2_TT = 18  # TODO
 CONTROL_TERM_MONITOR_P = 19
 CONTROL_TERM_DEMONITOR_P = 20
 CONTROL_TERM_MONITOR_P_EXIT = 21
@@ -109,7 +121,7 @@ class BaseConnection:
             return data[(offset + pkt_size):]
 
         # Protocol error has occured and instead we return None to request
-        # connection close (see util.py)
+        # connec tion close (see util.py)
         return None
 
     @abstractmethod
@@ -154,9 +166,14 @@ class BaseConnection:
         from Pyrlang import node
         the_node = node.Node.singleton
 
-        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
+        if ctrl_msg_type == CONTROL_TERM_REG_SEND:
             return the_node.send(sender=control_term[1],
                                  receiver=control_term[3],
+                                 message=msg_term)
+
+        elif ctrl_msg_type == CONTROL_TERM_SEND:
+            return the_node.send(sender=None,
+                                 receiver=control_term[2],
                                  message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:

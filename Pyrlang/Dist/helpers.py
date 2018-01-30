@@ -55,7 +55,10 @@ def _handle_socket_read(handler, sock):
                     collected1 = handler.consume(collected)
                     if collected1 is None:
                         print("Protocol requested to disconnect the socket")
-                        break
+                        sock.close()
+                        handler.on_connection_lost()
+                        return
+
                     if collected1 == collected:
                         break  # could not consume any more
 

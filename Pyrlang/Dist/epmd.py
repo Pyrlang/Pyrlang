@@ -88,7 +88,8 @@ class EPMDClient:
                 break  # the connect loop
 
             except socket.error as err:
-                print("EPMD: connection error:", err)
+                print("EPMD: connection error:", err,
+                      ". Is local EPMD running? Try `epmd -daemon`")
                 gevent.sleep(5)
 
         print("EPMD: Socket connected")

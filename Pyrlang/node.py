@@ -146,7 +146,8 @@ class Node(Greenlet):
         # Send a ('node_disconnected', NodeName) to forget the connection
         elif m[0] == 'node_disconnected':
             (_, addr) = m
-            del self.dist_nodes_[addr]
+            if addr in self.dist_nodes_:  # preventing KeyError here
+                del self.dist_nodes_[addr]
 
     def register_new_process(self, proc) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
