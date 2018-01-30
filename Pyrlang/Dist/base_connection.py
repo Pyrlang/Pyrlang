@@ -154,7 +154,11 @@ class BaseConnection:
         from Pyrlang import node
         the_node = node.Node.singleton
 
-        if ctrl_msg_type in [CONTROL_TERM_SEND, CONTROL_TERM_REG_SEND]:
+        if ctrl_msg_type == CONTROL_TERM_SEND:
+            return the_node.send(sender=None,
+                                 receiver=control_term[2],
+                                 message=msg_term)
+        elif ctrl_msg_type == CONTROL_TERM_REG_SEND:
             return the_node.send(sender=control_term[1],
                                  receiver=control_term[3],
                                  message=msg_term)
