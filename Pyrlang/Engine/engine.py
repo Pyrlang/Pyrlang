@@ -1,2 +1,3 @@
 class BaseEngine:
-    pass
+    def sleep(self, seconds: float):
+        pass

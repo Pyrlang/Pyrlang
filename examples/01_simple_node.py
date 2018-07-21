@@ -9,17 +9,13 @@
 import sys
 sys.path.insert(0, ".")
 
-import gevent
-
-from gevent import monkey
-monkey.patch_all()
-
-from Pyrlang import Node, Atom
+from Pyrlang import Node, Atom, GeventEngine
 
 
 def main():
-    node = Node("py@127.0.0.1", "COOKIE")
-    node.start()
+    event_engine = GeventEngine()
+    node = Node(name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    event_engine.start_task(node)
 
     # Attempt to send something will initiate a connection before sending
     pid = node.register_new_process(None)
@@ -29,7 +25,7 @@ def main():
 
     while True:
         # Sleep gives other greenlets time to run
-        gevent.sleep(0.1)
+        event_engine.sleep(0.1)
 
 
 if __name__ == "__main__":

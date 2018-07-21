@@ -13,13 +13,12 @@
 # limitations under the License.
 
 import logging
-import gevent
-from gevent import Greenlet
 
 from typing import Dict, Union
 
 from Pyrlang import mailbox
 from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Engine.task import Task
 from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
@@ -31,7 +30,7 @@ class NodeException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-class Node(Greenlet):
+class Node(Task):
     """ Implements an Erlang node which has a network name, a dictionary of 
         processes and registers itself via EPMD.
         Node handles the networking asynchronously.
@@ -40,27 +39,29 @@ class Node(Greenlet):
         must outlive all other objects it manages, for them to be accessible
         over the network.
 
-        Usage example:
+        Example:
 
-        1. Monkey patch with the help of Gevent: ``from gevent import monkey``
-            and then ``monkey.patch_all()``.
+        1. Create an async engine adapter:
+            e = GeventEngine()  # located in `import Pyrlang`
 
         2. Create a node class with a name and a cookie
-            ``node = Pyrlang.Node("py@127.0.0.1", "COOKIE")``
+            ``node = Pyrlang.Node("py@127.0.0.1", "COOKIE", engine=e)``
 
-        3. Start it with ``node.start()``
+        3. Start it via the engine adapter ``e.start(node)``
 
         4. Now anything that you do (for example an infinite loop with
-            ``gevent.sleep(1)`` in it, will give CPU time to the node.
-
-        .. note:: Node is a singleton, you can find the current node by
-            referencing ``Node.singleton``. This may change in future.
+            ``e.sleep(1)`` in it, will give CPU time to the node.
     """
     singleton = None
     """ Access this to find the current node. This may change in future. """
 
     def __init__(self, name: str, cookie: str, engine: BaseEngine) -> None:
-        Greenlet.__init__(self)
+        super().__init__()
+
+        self.engine_ = engine  # type: BaseEngine
+        """ The async adapter engine will give us access to async primitives
+            specific to either gevent or asyncio
+        """
 
         if Node.singleton is not None:
             raise NodeException("Singleton Node was already created")
@@ -115,10 +116,12 @@ class Node(Greenlet):
         self.net_kernel_ = NetKernel(self)
         self.net_kernel_.start()
 
-    def _run(self):
-        while not self.is_exiting_:
-            self.handle_inbox()
-            gevent.sleep(0.0)
+    def task_loop(self) -> bool:
+        """ This is called periodically by the Task (async engine adapter).
+            Returning True will continue its lifetime.
+        """
+        self.handle_inbox()
+        return not self.is_exiting_
 
     def handle_inbox(self):
         while True:
@@ -232,7 +235,8 @@ class Node(Greenlet):
                 "Node._send_local: pid %s <- %s" % (receiver, message))
             dst.inbox_.put(message)
         else:
-            logging.warning("Node._send_local: pid %s does not exist" % receiver)
+            logging.warning(
+                "Node._send_local: pid %s does not exist" % receiver)
 
     def send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
@@ -312,7 +316,7 @@ class Node(Greenlet):
             #     filter_fn=lambda m: m[0] == 'node_connected'
             # )
             while receiver_node not in self.dist_nodes_:
-                gevent.sleep(0.1)
+                self.engine_.sleep(0.1)
 
             logging.info("Node: connected")
 
