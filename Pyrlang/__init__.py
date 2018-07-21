@@ -24,7 +24,9 @@ from Pyrlang.Term.list import NIL, ImproperList
 from Pyrlang.Term.reference import Reference
 from Pyrlang.Term.fun import Fun
 
+from Pyrlang.Engine.gevent import GeventEngine
 
 __all__ = ['Node', 'NodeException', 'Process', 'Mailbox',
            'Term',
-           'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference']
+           'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
+           'GeventEngine']

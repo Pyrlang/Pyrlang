@@ -15,17 +15,13 @@
 """ The module implements incoming TCP distribution connection (i.e. initiated
     by another node with the help of EPMD).
 """
-from __future__ import print_function
 
 import random
+import logging
 import struct
 
-from Pyrlang import logger
-from Pyrlang.Dist import util, etf, dist_protocol
+from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
-
-LOG = logger.nothing
-ERROR = logger.tty
 
 
 class InConnection(BaseConnection):
@@ -85,7 +81,7 @@ class InConnection(BaseConnection):
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        LOG("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        logging.info("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
 
         # Report
         self._send_packet2(b"sok")
@@ -104,7 +100,7 @@ class InConnection(BaseConnection):
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        LOG("challengereply: peer's challenge", peers_challenge)
+        logging.info("challengereply: peer's challenge", peers_challenge)
 
         my_cookie = self.node_.node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
@@ -120,12 +116,12 @@ class InConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG("In-connection established with %s" % self.peer_name_)
+        logging.info("In-connection established with %s" % self.peer_name_)
         return True
 
     def _send_challenge(self, my_challenge):
-        LOG("Sending challenge (our number is %d)" % my_challenge,
-            self.node_.dist_.name_)
+        logging.info("Sending challenge (our number is %d)" % my_challenge,
+                     self.node_.dist_.name_)
         msg = b'n' \
               + struct.pack(">HII",
                             dist_protocol.DIST_VSN,

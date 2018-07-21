@@ -17,10 +17,7 @@ from typing import Callable
 import gevent
 from gevent.queue import Queue
 
-from Pyrlang import logger
-
-LOG = logger.nothing
-ERROR = logger.tty
+import logging
 
 
 class Mailbox:
@@ -32,7 +29,7 @@ class Mailbox:
         self.queue_ = Queue()
 
     def put(self, m: tuple):
-        LOG("Mailbox.put", m)
+        logging.info("Mailbox.put", m)
         self.queue_.put(m)
 
     def get(self):
@@ -57,7 +54,7 @@ class Mailbox:
                 (and returns True) or should be skipped (and returns False)
         """
         while True:
-            LOG(self.queue_.queue)
+            logging.info(self.queue_.queue)
 
             m = self.receive(filter_fn=filter_fn)
             if m is not None:
@@ -84,7 +81,7 @@ class Mailbox:
                 m = self.queue_.get_nowait()
 
                 if filter_fn(m):
-                    LOG("Mailbox: match return", m)
+                    logging.info("Mailbox: match return", m)
                     return m
 
                 self.queue_.put(m)

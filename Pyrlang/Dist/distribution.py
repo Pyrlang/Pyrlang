@@ -16,19 +16,13 @@
     which is called upon.
 """
 
-from __future__ import print_function
-
+import logging
 import gevent
 from gevent.server import StreamServer
 
-from Pyrlang import logger
 from Pyrlang.Dist import helpers
-from Pyrlang.Dist.epmd import EPMDClient, EPMDConnectionError
+from Pyrlang.Dist.epmd import EPMDClient
 from Pyrlang.Dist.out_connection import OutConnection
-
-LOG = logger.nothing
-WARN = logger.nothing
-ERROR = logger.tty
 
 
 class ErlangDistribution:
@@ -99,7 +93,7 @@ class ErlangDistribution:
             return handler
 
         except Exception as e:
-            ERROR("Dist:", e)
+            logging.error("Dist: " + str(e))
             return None
 
 

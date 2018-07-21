@@ -21,7 +21,6 @@
     *   "atoms_as_strings", default False. Always converts atoms to Python
         strings. This is potentially faster than using the Atom wrapper class.
 """
-from __future__ import print_function
 
 import struct
 
@@ -79,7 +78,7 @@ def incomplete_data(where=""):
         raise ETFDecodeException("Incomplete data at " + where)
 
 
-def binary_to_term(data: bytes, options: dict = {}):
+def binary_to_term(data: bytes, options: dict = None):
     """ Strip 131 header and unpack if the data was compressed.
 
         :param data: The incoming encoded data with the 131 byte
@@ -87,6 +86,9 @@ def binary_to_term(data: bytes, options: dict = {}):
         :raises ETFDecodeException: when the tag is not 131, when compressed
             data is incomplete or corrupted
     """
+    if options is None:
+        options = {}
+
     if data[0] != ETF_VERSION_TAG:
         raise ETFDecodeException("Unsupported external term version")
 
@@ -304,22 +306,22 @@ def binary_to_term_2(data: bytes, options: dict = None):
     if tag == TAG_SMALL_BIG_EXT:
         nbytes = data[1]
         # Data is encoded little-endian as bytes (least significant first)
-        in_bytes = data[3:(3+nbytes)]
+        in_bytes = data[3:(3 + nbytes)]
         # NOTE: int.from_bytes is Python 3.2+
         result_bi = int.from_bytes(in_bytes, byteorder='little')
         if data[2] != 0:
             result_bi = -result_bi
-        return result_bi, data[3+nbytes:]
+        return result_bi, data[3 + nbytes:]
 
     if tag == TAG_LARGE_BIG_EXT:
         nbytes = util.u32(data, 1)
         # Data is encoded little-endian as bytes (least significant first)
-        in_bytes = data[6:(6+nbytes)]
+        in_bytes = data[6:(6 + nbytes)]
         # NOTE: int.from_bytes is Python 3.2+
         result_lbi = int.from_bytes(in_bytes, byteorder='little')
         if data[2] != 0:
             result_lbi = -result_lbi
-        return result_lbi, data[6+nbytes:]
+        return result_lbi, data[6 + nbytes:]
 
     if tag == TAG_NEW_FUN_EXT:
         # size = util.u32(data, 1)
@@ -440,7 +442,7 @@ def _is_a_simple_object(obj):
            or isinstance(obj, reference.Reference)
 
 
-def _serialize_object(obj, cd: set=None):
+def _serialize_object(obj, cd: set = None):
     """ Given an arbitraty Python object creates a tuple (ClassName, {Fields}).
         A fair effort is made to avoid infinite recursion on cyclic objects.
         :param obj: Arbitrary object to encode
@@ -485,7 +487,7 @@ def _pack_binary(data, last_byte_bits):
         return bytes([TAG_BINARY_EXT]) + util.to_u32(len(data)) + data
 
     return bytes([TAG_BIT_BINARY_EXT]) + util.to_u32(len(data)) + \
-        bytes([last_byte_bits]) + data
+           bytes([last_byte_bits]) + data
 
 
 def term_to_binary_2(val):

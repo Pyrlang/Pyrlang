@@ -17,13 +17,12 @@
     nodes on the local machine and helps nodes finding each other.
 """
 import struct
-from typing import Union
+import logging
 
 import gevent
 import sys
 from gevent import socket
 
-from Pyrlang import logger
 from Pyrlang.Dist import util, dist_protocol
 
 NODE_HIDDEN = 77
@@ -40,17 +39,15 @@ PY3 = sys.version_info[0] >= 3
 EPMD_DEFAULT_PORT = 4369
 EPMD_REMOTE_DEFAULT_TIMEOUT = 5.0
 
-LOG = logger.nothing
-WARN = logger.nothing
-ERROR = logger.tty
-
 
 class EPMDClientError(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
 
 
 class EPMDConnectionError(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
 
 
 class EPMDClient:
@@ -184,7 +181,7 @@ class EPMDClient:
         r_ip = socket.gethostbyname(r_ip_or_hostname)
 
         port_please2 = bytes([REQ_PORT_PLEASE2]) \
-            + bytes(r_name, "utf8")  # not sure if latin-1 here
+                       + bytes(r_name, "utf8")  # not sure if latin-1 here
 
         resp = EPMDClient._fire_forget_query(r_ip, port_please2)
 
@@ -193,12 +190,13 @@ class EPMDClient:
         # 1     1
         # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
-            ERROR("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
-                  % (r_ip, resp))
+            logging.error("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
+                          % (r_ip, resp))
             raise EPMDConnectionError("PORT_PLEASE2 wrong response")
 
         if resp[1] != 0:
-            ERROR("EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
+            logging.error(
+                "EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
             raise EPMDConnectionError("PORT_PLEASE2 error %d" % resp[1])
 
         # Response structure

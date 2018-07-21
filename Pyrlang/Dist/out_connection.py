@@ -16,17 +16,11 @@
     by our node to another node with the help of EPMD).
 """
 
-from __future__ import print_function
-
 import random
+import logging
 
-from Pyrlang import logger
 from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
-
-LOG = logger.tty
-WARN = logger.tty
-ERROR = logger.tty
 
 
 class OutConnection(BaseConnection):
@@ -92,8 +86,8 @@ class OutConnection(BaseConnection):
               bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
               util.to_u32(self.node_.node_opts_.dflags_) + \
               bytes(str(self.node_.name_), "latin-1")
-        LOG("Dist-out: send_name {pkt} (name={name})"
-            .format(name=self.node_.name_, pkt=pkt))
+        logging.info("Dist-out: send_name {pkt} (name={name})"
+                     .format(name=self.node_.name_, pkt=pkt))
         self._send_packet2(pkt)
 
     def on_packet_recvstatus(self, data):
@@ -154,5 +148,5 @@ class OutConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG("Out-connection established with %s" % self.peer_name_)
+        logging.info("Out-connection established with %s" % self.peer_name_)
         return True

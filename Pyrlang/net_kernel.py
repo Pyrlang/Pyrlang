@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from Pyrlang import Term, gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
