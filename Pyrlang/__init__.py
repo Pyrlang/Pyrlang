@@ -13,7 +13,6 @@
 # limitations under the License.
 import logging
 
-from Pyrlang.mailbox import Mailbox
 from Pyrlang.node import Node, NodeException
 from Pyrlang.process import Process
 
@@ -35,7 +34,6 @@ def init():
 
 init()
 
-__all__ = ['Node', 'NodeException', 'Process', 'Mailbox',
-           'Term',
+__all__ = ['Node', 'NodeException', 'Process', 'Term',
            'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
            'GeventEngine']

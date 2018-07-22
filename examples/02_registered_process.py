@@ -16,12 +16,7 @@
 import sys
 sys.path.insert(0, ".")
 
-import gevent
-from gevent import monkey
-monkey.patch_all()
-import Pyrlang
-from Pyrlang import Atom
-from Pyrlang import Process
+from Pyrlang import Node, Atom, Process, GeventEngine
 
 
 class MyProcess(Process):
@@ -35,11 +30,13 @@ class MyProcess(Process):
 
 
 def main():
-    node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-    node.start()
-    mp = MyProcess(node)
+    event_engine = GeventEngine()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    event_engine.start_task(node)
+
+    _mp = MyProcess(node)
     while True:
-        gevent.sleep(0.1)
+        event_engine.sleep(0.1)
 
 
 if __name__ == "__main__":

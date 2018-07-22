@@ -16,12 +16,12 @@ import logging
 
 from typing import Dict, Union
 
-from Pyrlang import mailbox
 from Pyrlang.Engine.engine import BaseEngine
 from Pyrlang.Engine.task import Task
 from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
+from Pyrlang.bases import BaseNode
 from Pyrlang.process import Process
 
 LOG = logging.getLogger("Pyrlang")
@@ -32,7 +32,7 @@ class NodeException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-class Node(Task):
+class Node(Task, BaseNode):
     """ Implements an Erlang node which has a network name, a dictionary of 
         processes and registers itself via EPMD.
         Node handles the networking asynchronously.
@@ -59,20 +59,17 @@ class Node(Task):
     """ All existing Node objects indexed by node_name: str """
 
     def __init__(self, node_name: str, cookie: str, engine: BaseEngine) -> None:
-        super().__init__()
-
-        self.engine_ = engine  # type: BaseEngine
-        """ Async adapter engine for network and timer operations implemented 
-            either as Gevent or asyncio """
+        Task.__init__(self)
+        BaseNode.__init__(self, node_name=node_name, engine=engine)
 
         Node.all_nodes[node_name] = self
 
-        # Message queue based on ``gevent.Queue``. It is periodically checked
-        # in the ``_run`` method and the receive handler is called.
-        self.inbox_ = mailbox.Mailbox()
+        self.inbox_ = engine.queue_new()
+        """ Message queue based on ``gevent.Queue``. It is periodically checked
+            in the ``_run`` method and the receive handler is called. """
 
-        # An internal counter used to generate unique process ids
         self.pid_counter_ = 0
+        """ An internal counter used to generate unique process ids """
 
         # Process dictionary which stores all the existing ``Process`` objects
         # adressable by a pid.
@@ -92,10 +89,6 @@ class Node(Task):
         # An option object with feature support flags packed into an
         # integer.
         self.node_opts_ = NodeOpts(cookie=cookie)
-
-        # Node name as seen on the network. Use full node names here:
-        # ``name@hostname``
-        self.node_name_ = node_name  # type: str
 
         self.dist_nodes_ = {}  # type: Dict[str, Node]
         self.dist_ = ErlangDistribution(node_name=node_name, engine=engine)
@@ -304,7 +297,8 @@ class Node(Task):
             LOG.info("Node: connect to node", receiver_node)
             handler = self.dist_.connect_to_node(
                 local_node=self.node_name_,
-                remote_node=receiver_node)
+                remote_node=receiver_node,
+                engine=self.engine_)
 
             if handler is None:
                 raise NodeException("Node not connected %s" % receiver_node)

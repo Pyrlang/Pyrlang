@@ -9,28 +9,31 @@ Start the Node
 
 .. code-block:: python
 
-    import gevent
-    from gevent import monkey
-    monkey.patch_all()
-
-    import Pyrlang
+    from Pyrlang import Node, Atom, GeventEngine
 
     def main():
-        node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-        node.start()
+        event_engine = GeventEngine()
+        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+        event_engine.start_task(node)
 
         # Attempt to send something will initiate a connection before sending
         pid = node.register_new_process(None)
+
         # To be able to send to Erlang shell by name first give it a registered
         # name: `erlang:register(shell, self()).`
         node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
 
         while True:
             # Sleep gives other greenlets time to run
-            gevent.sleep(0.1)
+            event_engine.sleep(0.1)
 
     if __name__ == "__main__":
         main()
+
+Here ``event_engine`` is a pluggable adapter which allows Pyrlang to run both
+with gevent and asyncio-driven event loops. Pyrlang in this case performs mostly
+protocols handling, while event engine will open connections, start tasks
+and sleep asynchronously.
 
 
 Connect nodes
@@ -53,12 +56,10 @@ which exists on the Python side.
 
 .. code-block:: erlang
 
-    {'py@127.0.0.1', Name} ! hello.
+    {Name, 'py@127.0.0.1'} ! hello.
 
-If the process exists on Python side, its ``inbox_`` field (which must be a
-Gevent Queue) will receive your message. You can check it from your code
-using ``self.inbox_.empty()`` and the family of ``.get*()`` functions
-which can wait or won't wait for another message.
+If the process exists on Python side, its ``inbox_`` field (which will be a
+Gevent or Asyncio Queue) will receive your message.
 
 
 RPC call from Erlang

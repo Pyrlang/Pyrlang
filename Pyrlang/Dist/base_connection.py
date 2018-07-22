@@ -21,8 +21,9 @@ from abc import abstractmethod
 from hashlib import md5
 from typing import Union
 
-from Pyrlang import mailbox, Term
+from Pyrlang import Term
 from Pyrlang.Dist import util, etf
+from Pyrlang.Engine.engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -51,7 +52,7 @@ class DistributionError(Exception):
 
 
 class BaseConnection:
-    def __init__(self, node_name: str):
+    def __init__(self, node_name: str, engine: BaseEngine):
         """ Create connection handler object. """
 
         self.node_name_ = node_name
@@ -64,8 +65,11 @@ class BaseConnection:
         self.socket_ = None
         self.addr_ = None
 
+        self.engine_ = engine
+        """ Save engine object, to use for our async needs later. """
+
         # refer to util.make_handler_in which reads this
-        self.inbox_ = mailbox.Mailbox()
+        self.inbox_ = engine.queue_new()
         """ Inbox is used to ask the connection to do something. """
 
         self.peer_distr_version_ = (None, None)
@@ -187,7 +191,7 @@ class BaseConnection:
 
     def handle_inbox(self):
         while True:
-            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            msg = self.engine_.queue_get(self.inbox_)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)

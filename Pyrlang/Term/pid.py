@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from Pyrlang.Term.atom import Atom
+from Pyrlang.bases import BasePid
 
 PID_MARKER = "pyrlang.Pid"
 
 
-class Pid:
+class Pid(BasePid):
     """ Represents Erlang-style process identifier with 3 components. Node
         component is always 0 for local node, otherwise it can take arbitrary
         integer values.

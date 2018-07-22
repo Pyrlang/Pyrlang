@@ -1,4 +1,5 @@
 import gevent
+from gevent.queue import Queue, Empty
 
 from Pyrlang.Engine.engine import BaseEngine
 from Pyrlang.Engine.task import Task
@@ -32,3 +33,14 @@ class GeventEngine(BaseEngine):
             sleep for 0
         """
         gevent.spawn(lambda: task_loop_helper(t))
+
+    def queue_new(self):
+        """ Create Gevent queue which is asynchronously accessible. """
+        return Queue()
+
+    def queue_get(self, q: Queue):
+        """ Attempt to fetch one item from the queue, or return None. """
+        try:
+            return q.get_nowait()
+        except Empty:
+            return None

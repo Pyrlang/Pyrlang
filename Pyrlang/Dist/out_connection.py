@@ -21,6 +21,7 @@ import logging
 
 from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
+from Pyrlang.Engine.engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -45,8 +46,8 @@ class OutConnection(BaseConnection):
     RECV_CHALLENGE = 'recv_challenge'
     RECV_CHALLENGE_ACK = 'recv_challenge_ack'
 
-    def __init__(self, node_name: str):
-        BaseConnection.__init__(self, node_name)
+    def __init__(self, node_name: str, engine: BaseEngine):
+        BaseConnection.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
     def on_connected(self, sockt, address):

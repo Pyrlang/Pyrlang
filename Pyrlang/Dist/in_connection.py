@@ -22,6 +22,7 @@ import struct
 
 from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
+from Pyrlang.Engine.engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -39,8 +40,8 @@ class InConnection(BaseConnection):
     RECV_NAME = 'recvname'
     WAIT_CHALLENGE_REPLY = 'wait_ch_reply'
 
-    def __init__(self, node_name: str):
-        BaseConnection.__init__(self, node_name)
+    def __init__(self, node_name: str, engine: BaseEngine):
+        BaseConnection.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
     def on_connected(self, sockt, address):
@@ -105,7 +106,7 @@ class InConnection(BaseConnection):
         peer_digest = data[5:]
         LOG.info("challengereply: peer's challenge", peers_challenge)
 
-        my_cookie = self.node_.node_opts_.cookie_
+        my_cookie = self._get_node().node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
                                  challenge=self.my_challenge_,
                                  cookie=my_cookie):
@@ -125,13 +126,13 @@ class InConnection(BaseConnection):
     def _send_challenge(self, my_challenge):
         n = self._get_node()
         LOG.info("Sending challenge (our number is %d) %s"
-                 % (my_challenge, n.dist_.name_))
+                 % (my_challenge, self.node_name_))
         msg = b'n' \
               + struct.pack(">HII",
                             dist_protocol.DIST_VSN,
                             n.node_opts_.dflags_,
                             my_challenge) \
-              + bytes(n.dist_.name_, "latin1")
+              + bytes(self.node_name_, "latin1")
         self._send_packet2(msg)
 
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):

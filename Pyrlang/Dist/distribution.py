@@ -47,7 +47,8 @@ class ErlangDistribution:
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler_in helper
-        proto_kwargs = {"node_name": node_name}
+        proto_kwargs = {"node_name": node_name,
+                        "engine": engine}
 
         from Pyrlang.Dist.in_connection import InConnection
         handler = helpers.make_handler_in(receiver_class=InConnection,
@@ -78,10 +79,12 @@ class ErlangDistribution:
         """
         self.epmd_.close()
 
-    def connect_to_node(self, local_node: str, remote_node: str):
+    def connect_to_node(self, local_node: str, remote_node: str,
+                        engine: BaseEngine):
         """ Query EPMD where is the node, and initiate dist connection. Blocks
             the Greenlet until the connection is made or have failed.
 
+            :param engine: Async engine adapter (GeventEngine or AsyncioEngine)
             :param local_node: Reference to Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: Handler or None
@@ -92,7 +95,7 @@ class ErlangDistribution:
                 protocol_class=OutConnection,
                 host_port=host_port,
                 args=[],
-                kwargs={"node_name": local_node}
+                kwargs={"node_name": local_node, "engine": engine}
             )
             return handler
 
