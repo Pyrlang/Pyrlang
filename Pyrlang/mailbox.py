@@ -18,6 +18,7 @@ import gevent
 from gevent.queue import Queue
 
 import logging
+LOG = logging.getLogger("Pyrlang")
 
 
 class Mailbox:
@@ -29,7 +30,7 @@ class Mailbox:
         self.queue_ = Queue()
 
     def put(self, m: tuple):
-        logging.info("Mailbox.put", m)
+        LOG.info("Mailbox.put", m)
         self.queue_.put(m)
 
     def get(self):
@@ -54,7 +55,7 @@ class Mailbox:
                 (and returns True) or should be skipped (and returns False)
         """
         while True:
-            logging.info(self.queue_.queue)
+            LOG.info(self.queue_.queue)
 
             m = self.receive(filter_fn=filter_fn)
             if m is not None:
@@ -81,7 +82,7 @@ class Mailbox:
                 m = self.queue_.get_nowait()
 
                 if filter_fn(m):
-                    logging.info("Mailbox: match return", m)
+                    LOG.info("Mailbox: match return", m)
                     return m
 
                 self.queue_.put(m)

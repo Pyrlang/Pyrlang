@@ -24,6 +24,8 @@ from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.process import Process
 
+LOG = logging.getLogger("Pyrlang")
+
 
 class NodeException(Exception):
     def __init__(self, *args, **kwargs):
@@ -52,20 +54,18 @@ class Node(Task):
         4. Now anything that you do (for example an infinite loop with
             ``e.sleep(1)`` in it, will give CPU time to the node.
     """
-    singleton = None
-    """ Access this to find the current node. This may change in future. """
 
-    def __init__(self, name: str, cookie: str, engine: BaseEngine) -> None:
+    all_nodes = {}  # type: Dict[str, Node]
+    """ All existing Node objects indexed by node_name: str """
+
+    def __init__(self, node_name: str, cookie: str, engine: BaseEngine) -> None:
         super().__init__()
 
         self.engine_ = engine  # type: BaseEngine
-        """ The async adapter engine will give us access to async primitives
-            specific to either gevent or asyncio
-        """
+        """ Async adapter engine for network and timer operations implemented 
+            either as Gevent or asyncio """
 
-        if Node.singleton is not None:
-            raise NodeException("Singleton Node was already created")
-        Node.singleton = self
+        Node.all_nodes[node_name] = self
 
         # Message queue based on ``gevent.Queue``. It is periodically checked
         # in the ``_run`` method and the receive handler is called.
@@ -95,10 +95,10 @@ class Node(Task):
 
         # Node name as seen on the network. Use full node names here:
         # ``name@hostname``
-        self.name_ = Atom(name)
+        self.node_name_ = node_name  # type: str
 
         self.dist_nodes_ = {}  # type: Dict[str, Node]
-        self.dist_ = ErlangDistribution(node=self, name=name)
+        self.dist_ = ErlangDistribution(node_name=node_name, engine=engine)
 
         # This is important before we can begin spawning processes
         # to get the correct node creation
@@ -157,7 +157,7 @@ class Node(Task):
             :return: A new pid (does not modify the process in place, so please
                 store the pid!)
         """
-        pid1 = Pid(node=self.name_,
+        pid1 = Pid(node_name=self.node_name_,
                    id=self.pid_counter_ // 0x7fffffff,
                    serial=self.pid_counter_ % 0x7fffffff,
                    creation=self.dist_.creation_)
@@ -168,7 +168,7 @@ class Node(Task):
         return pid1
 
     def on_exit_process(self, exiting_pid, reason):
-        logging.info("Process %s exited with %s", exiting_pid, reason)
+        LOG.info("Process %s exited with %s", exiting_pid, reason)
         del self.processes_[exiting_pid]
 
     def register_name(self, proc, name) -> None:
@@ -213,11 +213,11 @@ class Node(Task):
 
         receiver_obj = self.where_is(receiver)
         if receiver_obj is not None:
-            logging.info("Node: send local reg=%s receiver=%s msg=%s" % (
+            LOG.info("Node: send local reg=%s receiver=%s msg=%s" % (
                 receiver, receiver_obj, message))
             receiver_obj.inbox_.put(message)
         else:
-            logging.warning(
+            LOG.warning(
                 "Node: send to unregistered name %s ignored" % receiver)
 
     def _send_local(self, receiver, message) -> None:
@@ -231,19 +231,18 @@ class Node(Task):
 
         dst = self.where_is(receiver)
         if dst is not None:
-            logging.debug(
+            LOG.debug(
                 "Node._send_local: pid %s <- %s" % (receiver, message))
             dst.inbox_.put(message)
         else:
-            logging.warning(
+            LOG.warning(
                 "Node._send_local: pid %s does not exist" % receiver)
 
-    def send(self, sender, receiver, message) -> None:
+    def send(self, sender: Union[Pid, None], receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
             :param sender: Message sender
-            :type sender: Pid
             :type receiver: Pid or Atom or tuple[Atom, Pid or Atom]
             :param receiver: Message receiver, a pid, or a name, or a tuple with
                 node name and a receiver on the remote node.
@@ -251,11 +250,11 @@ class Node(Task):
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        logging.debug("send -> %s: %s" % (receiver, message))
+        LOG.debug("send -> %s: %s" % (receiver, message))
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
-            if r_node == self.name_:  # atom compare
+            if r_node == self.node_name_:  # atom compare
                 # re-route locally
                 return self.send(sender, r_name, message)
             else:
@@ -270,7 +269,7 @@ class Node(Task):
                 return self._send_local(receiver, message)
             else:
                 return self._send_remote(sender=sender,
-                                         dst_node=str(receiver.node_),
+                                         dst_node=receiver.node_name_,
                                          receiver=receiver,
                                          message=message)
 
@@ -280,7 +279,7 @@ class Node(Task):
         raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
-        logging.debug("Node._send_remote %s <- %s" % (receiver, message))
+        LOG.debug("Node._send_remote %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)
@@ -302,23 +301,23 @@ class Node(Task):
                 values
         """
         if receiver_node not in self.dist_nodes_:
-            logging.info("Node: connect to node", receiver_node)
+            LOG.info("Node: connect to node", receiver_node)
             handler = self.dist_.connect_to_node(
-                this_node=self,
+                local_node=self.node_name_,
                 remote_node=receiver_node)
 
             if handler is None:
                 raise NodeException("Node not connected %s" % receiver_node)
 
             # block until connected, and get the connected message
-            logging.info("Node: wait for 'node_connected'")
+            LOG.info("Node: wait for 'node_connected'")
             # msg = self.inbox_.receive_wait(
             #     filter_fn=lambda m: m[0] == 'node_connected'
             # )
             while receiver_node not in self.dist_nodes_:
                 self.engine_.sleep(0.1)
 
-            logging.info("Node: connected")
+            LOG.info("Node: connected")
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)
@@ -335,7 +334,7 @@ class Node(Task):
             :param target: Name or pid of a monitor target process
        """
         target_proc = self.where_is(target)
-        logging.info(
+        LOG.info(
             "MonitorP: orig=%s targ=%s -> %s" % (origin, target, target_proc))
         if target_proc is not None:
             target_proc.monitors_.add(origin)

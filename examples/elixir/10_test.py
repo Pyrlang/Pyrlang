@@ -25,7 +25,7 @@ class MyProcess(Process):
 
     def handle_one_inbox_message(self, msg):
         print("Incoming to", self.pid_, type(self.pid_), msg)
-        gencall = gen.parse_gen_message(msg)
+        gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
 
         if isinstance(gencall, str):
             print("MyProcess:", gencall)

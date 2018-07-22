@@ -23,6 +23,7 @@ from gevent.server import StreamServer
 from Pyrlang.Dist import helpers
 from Pyrlang.Dist.epmd import EPMDClient
 from Pyrlang.Dist.out_connection import OutConnection
+from Pyrlang.Engine.engine import BaseEngine
 
 
 class ErlangDistribution:
@@ -31,8 +32,12 @@ class ErlangDistribution:
         Node as a parameter but don't store it to avoid creating a ref cycle.
     """
 
-    def __init__(self, node, name: str) -> None:
-        self.name_ = name
+    def __init__(self, node_name: str, engine: BaseEngine) -> None:
+        self.engine_ = engine
+        """ Async adapter engine for network and timer operations implemented 
+            either as Gevent or asyncio """
+
+        self.node_name_ = node_name
         """ Node name, a string. """
 
         self.creation_ = 0
@@ -42,7 +47,7 @@ class ErlangDistribution:
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler_in helper
-        proto_kwargs = {"node": node}
+        proto_kwargs = {"node_name": node_name}
 
         from Pyrlang.Dist.in_connection import InConnection
         handler = helpers.make_handler_in(receiver_class=InConnection,
@@ -73,12 +78,11 @@ class ErlangDistribution:
         """
         self.epmd_.close()
 
-    def connect_to_node(self, this_node, remote_node: str):
+    def connect_to_node(self, local_node: str, remote_node: str):
         """ Query EPMD where is the node, and initiate dist connection. Blocks
             the Greenlet until the connection is made or have failed.
 
-            :type this_node: Pyrlang.Node
-            :param this_node: Reference to Erlang Node object
+            :param local_node: Reference to Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: Handler or None
         """
@@ -88,7 +92,7 @@ class ErlangDistribution:
                 protocol_class=OutConnection,
                 host_port=host_port,
                 args=[],
-                kwargs={"node": this_node}
+                kwargs={"node_name": local_node}
             )
             return handler
 

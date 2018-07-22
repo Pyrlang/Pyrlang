@@ -27,7 +27,7 @@ class NetKernel(Process):
         node.register_name(self, Term.Atom('net_kernel'))
 
     def handle_one_inbox_message(self, msg):
-        gencall = gen.parse_gen_message(msg)
+        gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
         if not isinstance(gencall, gen.GenIncomingMessage):
             print("NetKernel:", gencall)
             return

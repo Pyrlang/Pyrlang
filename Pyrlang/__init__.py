@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 from Pyrlang.mailbox import Mailbox
 from Pyrlang.node import Node, NodeException
@@ -25,6 +26,14 @@ from Pyrlang.Term.reference import Reference
 from Pyrlang.Term.fun import Fun
 
 from Pyrlang.Engine.gevent import GeventEngine
+
+
+def init():
+    lg = logging.getLogger("Pyrlang")
+    lg.setLevel(logging.DEBUG)
+
+
+init()
 
 __all__ = ['Node', 'NodeException', 'Process', 'Mailbox',
            'Term',

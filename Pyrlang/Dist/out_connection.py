@@ -22,6 +22,8 @@ import logging
 from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
 
+LOG = logging.getLogger("Pyrlang")
+
 
 class OutConnection(BaseConnection):
     """ Handles outgoing connections from our to other nodes.
@@ -43,8 +45,8 @@ class OutConnection(BaseConnection):
     RECV_CHALLENGE = 'recv_challenge'
     RECV_CHALLENGE_ACK = 'recv_challenge_ack'
 
-    def __init__(self, node):
-        BaseConnection.__init__(self, node)
+    def __init__(self, node_name: str):
+        BaseConnection.__init__(self, node_name)
         self.state_ = self.DISCONNECTED
 
     def on_connected(self, sockt, address):
@@ -80,14 +82,20 @@ class OutConnection(BaseConnection):
 
         raise DistributionError("Unknown state for on_packet: %s" % self.state_)
 
+    def _get_node(self):
+        """ :return: Pyrlang.node.Node
+        """
+        from Pyrlang.node import Node  # todo: slow?
+        return Node.all_nodes[self.node_name_]
+
     def _send_name(self):
         """ Create and send first welcome packet. """
         pkt = b'n' + \
               bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
-              util.to_u32(self.node_.node_opts_.dflags_) + \
-              bytes(str(self.node_.name_), "latin-1")
-        logging.info("Dist-out: send_name {pkt} (name={name})"
-                     .format(name=self.node_.name_, pkt=pkt))
+              util.to_u32(self._get_node().node_opts_.dflags_) + \
+              bytes(self.node_name_, "latin-1")
+        LOG.info("Dist-out: send_name {pkt} (name={name})"
+                     .format(name=self.node_name_, pkt=pkt))
         self._send_packet2(pkt)
 
     def on_packet_recvstatus(self, data):
@@ -126,7 +134,7 @@ class OutConnection(BaseConnection):
         return True
 
     def _send_challenge_reply(self, challenge: int):
-        digest = self.make_digest(challenge, self.node_.get_cookie())
+        digest = self.make_digest(challenge, self._get_node().get_cookie())
         self.my_challenge_ = int(random.random() * 0x7fffffff)
 
         pkt = b'r' + util.to_u32(self.my_challenge_) + digest
@@ -139,7 +147,7 @@ class OutConnection(BaseConnection):
         digest = data[1:]
         if not self.check_digest(digest=digest,
                                  challenge=self.my_challenge_,
-                                 cookie=self.node_.get_cookie()):
+                                 cookie=self._get_node().get_cookie()):
             return self.protocol_error("Handshake digest verification failed")
 
         self.packet_len_size_ = 4
@@ -148,5 +156,5 @@ class OutConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        logging.info("Out-connection established with %s" % self.peer_name_)
+        LOG.info("Out-connection established with %s" % self.peer_name_)
         return True

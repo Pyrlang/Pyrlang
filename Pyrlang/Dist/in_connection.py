@@ -16,12 +16,14 @@
     by another node with the help of EPMD).
 """
 
-import random
 import logging
+import random
 import struct
 
 from Pyrlang.Dist import util, dist_protocol
 from Pyrlang.Dist.base_connection import *
+
+LOG = logging.getLogger("Pyrlang")
 
 
 class InConnection(BaseConnection):
@@ -37,8 +39,8 @@ class InConnection(BaseConnection):
     RECV_NAME = 'recvname'
     WAIT_CHALLENGE_REPLY = 'wait_ch_reply'
 
-    def __init__(self, node):
-        BaseConnection.__init__(self, node)
+    def __init__(self, node_name: str):
+        BaseConnection.__init__(self, node_name)
         self.state_ = self.DISCONNECTED
 
     def on_connected(self, sockt, address):
@@ -81,7 +83,8 @@ class InConnection(BaseConnection):
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        logging.info("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        LOG.info("RECV_NAME: %s %s"
+                 % (self.peer_distr_version_, self.peer_name_))
 
         # Report
         self._send_packet2(b"sok")
@@ -100,7 +103,7 @@ class InConnection(BaseConnection):
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        logging.info("challengereply: peer's challenge", peers_challenge)
+        LOG.info("challengereply: peer's challenge", peers_challenge)
 
         my_cookie = self.node_.node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
@@ -116,18 +119,19 @@ class InConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        logging.info("In-connection established with %s" % self.peer_name_)
+        LOG.info("In-connection established with %s" % self.peer_name_)
         return True
 
     def _send_challenge(self, my_challenge):
-        logging.info("Sending challenge (our number is %d)" % my_challenge,
-                     self.node_.dist_.name_)
+        n = self._get_node()
+        LOG.info("Sending challenge (our number is %d) %s"
+                 % (my_challenge, n.dist_.name_))
         msg = b'n' \
               + struct.pack(">HII",
                             dist_protocol.DIST_VSN,
-                            self.node_.node_opts_.dflags_,
+                            n.node_opts_.dflags_,
                             my_challenge) \
-              + bytes(self.node_.dist_.name_, "latin1")
+              + bytes(n.dist_.name_, "latin1")
         self._send_packet2(msg)
 
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):

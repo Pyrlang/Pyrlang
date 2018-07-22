@@ -16,14 +16,16 @@
     EPMD is a daemon application, part of Erlang/OTP which registers Erlang
     nodes on the local machine and helps nodes finding each other.
 """
-import struct
 import logging
+import struct
+import sys
 
 import gevent
-import sys
 from gevent import socket
 
 from Pyrlang.Dist import util, dist_protocol
+
+LOG = logging.getLogger("Pyrlang")
 
 NODE_HIDDEN = 77
 NODE_NORMAL = 72
@@ -78,40 +80,41 @@ class EPMDClient:
         """
         while True:
             try:
-                print("EPMD: Connecting %s:%d" % (self.host_, self.port_))
+                LOG.info("EPMD: Connecting %s:%d" % (self.host_, self.port_))
                 host_port = (self.host_, self.port_)
                 self.sock_ = socket.create_connection(address=host_port,
                                                       timeout=5.0)
                 break  # the connect loop
 
             except socket.error as err:
-                print("EPMD: connection error:", err,
-                      ". Is local EPMD running? Try `epmd -daemon`")
+                LOG.error("EPMD: connection error:", err,
+                          ". Is local EPMD running? Try `epmd -daemon`")
                 gevent.sleep(5)
 
-        print("EPMD: Socket connected")
+        LOG.info("EPMD: Socket connected")
         return True
 
     def alive2(self, dist) -> bool:
         """ Send initial hello (ALIVE2) to EPMD
 
+            :type dist: Pyrlang.Dist.distribution.ErlangDistribution
             :param dist: The distribution object from the node
             :return: Success True or False
         """
         self._req_alive2(nodetype=NODE_HIDDEN,
-                         node_name=dist.name_,
+                         node_name=dist.node_name_,
                          in_port=dist.in_port_,
                          dist_vsn=dist_protocol.DIST_VSN_PAIR,
                          extra="")
 
         creation = self._read_alive2_reply()
         if creation >= 0:
-            print("EPMD: Connected successfully (creation %d)"
-                  % creation)
+            LOG.info("EPMD: Connected successfully (creation %d)"
+                     % creation)
             dist.creation_ = creation
             return True
 
-        print("EPMD: ALIVE2 failed with creation %d" % creation)
+        LOG.error("EPMD: ALIVE2 failed with creation %d" % creation)
         return False
 
     def _read_alive2_reply(self) -> int:
@@ -123,7 +126,7 @@ class EPMDClient:
         # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
         reply = self.sock_.recv(2)
         if not reply:
-            print("EPMD: ALIVE2 Read error. Closed?", reply)
+            LOG.error("EPMD: ALIVE2 Read error. Closed?", reply)
             return -1
 
         if reply[1] == 0:
@@ -131,7 +134,7 @@ class EPMDClient:
             (creation,) = struct.unpack(">H", cr)
             return creation
 
-        print("EPMD: ALIVE2 returned error", reply[1])
+        LOG.error("EPMD: ALIVE2 returned error", reply[1])
         return -1
 
     @staticmethod
@@ -154,7 +157,7 @@ class EPMDClient:
                     dist_vsn: tuple, extra: str):
         msg = self._make_req_alive2(nodetype, node_name, in_port,
                                     dist_vsn, extra)
-        print("EPMD: sending ALIVE2 req", (node_name, nodetype, dist_vsn))
+        LOG.debug("EPMD: sending ALIVE2 req", (node_name, nodetype, dist_vsn))
         self._req(msg)
 
     def _req(self, req: bytes):
@@ -180,8 +183,8 @@ class EPMDClient:
         (r_name, r_ip_or_hostname) = node.split("@")
         r_ip = socket.gethostbyname(r_ip_or_hostname)
 
-        port_please2 = bytes([REQ_PORT_PLEASE2]) \
-                       + bytes(r_name, "utf8")  # not sure if latin-1 here
+        # not sure if latin-1 here
+        port_please2 = bytes([REQ_PORT_PLEASE2]) + bytes(r_name, "utf8")
 
         resp = EPMDClient._fire_forget_query(r_ip, port_please2)
 
@@ -190,13 +193,12 @@ class EPMDClient:
         # 1     1
         # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
-            logging.error("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
-                          % (r_ip, resp))
+            LOG.error("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
+                      % (r_ip, resp))
             raise EPMDConnectionError("PORT_PLEASE2 wrong response")
 
         if resp[1] != 0:
-            logging.error(
-                "EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
+            LOG.error("EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
             raise EPMDConnectionError("PORT_PLEASE2 error %d" % resp[1])
 
         # Response structure

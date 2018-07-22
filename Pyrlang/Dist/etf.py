@@ -242,7 +242,8 @@ def binary_to_term_2(data: bytes, options: dict = None):
         serial = util.u32(tail, 4)
         creation = tail[8]
 
-        pid = Pid(node=node,
+        assert isinstance(node, Atom)
+        pid = Pid(node_name=node.text_,
                   id=id1,
                   serial=serial,
                   creation=creation)
@@ -413,7 +414,7 @@ def _pack_atom(text: str, encoding: str) -> bytes:
 # TODO: maybe move this into pid class
 def _pack_pid(val) -> bytes:
     data = bytes([TAG_PID_EXT]) + \
-           term_to_binary_2(val.node_) + \
+           term_to_binary_2(Atom(val.node_name_)) + \
            util.to_u32(val.id_) + \
            util.to_u32(val.serial_) + \
            bytes([val.creation_])

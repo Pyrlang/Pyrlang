@@ -98,9 +98,6 @@ locally or remotely.
               receiver=term.Atom('my_erlang_process'),
               message=(123, 4.5678, [term.Atom('test')]))
 
-.. note:: Node is a singleton, you can find the node by referencing
-    ``Node.singleton``. This may change in future.
-
 Send from Python to a remote
 ----------------------------
 

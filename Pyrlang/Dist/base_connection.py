@@ -24,6 +24,8 @@ from typing import Union
 from Pyrlang import mailbox, Term
 from Pyrlang.Dist import util, etf
 
+LOG = logging.getLogger("Pyrlang")
+
 # Distribution protocol delivers pairs of (control_term, message).
 # http://erlang.org/doc/apps/erts/erl_dist_protocol.html
 # First element of control term in a 'p' message defines what it is
@@ -49,13 +51,10 @@ class DistributionError(Exception):
 
 
 class BaseConnection:
-    def __init__(self, node):
-        """ Create connection handler object.
+    def __init__(self, node_name: str):
+        """ Create connection handler object. """
 
-            :type node: Pyrlang.Node
-            :param node: Erlang node reference
-        """
-        self.node_ = node
+        self.node_name_ = node_name
         """ Reference to the running Erlang node. (XXX forms a ref cycle) """
 
         self.packet_len_size_ = 2
@@ -124,13 +123,15 @@ class BaseConnection:
     def on_packet(self, data) -> bool:
         pass
 
+    def _get_node(self):
+        from Pyrlang.node import Node
+        return Node.all_nodes[self.node_name_]
+
     def on_connection_lost(self):
         """ Handler is called when the client has disconnected
         """
         if self.peer_name_ is not None:
-            from Pyrlang.node import Node
-            Node.singleton.inbox_.put(
-                ('node_disconnected', self.peer_name_))
+            self._get_node().inbox_.put(('node_disconnected', self.peer_name_))
 
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
@@ -142,16 +143,15 @@ class BaseConnection:
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        logging.info("Dist: pkt out", content)
+        LOG.info("Dist: pkt out", content)
         msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
-    @staticmethod
-    def on_passthrough_message(control_term, msg_term):
+    def on_passthrough_message(self, control_term, msg_term):
         """ On incoming 'p' message with control and data, handle it.
             :raises DistributionError: when 'p' message is not a tuple
         """
-        logging.info("Passthrough msg %s\n%s" % (control_term, msg_term))
+        LOG.info("Passthrough msg %s\n%s" % (control_term, msg_term))
 
         if type(control_term) != tuple:
             raise DistributionError("In a 'p' message control term must be a "
@@ -159,31 +159,30 @@ class BaseConnection:
 
         ctrl_msg_type = control_term[0]
 
-        from Pyrlang import node
-        the_node = node.Node.singleton
+        n = self._get_node()
 
         if ctrl_msg_type == CONTROL_TERM_REG_SEND:
-            return the_node.send(sender=control_term[1],
-                                 receiver=control_term[3],
-                                 message=msg_term)
+            return n.send(sender=control_term[1],
+                          receiver=control_term[3],
+                          message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return the_node.send(sender=None,
-                                 receiver=control_term[2],
-                                 message=msg_term)
+            return n.send(sender=None,
+                          receiver=control_term[2],
+                          message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            return the_node.monitor_process(origin=sender,
-                                            target=target)
+            return n.monitor_process(origin=sender,
+                                     target=target)
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            return the_node.demonitor_process(origin=sender,
-                                              target=target)
+            return n.demonitor_process(origin=sender,
+                                       target=target)
 
         else:
-            logging.error(
+            LOG.error(
                 "Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
 
     def handle_inbox(self):
@@ -198,17 +197,17 @@ class BaseConnection:
         if m[0] == 'send':
             (_, from_pid, dst, msg) = m
             ctrl = self._control_term_send(from_pid=from_pid, dst=dst)
-            logging.info("Connection: control msg %s; %s" % (ctrl, msg))
+            LOG.info("Connection: control msg %s; %s" % (ctrl, msg))
             return self._control_message(ctrl, msg)
 
         elif m[0] == 'monitor_p_exit':
             (_, from_pid, to_pid, ref, reason) = m
             ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
                     from_pid, to_pid, ref, reason)
-            logging.info("Monitor proc exit: %s with %s" % (from_pid, reason))
+            LOG.info("Monitor proc exit: %s with %s" % (from_pid, reason))
             return self._control_message(ctrl, None)
 
-        logging.error("Connection: Unhandled message to InConnection %s" % m)
+        LOG.error("Connection: Unhandled message to InConnection %s" % m)
 
     @staticmethod
     def _control_term_send(from_pid, dst):
@@ -235,7 +234,7 @@ class BaseConnection:
         return result
 
     def protocol_error(self, msg) -> bool:
-        logging.error("Dist protocol error: %s (state %s)" % (msg, self.state_))
+        LOG.error("Dist protocol error: %s (state %s)" % (msg, self.state_))
         return False
 
     @staticmethod
@@ -275,8 +274,8 @@ class BaseConnection:
 
     def report_dist_connected(self):
         assert (self.peer_name_ is not None)
-        logging.info("Dist: connected to", self.peer_name_)
-        self.node_.inbox_.put(('node_connected', self.peer_name_, self))
+        LOG.info("Dist: connected to", self.peer_name_)
+        self._get_node().inbox_.put(('node_connected', self.peer_name_, self))
 
 
 __all__ = ['BaseConnection', 'DistributionError']

@@ -27,25 +27,26 @@ class Pid:
         uniquely identifies a running process in the cluster.
     """
 
-    def __init__(self, node: Atom, id: int, serial: int, creation: int) -> None:
-        self.node_ = node
+    def __init__(self, node_name: str, id: int, serial: int,
+                 creation: int) -> None:
+        self.node_name_ = node_name
         self.id_ = id
         self.serial_ = serial
         self.creation_ = creation
 
     def is_local_to(self, node):
-        return self.node_ == node.name_
+        return self.node_name_ == node.node_name_
 
     def __repr__(self) -> str:
         return "Pid<%d.%d.%d>@%s" % (self.creation_, self.id_, self.serial_,
-                                     self.node_.text_)
+                                     self.node_name_)
 
     def __str__(self) -> str:
         return self.__repr__()
 
     def equals(self, other) -> bool:
         return isinstance(other, Pid) \
-               and self.node_ == other.node_ \
+               and self.node_name_ == other.node_name_ \
                and self.id_ == other.id_ \
                and self.serial_ == other.serial_ \
                and self.creation_ == other.creation_
@@ -56,5 +57,5 @@ class Pid:
         return not self.equals(other)
 
     def __hash__(self):
-        return hash((PID_MARKER, self.node_,
+        return hash((PID_MARKER, self.node_name_,
                      self.id_, self.serial_, self.creation_))
