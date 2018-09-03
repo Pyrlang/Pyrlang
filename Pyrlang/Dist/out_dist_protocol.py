@@ -20,13 +20,13 @@ import random
 import logging
 
 from Pyrlang.Dist import util, dist_protocol
-from Pyrlang.Dist.base_connection import *
-from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Dist.base_dist_protocol import *
+from Pyrlang.Engine.base_engine import BaseEngine
 
-LOG = logging.getLogger("Pyrlang")
+LOG = logging.getLogger("Pyrlang.Dist")
 
 
-class OutConnection(BaseConnection):
+class OutDistProtocol(BaseDistProtocol):
     """ Handles outgoing connections from our to other nodes.
 
         Behaves like a ``Greenlet`` but the actual recv loop around this
@@ -47,16 +47,16 @@ class OutConnection(BaseConnection):
     RECV_CHALLENGE_ACK = 'recv_challenge_ack'
 
     def __init__(self, node_name: str, engine: BaseEngine):
-        BaseConnection.__init__(self, node_name=node_name, engine=engine)
+        BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
     def on_connected(self, sockt, address):
-        BaseConnection.on_connected(self, sockt=sockt, address=address)
+        BaseDistProtocol.on_connected(self, sockt=sockt, address=address)
         self._send_name()
         self.state_ = self.RECV_STATUS
 
     def on_connection_lost(self):
-        BaseConnection.on_connection_lost(self)
+        BaseDistProtocol.on_connection_lost(self)
         self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
@@ -95,8 +95,7 @@ class OutConnection(BaseConnection):
               bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
               util.to_u32(self._get_node().node_opts_.dflags_) + \
               bytes(self.node_name_, "latin-1")
-        LOG.info("Dist-out: send_name {pkt} (name={name})"
-                     .format(name=self.node_name_, pkt=pkt))
+        LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
         self._send_packet2(pkt)
 
     def on_packet_recvstatus(self, data):
@@ -157,5 +156,5 @@ class OutConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Out-connection established with %s" % self.peer_name_)
+        LOG.info("Outgoing: established with %s" % self.peer_name_)
         return True

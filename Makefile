@@ -17,6 +17,14 @@ example10b:
 	elixir --name elixir@127.0.0.1 --cookie COOKIE \
 		examples/elixir/test10.exs
 
+.PHONY: deps
+deps:
+	pip3 install -r requirements.txt
+
+.PHONY: docs
+docs:
+	cd docs && $(MAKE) html
+
 .PHONY: test
 test:
 	$(PY) test/dist_etf_decode_test.py && \

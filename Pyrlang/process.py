@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 import gevent
 from gevent import Greenlet
@@ -18,6 +19,8 @@ from typing import Set
 
 from Pyrlang.Term.pid import Pid
 from Pyrlang.bases import BaseNode
+
+LOG = logging.getLogger("Pyrlang")
 
 
 class Process(Greenlet):
@@ -32,6 +35,10 @@ class Process(Greenlet):
             object.
         """
         Greenlet.__init__(self)
+
+        self.engine_ = node.engine_
+        """ Pluggable async event engine """
+
         self.node_name_ = node.node_name_
         """ Convenience field to see the Node (from Node.all_nodes[name]). """
 
@@ -73,14 +80,15 @@ class Process(Greenlet):
             # run, so rather than unnecessarily consuming CPU block
             msg = self.inbox_.get()
             # msg = self.inbox_.receive(filter_fn=lambda _: True)
-            print("%s: handle_inbox %s" % (self, msg))
+            # LOG.info("%s: handle_inbox %s", self, msg)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)
 
     def handle_one_inbox_message(self, msg):
         """ Override this method to handle new incoming messages. """
-        print("%s: Handling msg %s" % (self.pid_, msg))
+        LOG.error("%s: Unhandled msg %s" % (self.pid_, msg))
+        raise NotImplementedError()
 
     def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and

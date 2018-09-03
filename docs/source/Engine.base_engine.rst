@@ -1,7 +1,7 @@
-Dist.in_connection module
+Engine.base_engine module
 =========================
 
-.. automodule:: Pyrlang.Dist.in_connection
+.. automodule:: Pyrlang.Engine.base_engine
     :members:
     :undoc-members:
     :show-inheritance:

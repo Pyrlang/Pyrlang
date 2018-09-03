@@ -16,7 +16,7 @@ import logging
 
 from typing import Dict, Union
 
-from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Engine.base_engine import BaseEngine
 from Pyrlang.Engine.task import Task
 from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
@@ -28,8 +28,9 @@ LOG = logging.getLogger("Pyrlang")
 
 
 class NodeException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("NodeException: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
 
 
 class Node(Task, BaseNode):
@@ -224,12 +225,10 @@ class Node(Task, BaseNode):
 
         dst = self.where_is(receiver)
         if dst is not None:
-            LOG.debug(
-                "Node._send_local: pid %s <- %s" % (receiver, message))
+            LOG.debug("Node._send_local: to %s <- %s", receiver, message)
             dst.inbox_.put(message)
         else:
-            LOG.warning(
-                "Node._send_local: pid %s does not exist" % receiver)
+            LOG.warning("Node._send_local: receiver %s does not exist", receiver)
 
     def send(self, sender: Union[Pid, None], receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
@@ -294,7 +293,7 @@ class Node(Task, BaseNode):
                 values
         """
         if receiver_node not in self.dist_nodes_:
-            LOG.info("Node: connect to node", receiver_node)
+            LOG.info("Node: connect to node %s", receiver_node)
             handler = self.dist_.connect_to_node(
                 local_node=self.node_name_,
                 remote_node=receiver_node,
@@ -328,8 +327,7 @@ class Node(Task, BaseNode):
             :param target: Name or pid of a monitor target process
        """
         target_proc = self.where_is(target)
-        LOG.info(
-            "MonitorP: orig=%s targ=%s -> %s" % (origin, target, target_proc))
+        LOG.info("MonitorP: orig=%s targ=%s -> %s", origin, target, target_proc)
         if target_proc is not None:
             target_proc.monitors_.add(origin)
         else:

@@ -23,9 +23,10 @@ from typing import Union
 
 from Pyrlang import Term
 from Pyrlang.Dist import util, etf
-from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Engine.base_engine import BaseEngine
+from Pyrlang.Engine.base_protocol import BaseProtocol
 
-LOG = logging.getLogger("Pyrlang")
+LOG = logging.getLogger("Pyrlang.Dist")
 
 # Distribution protocol delivers pairs of (control_term, message).
 # http://erlang.org/doc/apps/erts/erl_dist_protocol.html
@@ -51,9 +52,10 @@ class DistributionError(Exception):
     pass
 
 
-class BaseConnection:
+class BaseDistProtocol(BaseProtocol):
     def __init__(self, node_name: str, engine: BaseEngine):
         """ Create connection handler object. """
+        super().__init__()
 
         self.node_name_ = node_name
         """ Reference to the running Erlang node. (XXX forms a ref cycle) """
@@ -89,14 +91,7 @@ class BaseConnection:
         self.socket_ = sockt
         self.addr_ = address
 
-    def consume(self, data: bytes) -> Union[bytes, None]:
-        """ Attempt to consume first part of data as a packet
-
-            :param data: The accumulated data from the socket which we try to
-                partially or fully consume
-            :return: Unconsumed data, incomplete following packet maybe or
-                nothing. Returning None requests to close the connection
-        """
+    def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
         if len(data) < self.packet_len_size_:
             # Not ready yet, keep reading
             return data
@@ -147,7 +142,7 @@ class BaseConnection:
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        LOG.info("Dist: pkt out", content)
+        LOG.debug("pkt out %s", content)
         msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
@@ -186,12 +181,11 @@ class BaseConnection:
                                        target=target)
 
         else:
-            LOG.error(
-                "Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
+            LOG.error("Unhandled 'p' message: %s; %s", control_term, msg_term)
 
     def handle_inbox(self):
         while True:
-            msg = self.engine_.queue_get(self.inbox_)
+            msg = self.inbox_.get()
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)
@@ -201,7 +195,7 @@ class BaseConnection:
         if m[0] == 'send':
             (_, from_pid, dst, msg) = m
             ctrl = self._control_term_send(from_pid=from_pid, dst=dst)
-            LOG.info("Connection: control msg %s; %s" % (ctrl, msg))
+            LOG.info("Control msg %s; %s" % (ctrl, msg))
             return self._control_message(ctrl, msg)
 
         elif m[0] == 'monitor_p_exit':
@@ -211,7 +205,7 @@ class BaseConnection:
             LOG.info("Monitor proc exit: %s with %s" % (from_pid, reason))
             return self._control_message(ctrl, None)
 
-        LOG.error("Connection: Unhandled message to InConnection %s" % m)
+        LOG.error("Unhandled message to InConnection %s" % m)
 
     @staticmethod
     def _control_term_send(from_pid, dst):
@@ -238,7 +232,7 @@ class BaseConnection:
         return result
 
     def protocol_error(self, msg) -> bool:
-        LOG.error("Dist protocol error: %s (state %s)" % (msg, self.state_))
+        LOG.error("Error: %s (state %s)" % (msg, self.state_))
         return False
 
     @staticmethod
@@ -246,7 +240,7 @@ class BaseConnection:
         """ Hash cookie + the challenge together producing a verification hash
             and return if they match against the offered 'digest'.
         """
-        expected_digest = BaseConnection.make_digest(challenge, cookie)
+        expected_digest = BaseDistProtocol.make_digest(challenge, cookie)
         # LOG("Check digest: expected digest", expected_digest,
         #  "peer digest", digest)
         return digest == expected_digest
@@ -278,8 +272,8 @@ class BaseConnection:
 
     def report_dist_connected(self):
         assert (self.peer_name_ is not None)
-        LOG.info("Dist: connected to", self.peer_name_)
+        LOG.info("Connected to %s", self.peer_name_)
         self._get_node().inbox_.put(('node_connected', self.peer_name_, self))
 
 
-__all__ = ['BaseConnection', 'DistributionError']
+__all__ = ['BaseDistProtocol', 'DistributionError']

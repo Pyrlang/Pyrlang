@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from Pyrlang import Term, gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
+
+LOG = logging.getLogger("Pyrlang")
 
 
 class NetKernel(Process):
@@ -29,7 +33,7 @@ class NetKernel(Process):
     def handle_one_inbox_message(self, msg):
         gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
         if not isinstance(gencall, gen.GenIncomingMessage):
-            print("NetKernel:", gencall)
+            LOG.debug("Not a GenIncomingMessage: %s", gencall)
             return
 
         # Incoming gen_call packet to net_kernel, might be that net_adm:ping
@@ -39,7 +43,7 @@ class NetKernel(Process):
             gencall.reply(local_pid=self.pid_,
                           result=Term.Atom('yes'))
         else:
-            print("NetKernel: unknown message", msg)
+            LOG.error("Unknown message %s", msg)
 
 
 __all__ = ['NetKernel']

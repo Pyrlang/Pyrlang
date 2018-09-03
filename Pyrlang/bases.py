@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Engine.base_engine import BaseEngine
 
 
 class BasePid:

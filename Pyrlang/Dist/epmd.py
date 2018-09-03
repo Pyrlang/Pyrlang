@@ -43,13 +43,15 @@ EPMD_REMOTE_DEFAULT_TIMEOUT = 5.0
 
 
 class EPMDClientError(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("EPMD: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
 
 
 class EPMDConnectionError(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("EPMD: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
 
 
 class EPMDClient:
@@ -87,8 +89,8 @@ class EPMDClient:
                 break  # the connect loop
 
             except socket.error as err:
-                LOG.error("EPMD: connection error:", err,
-                          ". Is local EPMD running? Try `epmd -daemon`")
+                LOG.error("EPMD: connection error %s" 
+                          ". Is local EPMD running? Try `epmd -daemon`", err)
                 gevent.sleep(5)
 
         LOG.info("EPMD: Socket connected")
@@ -126,7 +128,7 @@ class EPMDClient:
         # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
         reply = self.sock_.recv(2)
         if not reply:
-            LOG.error("EPMD: ALIVE2 Read error. Closed?", reply)
+            LOG.error("EPMD: ALIVE2 Read error. Closed? %s", reply)
             return -1
 
         if reply[1] == 0:
@@ -134,7 +136,7 @@ class EPMDClient:
             (creation,) = struct.unpack(">H", cr)
             return creation
 
-        LOG.error("EPMD: ALIVE2 returned error", reply[1])
+        LOG.error("EPMD: ALIVE2 returned error %s", reply[1])
         return -1
 
     @staticmethod
@@ -157,7 +159,8 @@ class EPMDClient:
                     dist_vsn: tuple, extra: str):
         msg = self._make_req_alive2(nodetype, node_name, in_port,
                                     dist_vsn, extra)
-        LOG.debug("EPMD: sending ALIVE2 req", (node_name, nodetype, dist_vsn))
+        LOG.debug("EPMD: sending ALIVE2 req n=%s (%s) vsn=%s",
+                  node_name, nodetype, dist_vsn)
         self._req(msg)
 
     def _req(self, req: bytes):
@@ -193,13 +196,12 @@ class EPMDClient:
         # 1     1
         # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
-            LOG.error("EPMD: PORT_PLEASE2 to %s sent wrong response %s"
-                      % (r_ip, resp))
-            raise EPMDConnectionError("PORT_PLEASE2 wrong response")
+            raise EPMDConnectionError(
+                "EPMD: PORT_PLEASE2 to %s sent wrong response %s" % (r_ip, resp))
 
         if resp[1] != 0:
-            LOG.error("EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
-            raise EPMDConnectionError("PORT_PLEASE2 error %d" % resp[1])
+            raise EPMDConnectionError(
+                "EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
 
         # Response structure
         # 1     1       2       1           1           2               ...

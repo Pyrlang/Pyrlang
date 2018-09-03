@@ -7,6 +7,7 @@
 # Run:          from project root run `make example1`
 # Try in Erlang shell: `net_adm:ping('py@127.0.0.1').`
 #
+import logging
 import sys
 sys.path.insert(0, ".")
 
@@ -31,4 +32,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.getLogger("Pyrlang").setLevel(logging.DEBUG)
     main()

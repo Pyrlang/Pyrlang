@@ -49,16 +49,24 @@ changes required.
     Dist.epmd
     Dist.etf
     Dist.node_opts
-    Dist.in_connection
-    Dist.out_connection
-    Dist.helpers
+    Dist.in_dist_protocol
+    Dist.out_dist_protocol
+    Dist.base_dist_protocol
+
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Internal - Switchable Async Engine
+
+    Engine.base_engine
+    Engine.base_protocol
+    Engine.gevent_engine
 
 
 .. toctree::
     :maxdepth: 1
     :caption: Other modules
 
-    mailbox
     rex
     net_kernel
     gen

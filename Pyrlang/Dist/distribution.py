@@ -18,12 +18,10 @@
 
 import logging
 import gevent
-from gevent.server import StreamServer
 
-from Pyrlang.Dist import helpers
 from Pyrlang.Dist.epmd import EPMDClient
-from Pyrlang.Dist.out_connection import OutConnection
-from Pyrlang.Engine.engine import BaseEngine
+from Pyrlang.Dist.out_dist_protocol import OutDistProtocol
+from Pyrlang.Engine.base_engine import BaseEngine
 
 
 class ErlangDistribution:
@@ -50,14 +48,12 @@ class ErlangDistribution:
         proto_kwargs = {"node_name": node_name,
                         "engine": engine}
 
-        from Pyrlang.Dist.in_connection import InConnection
-        handler = helpers.make_handler_in(receiver_class=InConnection,
-                                          args=[],
-                                          kwargs=proto_kwargs)
-
-        self.in_srv_ = StreamServer(listener=('0.0.0.0', 0),
-                                    handle=handler)
-        self.in_srv_.start()
+        from Pyrlang.Dist.in_dist_protocol import InDistProtocol
+        self.in_srv_ = self.engine_.listen_with(
+            protocol_class=InDistProtocol,
+            protocol_args=[],
+            protocol_kwargs=proto_kwargs
+        )
         self.in_port_ = self.in_srv_.server_port
         print("Dist: Listening for dist connections on port", self.in_port_)
 
@@ -91,11 +87,11 @@ class ErlangDistribution:
         """
         try:
             host_port = EPMDClient.query_node(remote_node)
-            (handler, _sock) = helpers.connect_with(
-                protocol_class=OutConnection,
-                host_port=host_port,
-                args=[],
-                kwargs={"node_name": local_node, "engine": engine}
+            (handler, _sock) = self.engine_.connect_with(
+                protocol_class=OutDistProtocol,
+                protocol_args=[],
+                protocol_kwargs={"node_name": local_node, "engine": engine},
+                host_port=host_port
             )
             return handler
 
