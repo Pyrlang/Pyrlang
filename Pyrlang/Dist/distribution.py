@@ -17,11 +17,12 @@
 """
 
 import logging
-import gevent
 
 from Pyrlang.Dist.epmd import EPMDClient
 from Pyrlang.Dist.out_dist_protocol import OutDistProtocol
 from Pyrlang.Engine.base_engine import BaseEngine
+
+LOG = logging.getLogger("Pyrlang.Dist")
 
 
 class ErlangDistribution:
@@ -55,9 +56,9 @@ class ErlangDistribution:
             protocol_kwargs=proto_kwargs
         )
         self.in_port_ = self.in_srv_.server_port
-        print("Dist: Listening for dist connections on port", self.in_port_)
+        LOG.info("Listening for dist connections on port %s", self.in_port_)
 
-        self.epmd_ = EPMDClient()
+        self.epmd_ = EPMDClient(engine)
 
     def connect(self, node) -> bool:
         """ Looks up EPMD daemon and connects to it trying to discover other 
@@ -67,7 +68,7 @@ class ErlangDistribution:
             if self.epmd_.connect():
                 return self.epmd_.alive2(self)
 
-            gevent.sleep(5)
+            self.engine_.sleep(5.0)
 
     def disconnect(self) -> None:
         """ Finish EPMD connection, this will remove the node from the list of
@@ -86,7 +87,7 @@ class ErlangDistribution:
             :return: Handler or None
         """
         try:
-            host_port = EPMDClient.query_node(remote_node)
+            host_port = self.epmd_.query_node(remote_node)
             (handler, _sock) = self.engine_.connect_with(
                 protocol_class=OutDistProtocol,
                 protocol_args=[],

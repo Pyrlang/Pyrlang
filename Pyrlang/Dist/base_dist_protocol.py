@@ -135,7 +135,7 @@ class BaseDistProtocol(BaseProtocol):
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        # LOG("Dist: pkt out", content)
+        LOG.debug("pkt out %s", content)
         msg = struct.pack(">H", len(content)) + content
         self.socket_.sendall(msg)
 

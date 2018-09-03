@@ -24,6 +24,7 @@ def main():
 
     # To be able to send to Erlang shell by name first give it a registered
     # name: `erlang:register(shell, self()).`
+    # To see an incoming message in shell: `flush().`
     node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
 
     while True:

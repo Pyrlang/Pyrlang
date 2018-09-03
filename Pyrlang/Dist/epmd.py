@@ -20,10 +20,8 @@ import logging
 import struct
 import sys
 
-import gevent
-from gevent import socket
-
 from Pyrlang.Dist import util, dist_protocol
+from Pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -59,12 +57,16 @@ class EPMDClient:
         do other queries.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, engine: BaseEngine) -> None:
+        self.engine_ = engine  # type: BaseEngine
+        """ Pluggable async event engine (like gevent or asyncio) """
+
         self.host_ = '127.0.0.1'
         """ The local EPMD is always located on the local host. """
+
         self.port_ = EPMD_DEFAULT_PORT
 
-        self.sock_ = None  # type: socket
+        self.sock_ = None
 
     def close(self):
         """ Closing EPMD connection removes the node from available EPMD nodes
@@ -80,20 +82,21 @@ class EPMDClient:
 
             :return: True
         """
+        socket = self.engine_.socket_module()
         while True:
             try:
-                LOG.info("EPMD: Connecting %s:%d" % (self.host_, self.port_))
+                LOG.info("Connecting %s:%d" % (self.host_, self.port_))
                 host_port = (self.host_, self.port_)
                 self.sock_ = socket.create_connection(address=host_port,
                                                       timeout=5.0)
                 break  # the connect loop
 
             except socket.error as err:
-                LOG.error("EPMD: connection error %s" 
-                          ". Is local EPMD running? Try `epmd -daemon`", err)
-                gevent.sleep(5)
+                LOG.error("connection error %s. Is local EPMD running? "
+                          "Try `epmd -daemon`", err)
+                self.engine_.sleep(5.0)
 
-        LOG.info("EPMD: Socket connected")
+        LOG.info("Socket connected")
         return True
 
     def alive2(self, dist) -> bool:
@@ -111,12 +114,12 @@ class EPMDClient:
 
         creation = self._read_alive2_reply()
         if creation >= 0:
-            LOG.info("EPMD: Connected successfully (creation %d)"
+            LOG.info("Connected successfully (creation %d)"
                      % creation)
             dist.creation_ = creation
             return True
 
-        LOG.error("EPMD: ALIVE2 failed with creation %d" % creation)
+        LOG.error("ALIVE2 failed with creation %d" % creation)
         return False
 
     def _read_alive2_reply(self) -> int:
@@ -128,7 +131,7 @@ class EPMDClient:
         # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
         reply = self.sock_.recv(2)
         if not reply:
-            LOG.error("EPMD: ALIVE2 Read error. Closed? %s", reply)
+            LOG.error("ALIVE2 Read error. Closed? %s", reply)
             return -1
 
         if reply[1] == 0:
@@ -136,7 +139,7 @@ class EPMDClient:
             (creation,) = struct.unpack(">H", cr)
             return creation
 
-        LOG.error("EPMD: ALIVE2 returned error %s", reply[1])
+        LOG.error("ALIVE2 returned error %s", reply[1])
         return -1
 
     @staticmethod
@@ -159,7 +162,7 @@ class EPMDClient:
                     dist_vsn: tuple, extra: str):
         msg = self._make_req_alive2(nodetype, node_name, in_port,
                                     dist_vsn, extra)
-        LOG.debug("EPMD: sending ALIVE2 req n=%s (%s) vsn=%s",
+        LOG.debug("sending ALIVE2 req n=%s (%s) vsn=%s",
                   node_name, nodetype, dist_vsn)
         self._req(msg)
 
@@ -169,8 +172,7 @@ class EPMDClient:
         header = struct.pack(">H", len(req))
         self.sock_.sendall(header + req)
 
-    @staticmethod
-    def query_node(node: str) -> tuple:
+    def query_node(self, node: str) -> tuple:
         """ Query EPMD about the port to the given node.
 
             :param node: String with node "name@ip" or "name@hostname"
@@ -184,12 +186,13 @@ class EPMDClient:
             raise EPMDClientError("Node must have @ in it")
 
         (r_name, r_ip_or_hostname) = node.split("@")
+        socket = self.engine_.socket_module()
         r_ip = socket.gethostbyname(r_ip_or_hostname)
 
         # not sure if latin-1 here
         port_please2 = bytes([REQ_PORT_PLEASE2]) + bytes(r_name, "utf8")
 
-        resp = EPMDClient._fire_forget_query(r_ip, port_please2)
+        resp = self._fire_forget_query(r_ip, port_please2)
 
         # RESP_PORT2
         # Response Error structure
@@ -197,11 +200,11 @@ class EPMDClient:
         # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
             raise EPMDConnectionError(
-                "EPMD: PORT_PLEASE2 to %s sent wrong response %s" % (r_ip, resp))
+                "PORT_PLEASE2 to %s sent wrong response %s" % (r_ip, resp))
 
         if resp[1] != 0:
             raise EPMDConnectionError(
-                "EPMD: PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
+                "PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
 
         # Response structure
         # 1     1       2       1           1           2               ...
@@ -222,9 +225,9 @@ class EPMDClient:
 
         return r_ip, r_port
 
-    @staticmethod
-    def _fire_forget_query(ip: str, query: bytes) -> bytes:
+    def _fire_forget_query(self, ip: str, query: bytes) -> bytes:
         """ Connect to node, fire the query, read and disconnect. """
+        socket = self.engine_.socket_module()
         s = socket.create_connection(address=(ip, EPMD_DEFAULT_PORT),
                                      timeout=EPMD_REMOTE_DEFAULT_TIMEOUT)
         query1 = util.to_u16(len(query)) + query

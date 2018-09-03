@@ -43,15 +43,15 @@ class GeventEngine(BaseEngine):
     """
 
     def __init__(self):
+        super().__init__()
         from gevent import monkey
         monkey.patch_all()
 
-        # self.loop_ = gevent.get_hub()
-        log_fmt = '%(asctime)-15s [%(name)s] %(module)s: %(message)s'
-        logging.basicConfig(format=log_fmt)
-
     def sleep(self, seconds: float):
         gevent.sleep(seconds)
+
+    def socket_module(self):
+        return socket
 
     @staticmethod
     def start_task(t: Task):
@@ -190,8 +190,9 @@ class GeventEngine(BaseEngine):
     def listen_with(self, protocol_class: Type[BaseProtocol],
                     protocol_args: list,
                     protocol_kwargs: dict) -> StreamServer:
-        LOG.info("Listening on %s (%s)", )
-        in_srv = StreamServer(listener=('0.0.0.0', 0),
+        host_port = ('0.0.0.0', 0)
+        in_srv = StreamServer(listener=host_port,
                               handle=GeventEngine.make_serve_loop)
         in_srv.start()
+        LOG.info("Listening on %s (%s)", host_port, in_srv.server_port)
         return in_srv

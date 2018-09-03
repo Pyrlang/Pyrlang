@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import struct
-import gevent
 
 
 def u16(data: bytes, pos: int = 0):
@@ -50,12 +49,6 @@ def dec_bytes(data: bytes, sep: str= " "):
     return sep.join(str(bval) for bval in data)
 
 
-def schedule(delay, func, *args, **kw_args):
-    """ Spawns a greenlet with args periodically """
-    gevent.spawn_later(0, func, *args, **kw_args)
-    gevent.spawn_later(delay, schedule, delay, func, *args, **kw_args)
-
-
-__all__ = ['hex_bytes', 'dec_bytes', 'schedule',
+__all__ = ['hex_bytes', 'dec_bytes',
            'u16', 'u32', 'i32',
            'to_u16', 'to_u32', 'to_i32']

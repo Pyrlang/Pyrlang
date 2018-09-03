@@ -207,12 +207,12 @@ class Node(Task, BaseNode):
 
         receiver_obj = self.where_is(receiver)
         if receiver_obj is not None:
-            LOG.info("Node: send local reg=%s receiver=%s msg=%s" % (
+            LOG.info("Send local reg=%s receiver=%s msg=%s" % (
                 receiver, receiver_obj, message))
             receiver_obj.inbox_.put(message)
         else:
             LOG.warning(
-                "Node: send to unregistered name %s ignored" % receiver)
+                "Send to unregistered name %s ignored" % receiver)
 
     def _send_local(self, receiver, message) -> None:
         """ Try find a process by pid and drop a message into its ``inbox_``.
@@ -271,7 +271,7 @@ class Node(Task, BaseNode):
         raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
-        LOG.debug("Node._send_remote %s <- %s" % (receiver, message))
+        LOG.debug("_send_remote %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)
@@ -291,9 +291,10 @@ class Node(Task, BaseNode):
             :param receiver_node: Name of a remote node
             :param message: A crafted tuple with command name and some more
                 values
+            :raises: NodeException
         """
         if receiver_node not in self.dist_nodes_:
-            LOG.info("Node: connect to node %s", receiver_node)
+            LOG.info("Connect to node %s", receiver_node)
             handler = self.dist_.connect_to_node(
                 local_node=self.node_name_,
                 remote_node=receiver_node,
@@ -303,14 +304,14 @@ class Node(Task, BaseNode):
                 raise NodeException("Node not connected %s" % receiver_node)
 
             # block until connected, and get the connected message
-            LOG.info("Node: wait for 'node_connected'")
+            LOG.info("Wait for 'node_connected'")
             # msg = self.inbox_.receive_wait(
             #     filter_fn=lambda m: m[0] == 'node_connected'
             # )
             while receiver_node not in self.dist_nodes_:
                 self.engine_.sleep(0.1)
 
-            LOG.info("Node: connected")
+            LOG.info("Connected")
 
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)
