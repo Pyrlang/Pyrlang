@@ -110,6 +110,10 @@ class GeventEngine(BaseEngine):
         LOG.info("Listening on %s (%s)", host_port, in_srv.server_port)
         return in_srv
 
+    def spawn(self, a_callable):
+        greenlet = gevent.spawn(a_callable)
+        greenlet.start()
+
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #

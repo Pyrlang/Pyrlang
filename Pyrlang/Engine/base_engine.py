@@ -49,3 +49,9 @@ class BaseEngine:
             *   socket.gethostbyname
         """
         raise NotImplementedError()
+
+    def spawn(self, a_callable):
+        """ Creates an async task running together with other tasks on this
+            async engine. I.e. a greenlet, a fiber, a thread, whatever there is
+        """
+        raise NotImplementedError()

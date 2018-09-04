@@ -102,13 +102,11 @@ class Node(Task, BaseNode):
         # execution, which takes 'rpc:call's from Erlang
         from Pyrlang.rex import Rex
         self.rex_ = Rex(self)
-        self.rex_.start()
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
         from Pyrlang.net_kernel import NetKernel
         self.net_kernel_ = NetKernel(self)
-        self.net_kernel_.start()
 
     def task_loop(self) -> bool:
         """ This is called periodically by the Task (async engine adapter).
