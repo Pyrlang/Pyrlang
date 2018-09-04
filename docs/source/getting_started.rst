@@ -16,12 +16,14 @@ Start the Node
         node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
         event_engine.start_task(node)
 
-        # Attempt to send something will initiate a connection before sending
-        pid = node.register_new_process(None)
+        fake_pid = node.register_new_process()
 
         # To be able to send to Erlang shell by name first give it a registered
         # name: `erlang:register(shell, self()).`
-        node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
+        # To see an incoming message in shell: `flush().`
+        node.send(sender=fake_pid,
+                  receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+                  message=Atom('hello'))
 
         while True:
             # Sleep gives other greenlets time to run
@@ -43,8 +45,8 @@ Connect nodes
     automatically by sending to a remote name using tuple format
     ``{Name, Node}`` or sending to a remote pid (if you have it).
 
-You can initiate the connection between nodes from Erlang side. To do this,
-on Erlang side you can use ``net_adm:ping``.
+You can initiate the connection between nodes from Erlang side in a different
+way. To do this on Erlang side you can use ``net_adm:ping``.
 
 .. code-block:: erlang
 
@@ -112,7 +114,7 @@ The node connection will be established automatically.
               message=Atom('hello'))
 
 You can send messages to a remote named process, for this use tuple send format
-like ``{Name, Node}``. Sender pid is REQUIRED and must be provided,
+like ``{Name, Node}``. For remote sends sender pid is REQUIRED,
 even if it is a fake pid (see example below how to create a fake pid).
 
 To try this, open an Erlang shell and register shell with the name ``'shell'``:
@@ -126,8 +128,8 @@ established automatically):
 
 .. code-block:: python
 
-    pid = node.register_new_process(None)  # create a fake pid
-    node.send(sender=pid,
+    fake_pid = node.register_new_process(None)  # create a fake pid
+    node.send(sender=fake_pid,
               receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
               message=Atom('hello'))
 
@@ -156,13 +158,7 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. code-block:: python
 
-    import gevent
-    from gevent import monkey
-    monkey.patch_all()
-    import Pyrlang
-    from Pyrlang import Atom
-    from Pyrlang import Process
-
+    from Pyrlang import Node, Atom, Process, GeventEngine
 
     class MyProcess(Process):
         def __init__(self, node) -> None:
@@ -173,15 +169,15 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
         def handle_one_inbox_message(self, msg):
             print("Incoming", msg)
 
-
     def main():
-        node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-        node.start()
+        event_engine = GeventEngine()
+        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+        event_engine.start_task(node)
+
         # this automatically schedules itself to run via gevent
         mp = MyProcess(node)
         while True:
-            gevent.sleep(0.1)
-
+            event_engine.sleep(0.1)
 
     if __name__ == "__main__":
         main()
@@ -195,6 +191,9 @@ Now sending from Erlang is easy:
 
 Implement a Gen_server-like Object
 ----------------------------------
+
+.. todo::
+    This section needs to be updated when GenServer is added
 
 It is not very hard to implement minimum interface required to be able to
 respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
