@@ -23,7 +23,7 @@ changes required.
     :caption: Contents:
 
     examples
-    getting_started
+    cookbook
     data_types
 
     node

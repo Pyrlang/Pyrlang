@@ -1,5 +1,5 @@
-Getting Started
-===============
+Cookbook - How to Get Started
+=============================
 
 You might have come here to see some examples. Very well...
 But have a quick look at :doc:`examples` page too!
@@ -9,10 +9,10 @@ Start the Node
 
 .. code-block:: python
 
-    from Pyrlang import Node, Atom, GeventEngine
+    from Pyrlang import Node, Atom, GeventEngine # or AsyncioEngine
 
     def main():
-        event_engine = GeventEngine()
+        event_engine = GeventEngine()  # or AsyncioEngine
         node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
 
         fake_pid = node.register_new_process()
@@ -157,7 +157,7 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. code-block:: python
 
-    from Pyrlang import Node, Atom, Process, GeventEngine
+    from Pyrlang import Node, Atom, Process, GeventEngine # or AsyncioEngine
 
     class MyProcess(Process):
         def __init__(self, node) -> None:
@@ -169,7 +169,7 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
             print("Incoming", msg)
 
     def main():
-        event_engine = GeventEngine()
+        event_engine = GeventEngine()  # or AsyncioEngine
         node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
 
         # this automatically schedules itself to run via gevent
@@ -187,54 +187,45 @@ Now sending from Erlang is easy:
     (erl@127.0.0.1) 1> {my_process, 'py@127.0.0.1'} ! hello.
 
 
-Implement a Gen_server-like Object
-----------------------------------
+TODO Remote Calculations on Python Node
+---------------------------------------
+
+**Problem:**
+While it is possible to subclass the :py:class:`~Pyrlang.process.Process`
+class and implement a Erlang-like process, often existing Python code
+exposes just a functional API or a class which has to be created for the
+calculation to be performed.
+Often you would like to use some functional API without sending the results
+over the wire until they are ready.
+
+**Solution:**
+A notebook-like remote execution API, where intermediate call results are stored
+in history log and can be referred by name or index.
+
+.. todo::
+    Describe how chain of calculations can be performed remotely in
+    **direct mode** (one by one) using the new API.
+
+
+TODO Lazy Remote Calculations on Python Node
+--------------------------------------------
+
+**Problem:**
+Same as with direct remote calculations: Often you would like to use some
+functional API without sending the results over the wire until they are ready.
+Lazy remote calculations API allows you to prebuild your calculation as a data
+structure on Erlang side and then execute it remotely on one or more
+Pyrlang nodes, sending you the final result.
+Intermediate call results are stored in history log and can be referred by name
+or index.
+
+.. todo::
+    Describe how to calculate chain of calls on a remote node **lazily**
+    using the new API.
+
+
+TODO Implement a Gen_server-like Object
+---------------------------------------
 
 .. todo::
     This section needs to be updated when GenServer is added
-
-It is not very hard to implement minimum interface required to be able to
-respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
-
-Process class has a ``_run`` function which calls ``self.handle_inbox()``
-repeatedly.
-:py:class:`~Pyrlang.mailbox.Mailbox`
-class offers ``receive_wait(filter_fn)``
-for selective receive with a wait, ``receive(filter_fn)`` for instant mailbox
-check selectively and simple ``get()`` and ``get_nowait()`` functions.
-
-.. code-block:: python
-
-    from Pyrlang.process import Process
-
-    class MyProcess(Process):
-        def __init__(self, node) -> None:
-            Process.__init__(self, node)
-            node.register_name(self, term.Atom('my_process'))  # optional
-
-        def handle_inbox(self):
-            while True:
-                # Do a selective receive but the filter says always True
-                msg = self.inbox_.receive(filter_fn=lambda _: True)
-                if msg is None:
-                    break
-                self.handle_one_inbox_message(msg)
-
-        def handle_one_inbox_message(self, msg) -> None:
-            gencall = gen.parse_gen_message(msg)
-            if isinstance(gencall, str):
-                print("MyProcess:", gencall)
-                return
-
-            # Handle the message in 'gencall' using its sender_, ref_ and
-            # message_ fields
-
-            if EVERYTHING_IS_OK:
-                # Send a reply
-                gencall.reply(local_pid=self.pid_,
-                              result=SOME_RESULT_HERE)
-
-            else:
-                # Send an error exception which will crash Erlang caller
-                gencall.reply_exit(local_pid=self.pid_,
-                                   reason=SOME_ERROR_HERE)

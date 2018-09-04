@@ -28,6 +28,15 @@ class Process(BaseProcess):
         Registers itself in the process registry, can receive and send messages.
         To optionally register self with a name, call
         ``node.register_name(self, term.Atom('fgsfds'))``
+
+        Subclass the Process to run your logic in its ``_loop() -> bool``
+        function or to handle incoming messages via
+        ``handle_one_inbox_message(self, msg)``.
+
+        .. note::
+            Only a ``Process`` can serve as a target for sending messages, for
+            linking and monitoring. You do not need to create a Process for simple
+            one-way interactions with remote Erlang nodes.
     """
 
     def __init__(self, node: BaseNode) -> None:

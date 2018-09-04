@@ -16,7 +16,7 @@ from typing import List
 
 import array
 
-NIL = [] # type: List
+NIL = []  # type: List
 
 
 class ImproperList:
@@ -31,9 +31,12 @@ class ImproperList:
 
 
 def list_to_unicode_str(lst):
-    """ Convert list of large integers to a unicode string. """
+    """ A helper function to convert a list of large integers incoming from
+        Erlang into a unicode string. """
     return "".join(map(chr, lst))
 
 
 def list_to_str(lst):
+    """ A helper function to convert a list of bytes (0..255) into an
+        ASCII string. """
     return array.array('B', lst).tostring()
