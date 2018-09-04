@@ -165,7 +165,8 @@ class BaseDistProtocol(BaseProtocol):
                           message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return n.send(receiver=control_term[2],
+            return n.send(sender=None,
+                          receiver=control_term[2],
                           message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
@@ -181,14 +182,14 @@ class BaseDistProtocol(BaseProtocol):
         else:
             LOG.error("Unhandled 'p' message: %s; %s", control_term, msg_term)
 
-    def handle_inbox(self):
+    def periodic_check(self):
         while True:
             msg = self.inbox_.get()
             if msg is None:
                 break
-            self.handle_one_inbox_message(msg)
+            self._handle_one_inbox_message(msg)
 
-    def handle_one_inbox_message(self, m):
+    def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
             (_, from_pid, dst, msg) = m

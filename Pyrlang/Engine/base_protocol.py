@@ -25,5 +25,9 @@ class BaseProtocol:
     def on_connection_lost(self):
         pass
 
+    def periodic_check(self):
+        """ Override this to do periodic checks on something. """
+        pass
+
     def send(self, msg: bytes):
         self.send_buffer_ += msg

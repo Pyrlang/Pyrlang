@@ -150,6 +150,8 @@ async def _read_loop(proto: BaseProtocol,
             await ev_loop.sock_sendall(sock, proto.send_buffer_)
             proto.send_buffer_ = b''
 
+        proto.periodic_check()
+
         data = await ev_loop.sock_recv(sock, 4096)
         collected += data
 
@@ -167,5 +169,3 @@ async def _read_loop(proto: BaseProtocol,
                 break  # could not consume any more
 
             collected = collected1
-    # sock.close()
-    # handler.on_connection_lost()

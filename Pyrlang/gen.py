@@ -23,7 +23,8 @@ class GenBase:
         """
         from Pyrlang.node import Node
         n = Node.all_nodes[self.node_name_]
-        n.send(sender=local_pid, receiver=self.sender_,
+        n.send(sender=local_pid,
+               receiver=self.sender_,
                message=(self.ref_, result))
 
     def reply_exit(self, local_pid, reason):
@@ -49,6 +50,9 @@ class GenIncomingMessage(GenBase):
         GenBase.__init__(self, sender=sender, ref=ref, node_name=node_name)
         self.message_ = message
         """ The last part of the incoming message, the payload. """
+
+    def __str__(self):
+        return "GenIncomingMessage(" + str(self.message_) + ")"
 
 
 class GenIncomingCall(GenBase):

@@ -157,6 +157,8 @@ def _read_loop(proto: BaseProtocol, sock: socket.socket):
             sock.sendall(proto.send_buffer_)
             proto.send_buffer_ = b''
 
+        proto.periodic_check()
+
         ready = select.select([sock], [], [], 0.001)
         try:
             if ready[0]:
