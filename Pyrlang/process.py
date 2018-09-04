@@ -18,12 +18,12 @@ from gevent import Greenlet
 from typing import Set
 
 from Pyrlang.Term.pid import Pid
-from Pyrlang.bases import BaseNode
+from Pyrlang.bases import BaseNode, BaseProcess
 
 LOG = logging.getLogger("Pyrlang")
 
 
-class Process(Greenlet):
+class Process(BaseProcess, Greenlet):
     """ Implements Erlang process semantic and lifetime.
         Registers itself in the process registry, can receive and send messages.
         To optionally register self with a name, call

@@ -41,6 +41,7 @@ Features
 | List (improper)      | `tuple` (`list`, `Pyrlang.AnyTerm`) | A tuple with list and the tail element of the improper list                           |
 |                      |                                     | Sending an improper list to Erlang requires use of `Pyrlang.ImproperList` helper      |         
 | String               | Python `list`                       | Use helper functions in `Pyrlang.Term.list` module to convert to string               |
+| ASCII or UTF8 String or List of bytes | Python `bytes`     | If string contained only ASCII or UTF8, bytes will arrive                             | 
 | Tuple                | Python `tuple`                      |                                                                                       |
 | Map                  | Python `dict`                       |                                                                                       |
 | Binary               | Python `bytes`                      |                                                                                       |

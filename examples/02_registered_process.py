@@ -23,10 +23,10 @@ class MyProcess(Process):
     def __init__(self, node) -> None:
         Process.__init__(self, node)
         node.register_name(self, Atom('my_process'))  # optional
-        print("registering process - 'my_process'")
+        print("Example2: registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
-        print("Incoming", msg)
+        print("Example2: Incoming", msg)
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
     event_engine.start_task(node)
 
-    _mp = MyProcess(node)
+    MyProcess(node)
     while True:
         event_engine.sleep(0.1)
 

@@ -142,7 +142,7 @@ class Node(Task, BaseNode):
             if addr in self.dist_nodes_:  # preventing KeyError here
                 del self.dist_nodes_[addr]
 
-    def register_new_process(self, proc) -> Pid:
+    def register_new_process(self, proc=None) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
 
             :type proc: Process or None
@@ -230,7 +230,7 @@ class Node(Task, BaseNode):
         else:
             LOG.warning("Node._send_local: receiver %s does not exist", receiver)
 
-    def send(self, sender: Union[Pid, None], receiver, message) -> None:
+    def send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
@@ -242,7 +242,7 @@ class Node(Task, BaseNode):
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        LOG.debug("send -> %s: %s" % (receiver, message))
+        LOG.debug("send to %s <- %s", receiver, message)
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
@@ -256,7 +256,7 @@ class Node(Task, BaseNode):
                                          receiver=r_name,
                                          message=message)
 
-        if isinstance(receiver, Pid):
+        elif isinstance(receiver, Pid):
             if receiver.is_local_to(self):
                 return self._send_local(receiver, message)
             else:
@@ -265,13 +265,13 @@ class Node(Task, BaseNode):
                                          receiver=receiver,
                                          message=message)
 
-        if isinstance(receiver, Atom):
+        elif isinstance(receiver, Atom):
             return self._send_local_registered(receiver, message)
 
         raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
-        LOG.debug("_send_remote %s <- %s" % (receiver, message))
+        LOG.debug("send_remote to %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)

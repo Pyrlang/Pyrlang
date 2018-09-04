@@ -84,12 +84,12 @@ class BaseDistProtocol(BaseProtocol):
         self.my_challenge_ = None
         self.state_ = None
 
-    def on_connected(self, sockt, address):
+    def on_connected(self, sock, host_port):
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
             when the connection has been accepted and established.
         """
-        self.socket_ = sockt
-        self.addr_ = address
+        self.socket_ = sock
+        self.addr_ = host_port
 
     def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
         if len(data) < self.packet_len_size_:
@@ -142,7 +142,8 @@ class BaseDistProtocol(BaseProtocol):
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        LOG.debug("pkt out %s", content)
+        # if content != b'':
+        #     LOG.debug("pkt out %s", content)
         msg = struct.pack(">I", len(content)) + content
         self.socket_.sendall(msg)
 
@@ -166,8 +167,7 @@ class BaseDistProtocol(BaseProtocol):
                           message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return n.send(sender=None,
-                          receiver=control_term[2],
+            return n.send(receiver=control_term[2],
                           message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:

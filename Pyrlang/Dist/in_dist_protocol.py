@@ -44,8 +44,8 @@ class InDistProtocol(BaseDistProtocol):
         BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
-    def on_connected(self, sockt, address):
-        BaseDistProtocol.on_connected(self, sockt=sockt, address=address)
+    def on_connected(self, sock, host_port):
+        BaseDistProtocol.on_connected(self, sock=sock, host_port=host_port)
         self.state_ = self.RECV_NAME
 
     def on_connection_lost(self):
@@ -99,11 +99,11 @@ class InDistProtocol(BaseDistProtocol):
     def on_packet_challengereply(self, data):
         if data[0] != ord('r'):
             return self.protocol_error(
-                "Unexpected packet (expecting CHALLENGE_REPLY)")
+                "Unexpected packet (expecting CHALLENGE_REPLY) %s" % data)
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        LOG.info("challengereply: peer's challenge", peers_challenge)
+        LOG.info("challengereply: peer's challenge %s", peers_challenge)
 
         my_cookie = self._get_node().node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
@@ -119,7 +119,7 @@ class InDistProtocol(BaseDistProtocol):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Incoming established with %s" % self.peer_name_)
+        LOG.info("Incoming established with %s", self.peer_name_)
         return True
 
     def _send_challenge(self, my_challenge):

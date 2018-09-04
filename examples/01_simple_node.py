@@ -19,13 +19,14 @@ def main():
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
     event_engine.start_task(node)
 
-    # Attempt to send something will initiate a connection before sending
-    pid = node.register_new_process(None)
+    fake_pid = node.register_new_process()
 
     # To be able to send to Erlang shell by name first give it a registered
     # name: `erlang:register(shell, self()).`
     # To see an incoming message in shell: `flush().`
-    node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
+    node.send(sender=fake_pid,
+              receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+              message=Atom('hello'))
 
     while True:
         # Sleep gives other greenlets time to run

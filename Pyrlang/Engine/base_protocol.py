@@ -9,7 +9,7 @@ class BaseProtocol:
     def __init__(self, *_args, **_kwargs):
         pass
 
-    def on_connected(self, host, sock_port):
+    def on_connected(self, sock, host_port: tuple):
         pass
 
     def on_incoming_data(self, data: bytes) -> Union[bytes, None]:

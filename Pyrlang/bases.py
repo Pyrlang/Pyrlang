@@ -19,6 +19,10 @@ class BasePid:
     pass
 
 
+class BaseProcess:
+    pass
+
+
 class BaseNode:
     """ A code-less base for Erlang Node used to break circular imports and
         simplify type speccing of Node arguments and variables. """
@@ -33,4 +37,7 @@ class BaseNode:
             ``name@hostname`` """
 
     def register_new_process(self, proc) -> BasePid:
+        raise NotImplementedError()
+
+    def register_name(self, proc: BaseProcess, name):
         raise NotImplementedError()

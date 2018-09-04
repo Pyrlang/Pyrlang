@@ -181,7 +181,7 @@ def binary_to_term_2(data: bytes, options: dict = None):
         if len_expected > len_data:
             return incomplete_data()
 
-        return data[3:len_expected].decode("utf8"), data[len_expected:]
+        return data[3:len_expected], data[len_expected:]
 
     if tag == TAG_LIST_EXT:
         if len(data) < 5:
