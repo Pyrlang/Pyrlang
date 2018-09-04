@@ -17,7 +17,6 @@ import logging
 from typing import Dict, Union
 
 from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Engine.task import Task
 from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.node_opts import NodeOpts
@@ -33,7 +32,7 @@ class NodeException(Exception):
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class Node(Task, BaseNode):
+class Node(BaseNode):
     """ Implements an Erlang node which has a network name, a dictionary of 
         processes and registers itself via EPMD.
         Node handles the networking asynchronously.
@@ -60,7 +59,6 @@ class Node(Task, BaseNode):
     """ All existing Node objects indexed by node_name: str """
 
     def __init__(self, node_name: str, cookie: str, engine: BaseEngine) -> None:
-        Task.__init__(self)
         BaseNode.__init__(self, node_name=node_name, engine=engine)
 
         Node.all_nodes[node_name] = self
@@ -108,19 +106,16 @@ class Node(Task, BaseNode):
         from Pyrlang.net_kernel import NetKernel
         self.net_kernel_ = NetKernel(self)
 
-    def task_loop(self) -> bool:
-        """ This is called periodically by the Task (async engine adapter).
-            Returning True will continue its lifetime.
-        """
+        self.engine_.spawn(self._loop)
+
+    def _loop(self) -> bool:
+        """ Returns True to continue running. False to stop. """
         self.handle_inbox()
         return not self.is_exiting_
 
     def handle_inbox(self):
         while True:
-            # Block, but then gevent will allow other green-threads to
-            # run, so rather than unnecessarily consuming CPU block
             msg = self.inbox_.get()
-            # msg = self.inbox_.receive(filter_fn=lambda _: True)
             if msg is None:
                 break
             self.handle_one_inbox_message(msg)

@@ -16,7 +16,9 @@
 import sys
 sys.path.insert(0, ".")
 
-from Pyrlang import Node, Atom, Process, GeventEngine
+from Pyrlang import Node, Atom, Process
+# from Pyrlang import GeventEngine as Engine
+from Pyrlang import AsyncioEngine as Engine
 
 
 class MyProcess(Process):
@@ -30,13 +32,10 @@ class MyProcess(Process):
 
 
 def main():
-    event_engine = GeventEngine()
+    event_engine = Engine()
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-    event_engine.start_task(node)
-
     MyProcess(node)
-    while True:
-        event_engine.sleep(0.1)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

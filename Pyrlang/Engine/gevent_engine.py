@@ -7,17 +7,10 @@ from gevent import socket, select
 from gevent.queue import Queue, Empty
 from gevent.server import StreamServer
 
-from Pyrlang.Dist.util import hex_bytes
 from Pyrlang.Engine.base_engine import BaseEngine, BaseQueue
 from Pyrlang.Engine.base_protocol import BaseProtocol
-from Pyrlang.Engine.task import Task
 
 LOG = logging.getLogger("Pyrlang")
-
-
-def task_loop_helper(t: Task):
-    while t.task_loop():
-        gevent.sleep(0.0)
 
 
 class GeventQueue(BaseQueue):
@@ -26,6 +19,9 @@ class GeventQueue(BaseQueue):
 
     def put(self, v):
         self.q_.put(v)
+
+    def is_empty(self):
+        return self.q_.empty()
 
     def get(self):
         """ Attempt to fetch one item from the queue, or return None. """
@@ -54,15 +50,8 @@ class GeventEngine(BaseEngine):
     def socket_module(self):
         return socket
 
-    @staticmethod
-    def start_task(t: Task):
-        """ Start task loop helper which will call periodically t.task_loop and
-            sleep for 0
-        """
-        gevent.spawn(lambda: task_loop_helper(t))
-
     def queue_new(self) -> BaseQueue:
-        """ Create Gevent queue which is asynchronously accessible. """
+        """ Create Gevent queue adapter """
         return GeventQueue()
 
     def connect_with(self, protocol_class: Type[BaseProtocol], host_port: tuple,
@@ -82,7 +71,7 @@ class GeventEngine(BaseEngine):
         sock = socket.create_connection(address=host_port)
 
         handler = protocol_class(*protocol_args, **protocol_kwargs)
-        handler.on_connected(sock, host_port)
+        handler.on_connected(host_port)
 
         LOG.info("Connection to %s established", host_port)
 
@@ -99,7 +88,7 @@ class GeventEngine(BaseEngine):
 
     def listen_with(self, protocol_class: Type[BaseProtocol],
                     protocol_args: list,
-                    protocol_kwargs: dict) -> StreamServer:
+                    protocol_kwargs: dict) -> (StreamServer, int):
         host_port = ('0.0.0.0', 0)
         srv_loop = make_serve_loop(protocol_class=protocol_class,
                                    protocol_args=protocol_args,
@@ -108,18 +97,31 @@ class GeventEngine(BaseEngine):
                               handle=srv_loop)
         in_srv.start()
         LOG.info("Listening on %s (%s)", host_port, in_srv.server_port)
-        return in_srv
+        return in_srv, in_srv.listening_port
 
-    def spawn(self, a_callable):
-        greenlet = gevent.spawn(a_callable)
+    def spawn(self, loop_fn):
+        """ Spawns a task which will call loop_fn repeatedly while it
+            returns False, else will stop. """
+        greenlet = gevent.spawn(lambda: _generic_gevent_loop(loop_fn))
         greenlet.start()
+
+    def run_forever(self):
+        while True:
+            gevent.sleep(0.1)
 
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #
 
 
-def make_serve_loop(protocol_class, protocol_args, protocol_kwargs):
+def _generic_gevent_loop(loop_fn):
+    while loop_fn():
+        gevent.sleep(0.01)
+
+
+def make_serve_loop(protocol_class: Type[BaseProtocol],
+                    protocol_args: list,
+                    protocol_kwargs: dict):
     """ A basic connection handler that takes an accepted connection and feeds
         the data stream into the receiver protocol handler class.
 
@@ -134,7 +136,7 @@ def make_serve_loop(protocol_class, protocol_args, protocol_kwargs):
     def _serve_loop(sock: socket.socket, address):
         LOG.info("Client %s connected", address)
         proto = protocol_class(*protocol_args, **protocol_kwargs)
-        proto.on_connected(sock, address)
+        proto.on_connected(address)
 
         try:
             _read_loop(proto, sock)
@@ -194,8 +196,6 @@ def _read_loop(handler: BaseProtocol, sock: socket.socket):
 
                     collected = collected1
             else:
-                # TODO: Call handle_inbox after some cycles of consume too!
-                handler.handle_inbox()
                 # HACK to keep idle CPU down to 0.3% while trying to maintain
                 # lower latency
                 select.select([sock], [], [], 0.1)

@@ -60,6 +60,7 @@ changes required.
 
     Engine.base_engine
     Engine.base_protocol
+    Engine.asyncio_engine
     Engine.gevent_engine
 
 

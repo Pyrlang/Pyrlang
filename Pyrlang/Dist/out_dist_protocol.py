@@ -50,8 +50,8 @@ class OutDistProtocol(BaseDistProtocol):
         BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
-    def on_connected(self, sock, host_port):
-        BaseDistProtocol.on_connected(self, sock=sock, host_port=host_port)
+    def on_connected(self, host_port):
+        BaseDistProtocol.on_connected(self, host_port=host_port)
         self._send_name()
         self.state_ = self.RECV_STATUS
 

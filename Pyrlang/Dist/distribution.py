@@ -50,12 +50,11 @@ class ErlangDistribution:
                         "engine": engine}
 
         from Pyrlang.Dist.in_dist_protocol import InDistProtocol
-        self.in_srv_ = self.engine_.listen_with(
+        (self.in_srv_, self.in_port_) = self.engine_.listen_with(
             protocol_class=InDistProtocol,
             protocol_args=[],
             protocol_kwargs=proto_kwargs
         )
-        self.in_port_ = self.in_srv_.server_port
         LOG.info("Listening for dist connections on port %s", self.in_port_)
 
         self.epmd_ = EPMDClient(engine)

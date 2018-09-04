@@ -25,6 +25,7 @@ from Pyrlang.Term.reference import Reference
 from Pyrlang.Term.fun import Fun
 
 from Pyrlang.Engine.gevent_engine import GeventEngine
+from Pyrlang.Engine.asyncio_engine import AsyncioEngine
 
 
 def init():
@@ -36,4 +37,4 @@ init()
 
 __all__ = ['Node', 'NodeException', 'Process', 'Term',
            'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
-           'GeventEngine']
+           'GeventEngine', 'AsyncioEngine']

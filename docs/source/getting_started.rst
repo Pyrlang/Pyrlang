@@ -14,7 +14,6 @@ Start the Node
     def main():
         event_engine = GeventEngine()
         node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-        event_engine.start_task(node)
 
         fake_pid = node.register_new_process()
 
@@ -172,7 +171,6 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
     def main():
         event_engine = GeventEngine()
         node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-        event_engine.start_task(node)
 
         # this automatically schedules itself to run via gevent
         mp = MyProcess(node)

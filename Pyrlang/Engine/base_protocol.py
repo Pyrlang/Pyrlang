@@ -7,9 +7,9 @@ class BaseProtocol:
         engine is selected.
     """
     def __init__(self, *_args, **_kwargs):
-        pass
+        self.send_buffer_ = b''
 
-    def on_connected(self, sock, host_port: tuple):
+    def on_connected(self, host_port: tuple):
         pass
 
     def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
@@ -25,7 +25,5 @@ class BaseProtocol:
     def on_connection_lost(self):
         pass
 
-    def handle_inbox(self):
-        """ When no data is available on the socket, try and handle some data
-            that is already collected. """
-        pass
+    def send(self, msg: bytes):
+        self.send_buffer_ += msg

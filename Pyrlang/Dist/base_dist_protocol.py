@@ -64,7 +64,6 @@ class BaseDistProtocol(BaseProtocol):
         """ Packet size header is variable, 2 bytes before handshake is finished
             and 4 bytes afterwards. """
 
-        self.socket_ = None
         self.addr_ = None
 
         self.engine_ = engine
@@ -84,11 +83,10 @@ class BaseDistProtocol(BaseProtocol):
         self.my_challenge_ = None
         self.state_ = None
 
-    def on_connected(self, sock, host_port):
+    def on_connected(self, host_port):
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
             when the connection has been accepted and established.
         """
-        self.socket_ = sock
         self.addr_ = host_port
 
     def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
@@ -135,9 +133,9 @@ class BaseDistProtocol(BaseProtocol):
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        LOG.debug("pkt out %s", content)
+        # LOG.debug("pkt out %s", content)
         msg = struct.pack(">H", len(content)) + content
-        self.socket_.sendall(msg)
+        self.send(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
@@ -145,7 +143,7 @@ class BaseDistProtocol(BaseProtocol):
         # if content != b'':
         #     LOG.debug("pkt out %s", content)
         msg = struct.pack(">I", len(content)) + content
-        self.socket_.sendall(msg)
+        self.send(msg)
 
     def on_passthrough_message(self, control_term, msg_term):
         """ On incoming 'p' message with control and data, handle it.

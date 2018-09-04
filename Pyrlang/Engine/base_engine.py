@@ -11,6 +11,9 @@ class BaseQueue:
     def get(self):
         raise NotImplementedError()
 
+    def is_empty(self):
+        raise NotImplementedError()
+
 
 class BaseEngine:
     """ This is base class for Pluggable Async Engines.
@@ -51,7 +54,12 @@ class BaseEngine:
         raise NotImplementedError()
 
     def spawn(self, a_callable):
-        """ Creates an async task running together with other tasks on this
-            async engine. I.e. a greenlet, a fiber, a thread, whatever there is
-        """
+        """ Spawns a task which will call loop_fn repeatedly while it
+            returns False, else will stop. """
+        raise NotImplementedError()
+
+    def run_forever(self):
+        raise NotImplementedError()
+
+    def socket_send_all(self, sock, msg):
         raise NotImplementedError()
