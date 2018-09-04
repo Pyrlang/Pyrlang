@@ -1,5 +1,5 @@
-Getting Started
-===============
+Cookbook - How to Get Started
+=============================
 
 You might have come here to see some examples. Very well...
 But have a quick look at :doc:`examples` page too!
@@ -9,28 +9,32 @@ Start the Node
 
 .. code-block:: python
 
-    import gevent
-    from gevent import monkey
-    monkey.patch_all()
-
-    import Pyrlang
+    from Pyrlang import Node, Atom, GeventEngine # or AsyncioEngine
 
     def main():
-        node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-        node.start()
+        event_engine = GeventEngine()  # or AsyncioEngine
+        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
 
-        # Attempt to send something will initiate a connection before sending
-        pid = node.register_new_process(None)
+        fake_pid = node.register_new_process()
+
         # To be able to send to Erlang shell by name first give it a registered
         # name: `erlang:register(shell, self()).`
-        node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
+        # To see an incoming message in shell: `flush().`
+        node.send(sender=fake_pid,
+                  receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+                  message=Atom('hello'))
 
         while True:
             # Sleep gives other greenlets time to run
-            gevent.sleep(0.1)
+            event_engine.sleep(0.1)
 
     if __name__ == "__main__":
         main()
+
+Here ``event_engine`` is a pluggable adapter which allows Pyrlang to run both
+with gevent and asyncio-driven event loops. Pyrlang in this case performs mostly
+protocols handling, while event engine will open connections, start tasks
+and sleep asynchronously.
 
 
 Connect nodes
@@ -40,8 +44,8 @@ Connect nodes
     automatically by sending to a remote name using tuple format
     ``{Name, Node}`` or sending to a remote pid (if you have it).
 
-You can initiate the connection between nodes from Erlang side. To do this,
-on Erlang side you can use ``net_adm:ping``.
+You can initiate the connection between nodes from Erlang side in a different
+way. To do this on Erlang side you can use ``net_adm:ping``.
 
 .. code-block:: erlang
 
@@ -53,12 +57,10 @@ which exists on the Python side.
 
 .. code-block:: erlang
 
-    {'py@127.0.0.1', Name} ! hello.
+    {Name, 'py@127.0.0.1'} ! hello.
 
-If the process exists on Python side, its ``inbox_`` field (which must be a
-Gevent Queue) will receive your message. You can check it from your code
-using ``self.inbox_.empty()`` and the family of ``.get*()`` functions
-which can wait or won't wait for another message.
+If the process exists on Python side, its ``inbox_`` field (which will be a
+Gevent or Asyncio Queue) will receive your message.
 
 
 RPC call from Erlang
@@ -98,9 +100,6 @@ locally or remotely.
               receiver=term.Atom('my_erlang_process'),
               message=(123, 4.5678, [term.Atom('test')]))
 
-.. note:: Node is a singleton, you can find the node by referencing
-    ``Node.singleton``. This may change in future.
-
 Send from Python to a remote
 ----------------------------
 
@@ -114,7 +113,7 @@ The node connection will be established automatically.
               message=Atom('hello'))
 
 You can send messages to a remote named process, for this use tuple send format
-like ``{Name, Node}``. Sender pid is REQUIRED and must be provided,
+like ``{Name, Node}``. For remote sends sender pid is REQUIRED,
 even if it is a fake pid (see example below how to create a fake pid).
 
 To try this, open an Erlang shell and register shell with the name ``'shell'``:
@@ -128,8 +127,8 @@ established automatically):
 
 .. code-block:: python
 
-    pid = node.register_new_process(None)  # create a fake pid
-    node.send(sender=pid,
+    fake_pid = node.register_new_process(None)  # create a fake pid
+    node.send(sender=fake_pid,
               receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
               message=Atom('hello'))
 
@@ -158,13 +157,7 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. code-block:: python
 
-    import gevent
-    from gevent import monkey
-    monkey.patch_all()
-    import Pyrlang
-    from Pyrlang import Atom
-    from Pyrlang import Process
-
+    from Pyrlang import Node, Atom, Process, GeventEngine # or AsyncioEngine
 
     class MyProcess(Process):
         def __init__(self, node) -> None:
@@ -175,15 +168,14 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
         def handle_one_inbox_message(self, msg):
             print("Incoming", msg)
 
-
     def main():
-        node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-        node.start()
+        event_engine = GeventEngine()  # or AsyncioEngine
+        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+
         # this automatically schedules itself to run via gevent
         mp = MyProcess(node)
         while True:
-            gevent.sleep(0.1)
-
+            event_engine.sleep(0.1)
 
     if __name__ == "__main__":
         main()
@@ -195,51 +187,45 @@ Now sending from Erlang is easy:
     (erl@127.0.0.1) 1> {my_process, 'py@127.0.0.1'} ! hello.
 
 
-Implement a Gen_server-like Object
-----------------------------------
+TODO Remote Calculations on Python Node
+---------------------------------------
 
-It is not very hard to implement minimum interface required to be able to
-respond to ``gen:call``, which is used by ``gen_server`` in Erlang/OTP.
+**Problem:**
+While it is possible to subclass the :py:class:`~Pyrlang.process.Process`
+class and implement a Erlang-like process, often existing Python code
+exposes just a functional API or a class which has to be created for the
+calculation to be performed.
+Often you would like to use some functional API without sending the results
+over the wire until they are ready.
 
-Process class has a ``_run`` function which calls ``self.handle_inbox()``
-repeatedly.
-:py:class:`~Pyrlang.mailbox.Mailbox`
-class offers ``receive_wait(filter_fn)``
-for selective receive with a wait, ``receive(filter_fn)`` for instant mailbox
-check selectively and simple ``get()`` and ``get_nowait()`` functions.
+**Solution:**
+A notebook-like remote execution API, where intermediate call results are stored
+in history log and can be referred by name or index.
 
-.. code-block:: python
+.. todo::
+    Describe how chain of calculations can be performed remotely in
+    **direct mode** (one by one) using the new API.
 
-    from Pyrlang.process import Process
 
-    class MyProcess(Process):
-        def __init__(self, node) -> None:
-            Process.__init__(self, node)
-            node.register_name(self, term.Atom('my_process'))  # optional
+TODO Lazy Remote Calculations on Python Node
+--------------------------------------------
 
-        def handle_inbox(self):
-            while True:
-                # Do a selective receive but the filter says always True
-                msg = self.inbox_.receive(filter_fn=lambda _: True)
-                if msg is None:
-                    break
-                self.handle_one_inbox_message(msg)
+**Problem:**
+Same as with direct remote calculations: Often you would like to use some
+functional API without sending the results over the wire until they are ready.
+Lazy remote calculations API allows you to prebuild your calculation as a data
+structure on Erlang side and then execute it remotely on one or more
+Pyrlang nodes, sending you the final result.
+Intermediate call results are stored in history log and can be referred by name
+or index.
 
-        def handle_one_inbox_message(self, msg) -> None:
-            gencall = gen.parse_gen_message(msg)
-            if isinstance(gencall, str):
-                print("MyProcess:", gencall)
-                return
+.. todo::
+    Describe how to calculate chain of calls on a remote node **lazily**
+    using the new API.
 
-            # Handle the message in 'gencall' using its sender_, ref_ and
-            # message_ fields
 
-            if EVERYTHING_IS_OK:
-                # Send a reply
-                gencall.reply(local_pid=self.pid_,
-                              result=SOME_RESULT_HERE)
+TODO Implement a Gen_server-like Object
+---------------------------------------
 
-            else:
-                # Send an error exception which will crash Erlang caller
-                gencall.reply_exit(local_pid=self.pid_,
-                                   reason=SOME_ERROR_HERE)
+.. todo::
+    This section needs to be updated when GenServer is added

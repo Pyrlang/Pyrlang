@@ -16,30 +16,26 @@
 import sys
 sys.path.insert(0, ".")
 
-import gevent
-from gevent import monkey
-monkey.patch_all()
-import Pyrlang
-from Pyrlang import Atom
-from Pyrlang import Process
+from Pyrlang import Node, Atom, Process
+from Pyrlang import GeventEngine as Engine
+# from Pyrlang import AsyncioEngine as Engine
 
 
 class MyProcess(Process):
     def __init__(self, node) -> None:
         Process.__init__(self, node)
         node.register_name(self, Atom('my_process'))  # optional
-        print("registering process - 'my_process'")
+        print("Example2: registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
-        print("Incoming", msg)
+        print("Example2: Incoming", msg)
 
 
 def main():
-    node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-    node.start()
-    mp = MyProcess(node)
-    while True:
-        gevent.sleep(0.1)
+    event_engine = Engine()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    MyProcess(node)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

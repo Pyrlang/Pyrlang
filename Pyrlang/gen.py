@@ -9,7 +9,8 @@ class GenBase:
     """ Base class for Gen messages, do not use directly. See
         ``GenIncomingMessage`` and ``GenIncomingCall``.
     """
-    def __init__(self, sender, ref):
+    def __init__(self, sender, ref, node_name: str):
+        self.node_name_ = node_name
         self.sender_ = sender
         """ Where to send replies to. """
         self.ref_ = ref
@@ -21,9 +22,10 @@ class GenBase:
         """ Reply with a gen:call result
         """
         from Pyrlang.node import Node
-        Node.singleton.send(sender=local_pid,
-                            receiver=self.sender_,
-                            message=(self.ref_, result))
+        n = Node.all_nodes[self.node_name_]
+        n.send(sender=local_pid,
+               receiver=self.sender_,
+               message=(self.ref_, result))
 
     def reply_exit(self, local_pid, reason):
         """ Reply to remote gen:call with EXIT message which causes reason to be
@@ -34,8 +36,8 @@ class GenBase:
         from Pyrlang.node import Node
 
         reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
-        Node.singleton.dist_command(receiver_node=self.sender_.node_.text_,
-                                    message=reply)
+        n = Node.all_nodes[self.node_name_]
+        n.dist_command(receiver_node=self.sender_.node_.text_, message=reply)
 
 
 class GenIncomingMessage(GenBase):
@@ -44,10 +46,13 @@ class GenIncomingMessage(GenBase):
         For those situations when gen message is not a call, or is an incoming
         ``gen_server`` call.
     """
-    def __init__(self, sender, ref, message):
-        GenBase.__init__(self, sender=sender, ref=ref)
+    def __init__(self, sender, ref, message, node_name: str):
+        GenBase.__init__(self, sender=sender, ref=ref, node_name=node_name)
         self.message_ = message
         """ The last part of the incoming message, the payload. """
+
+    def __str__(self):
+        return "GenIncomingMessage(" + str(self.message_) + ")"
 
 
 class GenIncomingCall(GenBase):
@@ -55,20 +60,26 @@ class GenIncomingCall(GenBase):
         ``gen:call`` RPC call message.
     """
 
-    def __init__(self, mod, fun, args, group_leader, sender, ref):
-        GenBase.__init__(self, sender=sender, ref=ref)
+    def __init__(self, mod, fun, args, group_leader, sender, ref,
+                 node_name: str):
+
+        GenBase.__init__(self, sender=sender, ref=ref, node_name=node_name)
         self.mod_ = mod
         """ Module name as atom. """
+
         self.fun_ = fun
         """ Function name as atom. """
+
         self.args_ = args
         """ Call arguments as a ``term.List`` object. """
+
         self.group_leader_ = group_leader
         """ Remote group leader pid, comes in as a part of message. """
 
     def get_args(self):
         """ Returns parsed args for the RPC call. """
-        if isinstance(self.args_, list): return self.args_
+        if isinstance(self.args_, list):
+            return self.args_
         return self.args_.elements_
 
     def get_mod_str(self):
@@ -120,7 +131,7 @@ def parse_gen_call(msg):
                            )
 
 
-def parse_gen_message(msg):
+def parse_gen_message(msg, node_name: str):
     """ Might be an 'is_auth' request which is not a call
 
         :return: string on error, otherwise a ``GenIncomingMessage`` object
@@ -138,7 +149,8 @@ def parse_gen_message(msg):
 
     return GenIncomingMessage(sender=msender,
                               ref=mref,
-                              message=gcmsg)
+                              message=gcmsg,
+                              node_name=node_name)
 
 
 __all__ = ['GenIncomingCall', 'GenIncomingMessage',

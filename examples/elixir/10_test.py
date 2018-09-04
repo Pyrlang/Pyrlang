@@ -10,40 +10,43 @@
 import sys
 sys.path.insert(0, ".")
 
-import gevent
-from gevent import monkey
-monkey.patch_all()
-import Pyrlang
-from Pyrlang import Atom, Process, gen
+import logging
+from Pyrlang import Node, Atom, Process, gen
+from Pyrlang import GeventEngine as Engine
+# from Pyrlang import AsyncioEngine as Engine
+
+LOG = logging.getLogger("+++EXAMPLE10+++")
+LOG.setLevel(logging.DEBUG)
 
 
 class MyProcess(Process):
     def __init__(self, node) -> None:
         Process.__init__(self, node)
         node.register_name(self, Atom('my_process'))
-        print("registering process - 'my_process'")
+        LOG.info("registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
-        print("Incoming to", self.pid_, type(self.pid_), msg)
-        gencall = gen.parse_gen_message(msg)
+        LOG.info("Incoming to %s %s %s", self.pid_, type(self.pid_), msg)
+        gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
 
         if isinstance(gencall, str):
-            print("MyProcess:", gencall)
+            LOG.error("MyProcess gen parse error: %s", gencall)
             return
+        else:
+            LOG.info("Incoming gen_call %s", gencall)
+            # Here handle_call would match on the `message_` field of gencall
 
-        print('replying pid')
+        LOG.info("replying with my pid %s", self.pid_)
         gencall.reply(local_pid=self.pid_, result=self.pid_)
 
 
 def main():
-    node = Pyrlang.Node("py@127.0.0.1", "COOKIE")
-    node.start()
+    event_engine = Engine()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
 
-    mp = MyProcess(node)
+    MyProcess(node)
 
-    while True:
-        # Sleep gives other greenlets time to run
-        gevent.sleep(0.5)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

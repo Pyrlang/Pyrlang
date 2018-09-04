@@ -5,31 +5,33 @@
 # Requires:     Erlang running on the same host as:
 #               `erl -name erl@127.0.0.1 -setcookie COOKIE`
 # Run:          from project root run `make example1`
+# Try in Erlang shell: `net_adm:ping('py@127.0.0.1').`
+#
+# Before starting example1 try in Erlang shell: `erlang:register(shell, self()).`
+# Shell process will receive 'hello' (type `flush().` to see)
 #
 import sys
 sys.path.insert(0, ".")
 
-import gevent
-
-from gevent import monkey
-monkey.patch_all()
-
 from Pyrlang import Node, Atom
+from Pyrlang import GeventEngine as Engine
+# from Pyrlang import AsyncioEngine as Engine
 
 
 def main():
-    node = Node("py@127.0.0.1", "COOKIE")
-    node.start()
+    event_engine = Engine()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
 
-    # Attempt to send something will initiate a connection before sending
-    pid = node.register_new_process(None)
+    fake_pid = node.register_new_process()
+
     # To be able to send to Erlang shell by name first give it a registered
     # name: `erlang:register(shell, self()).`
-    node.send(pid, (Atom('erl@127.0.0.1'), Atom('shell')), Atom('hello'))
+    # To see an incoming message in shell: `flush().`
+    node.send(sender=fake_pid,
+              receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+              message=Atom('hello'))
 
-    while True:
-        # Sleep gives other greenlets time to run
-        gevent.sleep(0.1)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

@@ -18,18 +18,21 @@ http://pyrlang.readthedocs.io/en/latest/
 Features
 --------
 
-*   Based on gevent which supports Python 2 and 3; Although used type specs in
-    Python code raise required Python version to 3.5
-*   Erlang distribution protocol for R19 and R20+
-*   Registry of Python 'processes', which are gevent Greenlets and have a pid
+*   Requires Python 3.5 due to type hints, in theory could work on Python 2 and 
+    Gevent, but currently no work is done to ensure Python 2 compatibility
+*   Supports switchable backends: Gevent and Asyncio - see examples.
+*   Erlang distribution protocol for Erlang versions 19, 20, and 21
+*   Registry of Python 'processes', which are asyncronous tasks, have a pid
     and an optional registered name
-*   Can inherit from `Pyrlang.Process` to create simple process-like Python 
-    objects
-*   Send and receive messages locally and remotely by pid or name;
+*   User can inherit from `Pyrlang.Process` to create simple process-like Python 
+    objects which can receive messages, be linked and monitored from Erlang
+*   Send and receive messages locally and remotely by pid or name
 *   Supports `net_adm` pings
 *   Supports RPC calls. An RPC call can propagate an exception from 
     Python to Erlang;
-*   `Pyrlang.gen` module has a helper to process `gen_server`-style calls
+*   `Pyrlang.gen` module helps decode `gen_server`-style calls (you still have
+    to handle the value yourself). See `example10` (Elixir) for a 
+    `gen_server:call` implementation.
 
 
 | Erlang               | Python                              | Notes                                                                                 |
@@ -41,6 +44,7 @@ Features
 | List (improper)      | `tuple` (`list`, `Pyrlang.AnyTerm`) | A tuple with list and the tail element of the improper list                           |
 |                      |                                     | Sending an improper list to Erlang requires use of `Pyrlang.ImproperList` helper      |         
 | String               | Python `list`                       | Use helper functions in `Pyrlang.Term.list` module to convert to string               |
+| ASCII or UTF8 String or List of bytes | Python `bytes`     | If string contained only ASCII or UTF8, bytes will arrive                             | 
 | Tuple                | Python `tuple`                      |                                                                                       |
 | Map                  | Python `dict`                       |                                                                                       |
 | Binary               | Python `bytes`                      |                                                                                       |
@@ -60,11 +64,13 @@ pull requirements for Sphinx documentation generator (not needed if you only
 use the library).
 
 To operate Pyrlang only requires `gevent` and `greenlet` (dependency of 
-`gevent`). NOTE: type specs in Pyrlang code require Python 3.5 so it will not
+`gevent`) OR `asyncio`.
+NOTE: type specs in Pyrlang code require Python 3.5 so it will not
 really work on Python 2. 
 
 Source for the documentation is in the `docs/` directory. It uses `sphinx`
-documentation generator. In `docs/` run `make html` or just `make`.
+documentation generator. To generate: run `make docs` or in `docs/` directory
+you can run `make` to see other output formats.
 
 
 Examples
@@ -76,3 +82,6 @@ See top comment in `examples/01_simple_node.py`.
 Running `make example2` will create a `MyProcess` Python class inherited from
 `Process`, register self under a name and await for message from a connected
 Erlang node (see top comment in `examples/02_registered_process.py`) 
+
+Running `make example10a` and `make example10b` in two console tabs will start
+a Python `gen_server`-like process and Elixir client will do a call to it.

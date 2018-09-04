@@ -14,25 +14,32 @@ Erlang lists can be of 2 kinds:
 
 * Improper lists (those with last cell's tail being not ``[] NIL``).
 
-Pyrlang always decodes an incoming regular lists and Erlang strings as Python
-lists, use helper functions in ``Pyrlang.Term.list`` module to extract strings.
+Pyrlang always decodes incoming regular lists as Python lists,
+use helper functions in ``Pyrlang.Term.list`` module to extract strings.
+If incoming string contained only bytes (integers between 0 and 255) then
+Erlang node will optimize the encoding and send a byte array. In this case you
+will receive Python ``bytes`` string, and not a list, which is
+**the same as if you have sent a binary**, so to reduce confusion always send
+strings as UTF8 binaries.
 
-A regular list always has an invisible ``[]`` (``NIL``) set as tail of its last
-cons cell. Regular lists map directly to Python lists or strings and
+A regular Erlang list always has an invisible ``[]`` (``NIL``) set as tail of
+its last cons cell. Regular lists map directly to Python lists and
 **there is no easy way to tell a list of integers from a string** other than
-check elements ranges and assume that is a printable string.
+check elements ranges and assume that is a printable string. Unless you received
+Python ``bytes`` then it's easy.
 
-An improper list has some other value than ``[] NIL`` as its last cell tail.
-Pyrlang parses these as a tuple ``(list, tail)``.
-To be able to send an improper list back to Erlang, use the ``ImproperList``
-class located in ``Pyrlang.Term.list``.
+An improper Erlang list has some other value than ``[] NIL`` as the tail of
+its last cell.
+Pyrlang returns these as Python tuple ``(list, tail)``.
+To tell Pyrlang encoder to send an improper list back to Erlang, use the
+:py:class:`~Pyrlang.Term.list.ImproperList` class.
 
 
 Binaries
 --------
 
-Pyrlang always converts a simple Erlang binary to Python ``bytes`` object.
+Pyrlang always decodes incoming Erlang binaries into Python ``bytes`` objects.
 
-Bitstrings are accepted and returned as Python tuple ``(bytes, last_byte_bits:int)``
-To be able to return a bitstring back to Erlang, use the ``BitString`` class
-located in ``Pyrlang.Term.bitstring``.
+Bitstrings are decoded as Python pairs of ``(bytes, last_byte_bits:int)``
+To be able to send a bitstring back to Erlang, use class
+:py:class:`~Pyrlang.Term.bitstring.BitString`.

@@ -16,19 +16,13 @@
     which is called upon.
 """
 
-from __future__ import print_function
+import logging
 
-import gevent
-from gevent.server import StreamServer
+from Pyrlang.Dist.epmd import EPMDClient
+from Pyrlang.Dist.out_dist_protocol import OutDistProtocol
+from Pyrlang.Engine.base_engine import BaseEngine
 
-from Pyrlang import logger
-from Pyrlang.Dist import helpers
-from Pyrlang.Dist.epmd import EPMDClient, EPMDConnectionError
-from Pyrlang.Dist.out_connection import OutConnection
-
-LOG = logger.nothing
-WARN = logger.nothing
-ERROR = logger.tty
+LOG = logging.getLogger("Pyrlang.Dist")
 
 
 class ErlangDistribution:
@@ -37,8 +31,12 @@ class ErlangDistribution:
         Node as a parameter but don't store it to avoid creating a ref cycle.
     """
 
-    def __init__(self, node, name: str) -> None:
-        self.name_ = name
+    def __init__(self, node_name: str, engine: BaseEngine) -> None:
+        self.engine_ = engine
+        """ Async adapter engine for network and timer operations implemented 
+            either as Gevent or asyncio """
+
+        self.node_name_ = node_name
         """ Node name, a string. """
 
         self.creation_ = 0
@@ -48,20 +46,18 @@ class ErlangDistribution:
 
         # Listener for Incoming connections from other nodes
         # Create handler using make_handler_in helper
-        proto_kwargs = {"node": node}
+        proto_kwargs = {"node_name": node_name,
+                        "engine": engine}
 
-        from Pyrlang.Dist.in_connection import InConnection
-        handler = helpers.make_handler_in(receiver_class=InConnection,
-                                          args=[],
-                                          kwargs=proto_kwargs)
+        from Pyrlang.Dist.in_dist_protocol import InDistProtocol
+        (self.in_srv_, self.in_port_) = self.engine_.listen_with(
+            protocol_class=InDistProtocol,
+            protocol_args=[],
+            protocol_kwargs=proto_kwargs
+        )
+        LOG.info("Listening for dist connections on port %s", self.in_port_)
 
-        self.in_srv_ = StreamServer(listener=('0.0.0.0', 0),
-                                    handle=handler)
-        self.in_srv_.start()
-        self.in_port_ = self.in_srv_.server_port
-        print("Dist: Listening for dist connections on port", self.in_port_)
-
-        self.epmd_ = EPMDClient()
+        self.epmd_ = EPMDClient(engine)
 
     def connect(self, node) -> bool:
         """ Looks up EPMD daemon and connects to it trying to discover other 
@@ -71,7 +67,7 @@ class ErlangDistribution:
             if self.epmd_.connect():
                 return self.epmd_.alive2(self)
 
-            gevent.sleep(5)
+            self.engine_.sleep(5.0)
 
     def disconnect(self) -> None:
         """ Finish EPMD connection, this will remove the node from the list of
@@ -79,27 +75,28 @@ class ErlangDistribution:
         """
         self.epmd_.close()
 
-    def connect_to_node(self, this_node, remote_node: str):
+    def connect_to_node(self, local_node: str, remote_node: str,
+                        engine: BaseEngine):
         """ Query EPMD where is the node, and initiate dist connection. Blocks
             the Greenlet until the connection is made or have failed.
 
-            :type this_node: Pyrlang.Node
-            :param this_node: Reference to Erlang Node object
+            :param engine: Async engine adapter (GeventEngine or AsyncioEngine)
+            :param local_node: Reference to Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: Handler or None
         """
         try:
-            host_port = EPMDClient.query_node(remote_node)
-            (handler, _sock) = helpers.connect_with(
-                protocol_class=OutConnection,
-                host_port=host_port,
-                args=[],
-                kwargs={"node": this_node}
+            host_port = self.epmd_.query_node(remote_node)
+            (handler, _sock) = self.engine_.connect_with(
+                protocol_class=OutDistProtocol,
+                protocol_args=[],
+                protocol_kwargs={"node_name": local_node, "engine": engine},
+                host_port=host_port
             )
             return handler
 
         except Exception as e:
-            ERROR("Dist:", e)
+            logging.error("Dist: " + str(e))
             return None
 
 

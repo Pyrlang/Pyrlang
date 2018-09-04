@@ -15,20 +15,19 @@
 """ The module implements incoming TCP distribution connection (i.e. initiated
     by another node with the help of EPMD).
 """
-from __future__ import print_function
 
+import logging
 import random
 import struct
 
-from Pyrlang import logger
-from Pyrlang.Dist import util, etf, dist_protocol
-from Pyrlang.Dist.base_connection import *
+from Pyrlang.Dist import util, dist_protocol
+from Pyrlang.Dist.base_dist_protocol import *
+from Pyrlang.Engine.base_engine import BaseEngine
 
-LOG = logger.nothing
-ERROR = logger.tty
+LOG = logging.getLogger("Pyrlang.Dist")
 
 
-class InConnection(BaseConnection):
+class InDistProtocol(BaseDistProtocol):
     """ Handles incoming connections from other nodes.
 
         Behaves like a ``Greenlet`` but the actual Greenlet run procedure and
@@ -41,16 +40,16 @@ class InConnection(BaseConnection):
     RECV_NAME = 'recvname'
     WAIT_CHALLENGE_REPLY = 'wait_ch_reply'
 
-    def __init__(self, node):
-        BaseConnection.__init__(self, node)
+    def __init__(self, node_name: str, engine: BaseEngine):
+        BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
 
-    def on_connected(self, sockt, address):
-        BaseConnection.on_connected(self, sockt=sockt, address=address)
+    def on_connected(self, host_port):
+        BaseDistProtocol.on_connected(self, host_port=host_port)
         self.state_ = self.RECV_NAME
 
     def on_connection_lost(self):
-        BaseConnection.on_connection_lost(self)
+        BaseDistProtocol.on_connection_lost(self)
         self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
@@ -85,7 +84,7 @@ class InConnection(BaseConnection):
 
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
-        LOG("RECV_NAME:", self.peer_distr_version_, self.peer_name_)
+        LOG.info("RECV_NAME: %s %s", self.peer_distr_version_, self.peer_name_)
 
         # Report
         self._send_packet2(b"sok")
@@ -100,13 +99,13 @@ class InConnection(BaseConnection):
     def on_packet_challengereply(self, data):
         if data[0] != ord('r'):
             return self.protocol_error(
-                "Unexpected packet (expecting CHALLENGE_REPLY)")
+                "Unexpected packet (expecting CHALLENGE_REPLY) %s" % data)
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
-        LOG("challengereply: peer's challenge", peers_challenge)
+        LOG.info("challengereply: peer's challenge %s", peers_challenge)
 
-        my_cookie = self.node_.node_opts_.cookie_
+        my_cookie = self._get_node().node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
                                  challenge=self.my_challenge_,
                                  cookie=my_cookie):
@@ -120,26 +119,27 @@ class InConnection(BaseConnection):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG("In-connection established with %s" % self.peer_name_)
+        LOG.info("Incoming established with %s", self.peer_name_)
         return True
 
     def _send_challenge(self, my_challenge):
-        LOG("Sending challenge (our number is %d)" % my_challenge,
-            self.node_.dist_.name_)
+        n = self._get_node()
+        LOG.info("Sending challenge (our number is %d) %s"
+                 % (my_challenge, self.node_name_))
         msg = b'n' \
               + struct.pack(">HII",
                             dist_protocol.DIST_VSN,
-                            self.node_.node_opts_.dflags_,
+                            n.node_opts_.dflags_,
                             my_challenge) \
-              + bytes(self.node_.dist_.name_, "latin1")
+              + bytes(self.node_name_, "latin1")
         self._send_packet2(msg)
 
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):
         """ After cookie has been verified, send the confirmation by digesting
             our cookie with the remote challenge
         """
-        digest = InConnection.make_digest(peers_challenge, cookie)
+        digest = InDistProtocol.make_digest(peers_challenge, cookie)
         self._send_packet2(b'a' + digest)
 
 
-__all__ = ['InConnection']
+__all__ = ['InDistProtocol']

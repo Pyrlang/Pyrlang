@@ -15,18 +15,18 @@
 """ Base abstract Distribution connection class
 """
 
-from __future__ import print_function
-
+import logging
 import struct
 from abc import abstractmethod
 from hashlib import md5
 from typing import Union
 
-from Pyrlang import logger, mailbox, Term
+from Pyrlang import Term
 from Pyrlang.Dist import util, etf
+from Pyrlang.Engine.base_engine import BaseEngine
+from Pyrlang.Engine.base_protocol import BaseProtocol
 
-LOG = logger.nothing
-ERROR = logger.tty
+LOG = logging.getLogger("Pyrlang.Dist")
 
 # Distribution protocol delivers pairs of (control_term, message).
 # http://erlang.org/doc/apps/erts/erl_dist_protocol.html
@@ -52,25 +52,25 @@ class DistributionError(Exception):
     pass
 
 
-class BaseConnection:
-    def __init__(self, node):
-        """ Create connection handler object.
+class BaseDistProtocol(BaseProtocol):
+    def __init__(self, node_name: str, engine: BaseEngine):
+        """ Create connection handler object. """
+        super().__init__()
 
-            :type node: Pyrlang.Node
-            :param node: Erlang node reference
-        """
-        self.node_ = node
+        self.node_name_ = node_name
         """ Reference to the running Erlang node. (XXX forms a ref cycle) """
 
         self.packet_len_size_ = 2
         """ Packet size header is variable, 2 bytes before handshake is finished
             and 4 bytes afterwards. """
 
-        self.socket_ = None
         self.addr_ = None
 
+        self.engine_ = engine
+        """ Save engine object, to use for our async needs later. """
+
         # refer to util.make_handler_in which reads this
-        self.inbox_ = mailbox.Mailbox()
+        self.inbox_ = engine.queue_new()
         """ Inbox is used to ask the connection to do something. """
 
         self.peer_distr_version_ = (None, None)
@@ -83,21 +83,13 @@ class BaseConnection:
         self.my_challenge_ = None
         self.state_ = None
 
-    def on_connected(self, sockt, address):
+    def on_connected(self, host_port):
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
             when the connection has been accepted and established.
         """
-        self.socket_ = sockt
-        self.addr_ = address
+        self.addr_ = host_port
 
-    def consume(self, data: bytes) -> Union[bytes, None]:
-        """ Attempt to consume first part of data as a packet
-
-            :param data: The accumulated data from the socket which we try to
-                partially or fully consume
-            :return: Unconsumed data, incomplete following packet maybe or
-                nothing. Returning None requests to close the connection
-        """
+    def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
         if len(data) < self.packet_len_size_:
             # Not ready yet, keep reading
             return data
@@ -128,34 +120,36 @@ class BaseConnection:
     def on_packet(self, data) -> bool:
         pass
 
+    def _get_node(self):
+        from Pyrlang.node import Node
+        return Node.all_nodes[self.node_name_]
+
     def on_connection_lost(self):
         """ Handler is called when the client has disconnected
         """
         if self.peer_name_ is not None:
-            from Pyrlang.node import Node
-            Node.singleton.inbox_.put(
-                ('node_disconnected', self.peer_name_))
+            self._get_node().inbox_.put(('node_disconnected', self.peer_name_))
 
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        # LOG("Dist: pkt out", content)
+        # LOG.debug("pkt out %s", content)
         msg = struct.pack(">H", len(content)) + content
-        self.socket_.sendall(msg)
+        self.send(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        LOG("Dist: pkt out", content)
+        # if content != b'':
+        #     LOG.debug("pkt out %s", content)
         msg = struct.pack(">I", len(content)) + content
-        self.socket_.sendall(msg)
+        self.send(msg)
 
-    @staticmethod
-    def on_passthrough_message(control_term, msg_term):
+    def on_passthrough_message(self, control_term, msg_term):
         """ On incoming 'p' message with control and data, handle it.
             :raises DistributionError: when 'p' message is not a tuple
         """
-        LOG("Passthrough msg %s\n%s" % (control_term, msg_term))
+        LOG.info("Passthrough msg %s\n%s" % (control_term, msg_term))
 
         if type(control_term) != tuple:
             raise DistributionError("In a 'p' message control term must be a "
@@ -163,55 +157,54 @@ class BaseConnection:
 
         ctrl_msg_type = control_term[0]
 
-        from Pyrlang import node
-        the_node = node.Node.singleton
+        n = self._get_node()
 
         if ctrl_msg_type == CONTROL_TERM_REG_SEND:
-            return the_node.send(sender=control_term[1],
-                                 receiver=control_term[3],
-                                 message=msg_term)
+            return n.send(sender=control_term[1],
+                          receiver=control_term[3],
+                          message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return the_node.send(sender=None,
-                                 receiver=control_term[2],
-                                 message=msg_term)
+            return n.send(sender=None,
+                          receiver=control_term[2],
+                          message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            return the_node.monitor_process(origin=sender,
-                                            target=target)
+            return n.monitor_process(origin=sender,
+                                     target=target)
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            return the_node.demonitor_process(origin=sender,
-                                              target=target)
+            return n.demonitor_process(origin=sender,
+                                       target=target)
 
         else:
-            ERROR("Unhandled 'p' message: %s\n%s" % (control_term, msg_term))
+            LOG.error("Unhandled 'p' message: %s; %s", control_term, msg_term)
 
-    def handle_inbox(self):
+    def periodic_check(self):
         while True:
-            msg = self.inbox_.receive(filter_fn=lambda _: True)
+            msg = self.inbox_.get()
             if msg is None:
                 break
-            self.handle_one_inbox_message(msg)
+            self._handle_one_inbox_message(msg)
 
-    def handle_one_inbox_message(self, m):
+    def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
             (_, from_pid, dst, msg) = m
             ctrl = self._control_term_send(from_pid=from_pid, dst=dst)
-            LOG("Connection: control msg %s; %s" % (ctrl, msg))
+            LOG.info("Control msg %s; %s" % (ctrl, msg))
             return self._control_message(ctrl, msg)
 
         elif m[0] == 'monitor_p_exit':
             (_, from_pid, to_pid, ref, reason) = m
             ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
                     from_pid, to_pid, ref, reason)
-            LOG("Monitor proc exit: %s with %s" % (from_pid, reason))
+            LOG.info("Monitor proc exit: %s with %s" % (from_pid, reason))
             return self._control_message(ctrl, None)
 
-        ERROR("Connection: Unhandled message to InConnection %s" % m)
+        LOG.error("Unhandled message to InConnection %s" % m)
 
     @staticmethod
     def _control_term_send(from_pid, dst):
@@ -238,7 +231,7 @@ class BaseConnection:
         return result
 
     def protocol_error(self, msg) -> bool:
-        ERROR("Dist protocol error: %s (state %s)" % (msg, self.state_))
+        LOG.error("Error: %s (state %s)" % (msg, self.state_))
         return False
 
     @staticmethod
@@ -246,7 +239,7 @@ class BaseConnection:
         """ Hash cookie + the challenge together producing a verification hash
             and return if they match against the offered 'digest'.
         """
-        expected_digest = BaseConnection.make_digest(challenge, cookie)
+        expected_digest = BaseDistProtocol.make_digest(challenge, cookie)
         # LOG("Check digest: expected digest", expected_digest,
         #  "peer digest", digest)
         return digest == expected_digest
@@ -277,9 +270,9 @@ class BaseConnection:
         return True
 
     def report_dist_connected(self):
-        assert(self.peer_name_ is not None)
-        LOG("Dist: connected to", self.peer_name_)
-        self.node_.inbox_.put(('node_connected', self.peer_name_, self))
+        assert (self.peer_name_ is not None)
+        LOG.info("Connected to %s", self.peer_name_)
+        self._get_node().inbox_.put(('node_connected', self.peer_name_, self))
 
 
-__all__ = ['BaseConnection', 'DistributionError']
+__all__ = ['BaseDistProtocol', 'DistributionError']
