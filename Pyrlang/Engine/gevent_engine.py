@@ -76,9 +76,7 @@ class GeventEngine(BaseEngine):
         LOG.info("Connection to %s established", host_port)
 
         try:
-            g = gevent.spawn(_read_loop,
-                             handler=handler,
-                             sock=sock)
+            g = gevent.spawn(_read_loop, proto=handler, sock=sock)
             g.start()
 
         except Exception as e:
@@ -97,7 +95,7 @@ class GeventEngine(BaseEngine):
                               handle=srv_loop)
         in_srv.start()
         LOG.info("Listening on %s (%s)", host_port, in_srv.server_port)
-        return in_srv, in_srv.listening_port
+        return in_srv, in_srv.server_port
 
     def spawn(self, loop_fn):
         """ Spawns a task which will call loop_fn repeatedly while it
@@ -139,7 +137,7 @@ def make_serve_loop(protocol_class: Type[BaseProtocol],
         proto.on_connected(address)
 
         try:
-            _read_loop(proto, sock)
+            _read_loop(proto=proto, sock=sock)
 
         except Exception as e:
             LOG.error("Exception: %s", traceback.format_exc())
@@ -152,27 +150,13 @@ def make_serve_loop(protocol_class: Type[BaseProtocol],
     return _serve_loop
 
 
-def _read_loop(handler: BaseProtocol, sock: socket.socket):
+def _read_loop(proto: BaseProtocol, sock: socket.socket):
     collected = b''
     while True:
-        # a full packet before calling on_packet in the handler class
-        # Ideally instead of 10 msec timeout, this should have been
-        # infinity (that is None), but post that change the messaging
-        # stops working because it is possible that this would
-        # block other actions, like handling messages on the queues.
-        # TODO: find a better solution.
-        # Additionally, anything lower than 10 msec would unnecessarily consume
-        # CPU, because epoll_wait() will have a time out 1 msec if the timeout
-        # here is set to 0.0, which is bad for idle python nodes.
-        # Note that setting a value of 0.01 or 10 msec would imply that
-        # python node would not be able to send replies faster than 10 msec
-        # to Erlang node, but this is an acceptable delay condering the
-        # idle python node cpu consumption issue mentioned above.
+        if len(proto.send_buffer_) > 0:
+            sock.sendall(proto.send_buffer_)
+            proto.send_buffer_ = b''
 
-        # update: set lower timeout of 1 millisecond but do a select for
-        # longer time 1 second further down below to save cpu cycles
-        # when there are no messages.
-        # This is a HACK
         ready = select.select([sock], [], [], 0.001)
         try:
             if ready[0]:
@@ -184,11 +168,11 @@ def _read_loop(handler: BaseProtocol, sock: socket.socket):
                 # Try and consume repeatedly if multiple messages arrived
                 # in the same packet
                 while True:
-                    collected1 = handler.on_incoming_data(collected)
+                    collected1 = proto.on_incoming_data(collected)
                     if collected1 is None:
                         LOG.error("Protocol requested to disconnect the socket")
                         sock.close()
-                        handler.on_connection_lost()
+                        proto.on_connection_lost()
                         return
 
                     if collected1 == collected:
@@ -206,4 +190,4 @@ def _read_loop(handler: BaseProtocol, sock: socket.socket):
             break
 
     sock.close()
-    handler.on_connection_lost()
+    proto.on_connection_lost()
