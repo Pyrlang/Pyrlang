@@ -163,28 +163,13 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
 .. code-block:: python
 
-    from Pyrlang import Node, Atom, Process, GeventEngine # or AsyncioEngine
-
     class MyProcess(Process):
         def __init__(self, node) -> None:
             Process.__init__(self, node)
             node.register_name(self, Atom('my_process'))  # optional
-            print("registering process - 'my_process'")
 
         def handle_one_inbox_message(self, msg):
             print("Incoming", msg)
-
-    def main():
-        event_engine = GeventEngine()  # or AsyncioEngine
-        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-
-        # this automatically schedules itself to run via gevent
-        mp = MyProcess(node)
-        while True:
-            event_engine.sleep(0.1)
-
-    if __name__ == "__main__":
-        main()
 
 Now sending from Erlang is easy:
 
@@ -230,8 +215,23 @@ or index.
     using the new API.
 
 
-TODO Implement a Gen_server-like Object
----------------------------------------
+Gen_server-like Processes
+-------------------------
 
-.. todo::
-    This section needs to be updated when GenServer is added
+To have a :py:class:`~Pyrlang.process.Process` descendant which responds to
+``gen_server:call``, inherit your class from :py:class:`~Pyrlang.gen_server.GenServer`.
+When calling ``GenServer`` constructor in your ``__init__`` specify an
+additional parameter ``accepted_calls`` which is a list of strings.
+
+Functions with these names will be mapped to incoming ``gen_server:call``
+and their result will be transparently 'replied' back to the caller.
+
+.. code-block:: python
+
+    class MyProcess(GenServer):
+        def __init__(self, node) -> None:
+            GenServer.__init__(self, node, accepted_calls=['hello'])
+
+        def hello(self):
+            return self.pid_
+
