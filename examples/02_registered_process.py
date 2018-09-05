@@ -17,8 +17,8 @@ import sys
 sys.path.insert(0, ".")
 
 from Pyrlang import Node, Atom, Process
-from Pyrlang import GeventEngine as Engine
-# from Pyrlang import AsyncioEngine as Engine
+# from Pyrlang import GeventEngine as Engine
+from Pyrlang import AsyncioEngine as Engine
 
 
 class MyProcess(Process):

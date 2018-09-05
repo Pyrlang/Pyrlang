@@ -121,9 +121,18 @@ class GeventEngine(BaseEngine):
         while True:
             gevent.sleep(0.1)
 
+    def call_later(self, t: float, fn):
+        self.spawn(lambda: _call_later_helper(t, fn))
+
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #
+
+
+def _call_later_helper(t, fn):
+    """ Sleeps T amount of seconds then calls a callable fn and dies. """
+    gevent.sleep(t)
+    fn()
 
 
 def _generic_gevent_loop(loop_fn):
@@ -167,16 +176,14 @@ def make_serve_loop(protocol_class: Type[BaseProtocol],
 def _read_loop(proto: BaseProtocol, sock: socket.socket):
     collected = b''
     while True:
-        if len(proto.send_buffer_) > 0:
-            sock.sendall(proto.send_buffer_)
-            proto.send_buffer_ = b''
-
+        # LOG.debug("loop")
         proto.periodic_check()
-
-        ready = select.select([sock], [], [], 0)
         try:
-            if ready[0]:
+            s_read, s_write, s_error = select.select([sock], [sock], [sock], 0)
+            if s_read:
                 data = sock.recv(4096)
+                if not data:
+                    return _disconnect(proto, sock, "Socket closed")
                 # LOG.debug("data in: %s" % hex_bytes(data))
 
                 collected += data
@@ -186,24 +193,33 @@ def _read_loop(proto: BaseProtocol, sock: socket.socket):
                 while True:
                     collected1 = proto.on_incoming_data(collected)
                     if collected1 is None:
-                        LOG.error("Protocol requested to disconnect the socket")
-                        sock.close()
-                        proto.on_connection_lost()
-                        return
+                        return _disconnect(
+                            proto, sock, "Protocol requested to disconnect the socket")
 
                     if collected1 == collected:
                         break  # could not consume any more
 
                     collected = collected1
+            elif s_write:
+                if len(proto.send_buffer_) > 0:
+                    sock.sendall(proto.send_buffer_)
+                    proto.send_buffer_ = b''
+
+            elif s_error:
+                return _disconnect(proto, sock, "Error detected on the socket")
+
             else:
                 # HACK to keep idle CPU down to 0.3% while trying to maintain
                 # lower latency
                 select.select([sock], [], [], 0.05)
                 # gevent.sleep(0.1)
 
-        except select.error:
-            # Disconnected probably or another error
-            break
+        except select.error as e:
+            return _disconnect(proto, sock,
+                               "Select error detected on the socket %s" % e)
 
+
+def _disconnect(proto, sock, msg: str):
+    LOG.error(msg)
     sock.close()
     proto.on_connection_lost()

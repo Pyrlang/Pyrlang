@@ -17,7 +17,6 @@
 
 import logging
 import struct
-from abc import abstractmethod
 from hashlib import md5
 from typing import Union
 
@@ -49,10 +48,38 @@ CONTROL_TERM_MONITOR_P_EXIT = 21
 
 
 class DistributionError(Exception):
-    pass
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("DistributionError: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
 
 
 class BaseDistProtocol(BaseProtocol):
+    """ Defines Erlang distribution protocol. """
+
+    #
+    # Used by both Incoming and Outgoing protocols
+    #
+    DISCONNECTED = 'disconn'
+    CONNECTED = 'conn'
+
+    #
+    # Used by Incoming protocol only
+    #
+    RECV_NAME = 'recvname'
+    WAIT_CHALLENGE_REPLY = 'wait_ch_reply'
+
+    #
+    # Used by Outgoing protocol only
+    #
+
+    RECV_STATUS = 'recv_status'
+    # State 'alive' means that this connection is duplicate, next message
+    # may be 'true' to allow using this new connection or 'false', requesting
+    # this connection to be closed
+    ALIVE = 'alive'
+    RECV_CHALLENGE = 'recv_challenge'
+    RECV_CHALLENGE_ACK = 'recv_challenge_ack'
+
     def __init__(self, node_name: str, engine: BaseEngine):
         """ Create connection handler object. """
         super().__init__()
@@ -73,21 +100,26 @@ class BaseDistProtocol(BaseProtocol):
         self.inbox_ = engine.queue_new()
         """ Inbox is used to ask the connection to do something. """
 
-        self.peer_distr_version_ = (None, None)
+        self.peer_distr_version_ = (None, None)  # type: (int, int)
         """ Protocol version range supported by the remote peer. Erlang/OTP 
             versions 19-20 supports protocol version 7, older Erlangs down to 
             R6B support version 5. """
 
         self.peer_flags_ = 0
-        self.peer_name_ = None
+        self.peer_name_ = None  # type: Union[None, str]
         self.my_challenge_ = None
-        self.state_ = None
+
+        self.state_ = self.DISCONNECTED
+        """ FSM state for the protocol state-machine. """
+
+        self._schedule_periodic_ping_remote()
 
     def on_connected(self, host_port):
         """ Handler invoked from the recv loop (in ``util.make_handler_in``)
             when the connection has been accepted and established.
         """
         self.addr_ = host_port
+        self.state_ = self.RECV_NAME
 
     def on_incoming_data(self, data: bytes) -> Union[bytes, None]:
         if len(data) < self.packet_len_size_:
@@ -113,10 +145,9 @@ class BaseDistProtocol(BaseProtocol):
             return data[(offset + pkt_size):]
 
         # Protocol error has occured and instead we return None to request
-        # connec tion close (see util.py)
+        # connection close
         return None
 
-    @abstractmethod
     def on_packet(self, data) -> bool:
         pass
 
@@ -125,10 +156,11 @@ class BaseDistProtocol(BaseProtocol):
         return Node.all_nodes[self.node_name_]
 
     def on_connection_lost(self):
-        """ Handler is called when the client has disconnected
-        """
+        """ Handler is called when the client has disconnected """
+        self.state_ = self.DISCONNECTED
+
         if self.peer_name_ is not None:
-            self._get_node().inbox_.put(('node_disconnected', self.peer_name_))
+            self._get_node().inbox_.put(("node_disconnected", self.peer_name_))
 
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
@@ -190,6 +222,16 @@ class BaseDistProtocol(BaseProtocol):
                 break
             self._handle_one_inbox_message(msg)
 
+    def _periodic_ping_remote(self):
+        self._schedule_periodic_ping_remote()
+
+        if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
+            LOG.debug("pinging remote...")
+            self._send_packet4(b'')
+
+    def _schedule_periodic_ping_remote(self):
+        self.engine_.call_later(5.0, self._periodic_ping_remote)
+
     def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
         if m[0] == 'send':
@@ -249,6 +291,7 @@ class BaseDistProtocol(BaseProtocol):
         """ Handle incoming dist packets in the connected state. """
         # TODO: Update timeout timer, that we have connectivity still
         if data == b'':
+            LOG.debug("responding to a remote ping...")
             self._send_packet4(b'')
             return True  # this was a keepalive
 

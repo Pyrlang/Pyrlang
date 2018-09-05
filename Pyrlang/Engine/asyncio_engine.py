@@ -131,10 +131,18 @@ class AsyncioEngine(BaseEngine):
     def socket_send_all(self, sock, msg):
         self.loop_.run_until_complete(self.loop_.sock_sendall(sock, msg))
 
+    def call_later(self, t: float, fn):
+        self.loop_.create_task(_call_later_helper(t, fn))
 
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #
+
+
+async def _call_later_helper(t, fn):
+    """ Sleeps T amount of seconds then calls a callable fn and dies. """
+    await asyncio.sleep(t)
+    fn()
 
 
 async def _accept_loop(server_sock,
@@ -143,12 +151,15 @@ async def _accept_loop(server_sock,
                        protocol_class: Type[BaseProtocol],
                        protocol_args: list,
                        protocol_kwargs: dict):
-    client_sock, _addr = await ev_loop.sock_accept(server_sock)
-    proto = protocol_class(*protocol_args, **protocol_kwargs)
-    proto.on_connected(client_sock.getpeername())
-    ev_loop.create_task(read_loop_fn(proto=proto,
-                                     sock=client_sock,
-                                     ev_loop=ev_loop))
+    while True:
+        client_sock, _addr = await ev_loop.sock_accept(server_sock)
+        proto = protocol_class(*protocol_args, **protocol_kwargs)
+        peer_name = client_sock.getpeername()
+        LOG.debug("Incoming from %s", peer_name)
+        proto.on_connected(peer_name)
+        ev_loop.create_task(read_loop_fn(proto=proto,
+                                         sock=client_sock,
+                                         ev_loop=ev_loop))
 
 
 async def _generic_async_loop(loop_fn):
@@ -161,30 +172,46 @@ async def _read_loop(proto: BaseProtocol,
                      ev_loop: asyncio.AbstractEventLoop):
     collected = b''
     while True:
-        if len(proto.send_buffer_) > 0:
-            await ev_loop.sock_sendall(sock, proto.send_buffer_)
-            proto.send_buffer_ = b''
-
+        # LOG.debug("loop")
         proto.periodic_check()
+        try:
+            s_read, s_write, s_error = select.select([sock], [sock], [sock], 0)
+            if s_read:
+                data = await ev_loop.sock_recv(sock, 4096)
+                if not data:
+                    return _disconnect(proto, sock, "Socket closed")
 
-        ready = select.select([sock], [], [], 0)
-        if ready[0]:
-            data = await ev_loop.sock_recv(sock, 4096)
-            collected += data
+                collected += data
 
-            # Try and consume repeatedly if multiple messages arrived
-            # in the same packet
-            while True:
-                collected1 = proto.on_incoming_data(collected)
-                if collected1 is None:
-                    LOG.error("Protocol requested to disconnect the socket")
-                    await sock.close()
-                    proto.on_connection_lost()
-                    return
+                # Try and consume repeatedly if multiple messages arrived
+                # in the same packet
+                while True:
+                    collected1 = proto.on_incoming_data(collected)
+                    if collected1 is None:
+                        return _disconnect(
+                            proto, sock, "Protocol requested to disconnect the socket")
 
-                if collected1 == collected:
-                    break  # could not consume any more
+                    if collected1 == collected:
+                        break  # could not consume any more
 
-                collected = collected1
+                    collected = collected1
 
-        await asyncio.sleep(0.05)
+            elif s_write and len(proto.send_buffer_) > 0:
+                await ev_loop.sock_sendall(sock, proto.send_buffer_)
+                proto.send_buffer_ = b''
+
+            # Check for errors too
+            elif s_error:
+                return _disconnect(proto, sock, "Error detected on the socket")
+
+        except select.error as e:
+            return _disconnect(proto, sock,
+                               "Select error detected on the socket %s" % e)
+
+        await asyncio.sleep(0.1)
+
+
+def _disconnect(proto, sock, msg: str):
+    LOG.error(msg)
+    sock.close()
+    proto.on_connection_lost()

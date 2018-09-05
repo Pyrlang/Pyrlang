@@ -32,19 +32,8 @@ class InDistProtocol(BaseDistProtocol):
     """ Protocol handles incoming connections from other nodes.
     """
 
-    DISCONNECTED = 'disconn'
-    CONNECTED = 'conn'
-    RECV_NAME = 'recvname'
-    WAIT_CHALLENGE_REPLY = 'wait_ch_reply'
-
     def __init__(self, node_name: str, engine: BaseEngine):
         BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
-        self.state_ = self.DISCONNECTED
-        """ State for the finite state machine. """
-
-    def on_connected(self, host_port):
-        BaseDistProtocol.on_connected(self, host_port=host_port)
-        self.state_ = self.RECV_NAME
 
     def on_connection_lost(self):
         BaseDistProtocol.on_connection_lost(self)

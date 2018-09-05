@@ -42,30 +42,35 @@ class GenServer(Process):
         """
         super().__init__(node)
 
-        if accepted_calls is None: accepted_calls = []
+        if accepted_calls is None:
+            accepted_calls = []
         self.gen_accepted_calls_ = {k: True for k in accepted_calls}
         """ List of strings with allowed messages which will be converted into 
             method calls. A incoming call is identified by its first element 
             (which must be atom, binary or string). 
         """
 
-    def handle_info(self, msg):
+    @staticmethod
+    def handle_info(msg):
         """ Similar to Erlang/OTP - handler receives all messages which were
             not recognized by gen message parser.
         """
-        pass
+        LOG.info("Info message %s", msg)
 
     def handle_one_inbox_message(self, msg):
+        """ Function contains secret sauce - the ``gen:call`` parsing logic. """
         sys_msg = gen.parse_gen_message(msg, node_name=self.node_name_)
 
         if isinstance(sys_msg, str):
-            return self.handle_info()
+            return self.handle_info(msg)
+
         elif isinstance(sys_msg, GenIncomingMessage):
             LOG.info("In call %s", sys_msg)
             result = self._handle_incoming_call(sys_msg)
 
             LOG.debug("Replying with result=%s", result)
             sys_msg.reply(local_pid=self.pid_, result=result)
+
         else:
             LOG.info("Unhandled sys message %s", sys_msg)
 

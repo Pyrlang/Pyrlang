@@ -125,14 +125,16 @@ class Node(BaseNode):
         """
         # Send a ('node_connected', NodeName, Connection) to inform about the
         # connectivity with the other node
-        if m[0] == 'node_connected':
+        if m[0] == "node_connected":
             (_, addr, connection) = m
+            LOG.info("Node %s connected", addr)
             self.dist_nodes_[addr] = connection
 
         # Send a ('node_disconnected', NodeName) to forget the connection
-        elif m[0] == 'node_disconnected':
+        elif m[0] == "node_disconnected":
             (_, addr) = m
             if addr in self.dist_nodes_:  # preventing KeyError here
+                LOG.info("Node %s disconnected", addr)
                 del self.dist_nodes_[addr]
 
     def register_new_process(self, proc=None) -> Pid:

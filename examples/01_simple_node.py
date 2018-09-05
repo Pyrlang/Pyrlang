@@ -14,8 +14,8 @@ import sys
 sys.path.insert(0, ".")
 
 from Pyrlang import Node, Atom
-from Pyrlang import GeventEngine as Engine
-# from Pyrlang import AsyncioEngine as Engine
+# from Pyrlang import GeventEngine as Engine
+from Pyrlang import AsyncioEngine as Engine
 
 
 def main():

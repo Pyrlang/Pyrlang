@@ -77,3 +77,6 @@ class BaseEngine:
 
     def socket_send_all(self, sock, msg):
         raise NotImplementedError()
+
+    def call_later(self, t: float, fn):
+        raise NotImplementedError()

@@ -14,8 +14,8 @@ sys.path.insert(0, ".")
 import logging
 from Pyrlang.gen_server import GenServer
 from Pyrlang import Node, Atom, Process, gen
-# from Pyrlang import GeventEngine as Engine
-from Pyrlang import AsyncioEngine as Engine
+from Pyrlang import GeventEngine as Engine
+# from Pyrlang import AsyncioEngine as Engine
 
 LOG = logging.getLogger("+++EXAMPLE10+++")
 logging.getLogger("").setLevel(logging.DEBUG)

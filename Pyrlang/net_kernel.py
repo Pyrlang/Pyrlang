@@ -14,36 +14,40 @@
 
 import logging
 
-from Pyrlang import Term, gen
-from Pyrlang.process import Process
+from Pyrlang import Term, Atom
+from Pyrlang.gen_server import GenServer
 from Pyrlang.node import Node
 
 LOG = logging.getLogger("Pyrlang")
 
 
-class NetKernel(Process):
+class NetKernel(GenServer):
     """ A special process which registers itself as ``net_kernel`` and handles
         one specific ``is_auth`` message, which is used by ``net_adm:ping``.
     """
 
     def __init__(self, node: Node) -> None:
-        Process.__init__(self, node)
+        GenServer.__init__(self, node, accepted_calls=['is_auth'])
         node.register_name(self, Term.Atom('net_kernel'))
 
-    def handle_one_inbox_message(self, msg):
-        gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
-        if not isinstance(gencall, gen.GenIncomingMessage):
-            LOG.debug("Not a GenIncomingMessage: %s", gencall)
-            return
+    @staticmethod
+    def is_auth():
+        return Atom('yes')
 
-        # Incoming gen_call packet to net_kernel, might be that net_adm:ping
-        msg = gencall.message_
-
-        if isinstance(msg[0], Term.Atom) and msg[0].text_ == 'is_auth':
-            gencall.reply(local_pid=self.pid_,
-                          result=Term.Atom('yes'))
-        else:
-            LOG.error("Unknown message %s", msg)
+    # def handle_one_inbox_message(self, msg):
+    #     gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
+    #     if not isinstance(gencall, gen.GenIncomingMessage):
+    #         LOG.debug("Not a GenIncomingMessage: %s", gencall)
+    #         return
+    #
+    #     # Incoming gen_call packet to net_kernel, might be that net_adm:ping
+    #     msg = gencall.message_
+    #
+    #     if isinstance(msg[0], Term.Atom) and msg[0].text_ == 'is_auth':
+    #         gencall.reply(local_pid=self.pid_,
+    #                       result=Term.Atom('yes'))
+    #     else:
+    #         LOG.error("Unknown message %s", msg)
 
 
 __all__ = ['NetKernel']

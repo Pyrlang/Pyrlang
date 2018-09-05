@@ -3,8 +3,7 @@
 # Python server will reply with its own Pid, so then you know the Pid and can
 # send to it directly (second send call).
 #
-# Run `make example10a` to run Python node
-# Run `make example10b` to run Elixir client which will perform the call
+# See the documentation: Examples page, section "Example 10"
 #
 
 IO.puts "Test10 trying to connect to py@127.0.0.1 and send some hellos"
@@ -20,3 +19,6 @@ val1 = GenServer.call(my_process, "hello")
 IO.puts "Calling my_process via a pid with hello_again"
 val2 = GenServer.call(val1, "hello_again")
 :io.format "Result of calling again by pid ~p~n", [val2]
+
+send(val1, "some_random_message")
+

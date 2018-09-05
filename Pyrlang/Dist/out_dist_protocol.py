@@ -27,37 +27,15 @@ LOG = logging.getLogger("Pyrlang.Dist")
 
 
 class OutDistProtocol(BaseDistProtocol):
-    """ Handles outgoing connections from our to other nodes.
-
-        Behaves like a ``Greenlet`` but the actual recv loop around this
-        protocol is located in the ``util.connect_with`` helper function.
-    """
-    DISCONNECTED = 'disconn'
-
-    CONNECTED = 'conn'
-
-    RECV_STATUS = 'recv_status'
-
-    # State 'alive' means that this connection is duplicate, next message
-    # may be 'true' to allow using this new connection or 'false', requesting
-    # this connection to be closed
-    ALIVE = 'alive'
-
-    RECV_CHALLENGE = 'recv_challenge'
-    RECV_CHALLENGE_ACK = 'recv_challenge_ack'
+    """ Handles outgoing connections from our to other nodes. """
 
     def __init__(self, node_name: str, engine: BaseEngine):
         BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
-        self.state_ = self.DISCONNECTED
 
     def on_connected(self, host_port):
         BaseDistProtocol.on_connected(self, host_port=host_port)
         self._send_name()
         self.state_ = self.RECV_STATUS
-
-    def on_connection_lost(self):
-        BaseDistProtocol.on_connection_lost(self)
-        self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
         """ Handle incoming distribution packet
