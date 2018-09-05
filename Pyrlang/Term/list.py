@@ -25,18 +25,18 @@ class ImproperList:
         tail slot of last list cell instead of `NIL`. This is a rare data type
         and very likely you will not ever need it.
     """
-    def __init__(self, elements, tail):
+    def __init__(self, elements: list, tail):
         self.elements_ = elements
         self.tail_ = tail
 
 
-def list_to_unicode_str(lst):
+def list_to_unicode_str(lst: list) -> str:
     """ A helper function to convert a list of large integers incoming from
         Erlang into a unicode string. """
     return "".join(map(chr, lst))
 
 
-def list_to_str(lst):
+def list_to_str(lst: list) -> str:
     """ A helper function to convert a list of bytes (0..255) into an
         ASCII string. """
     return array.array('B', lst).tostring()

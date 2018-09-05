@@ -12,11 +12,11 @@ from Pyrlang.Term.bitstring import BitString
 class TestETFEncode(unittest.TestCase):
     def test_encode_atom(self):
         """ Try an atom 'hello' """
-        data1 = etf.term_to_binary(Term.Atom('hello', encoding="latin-1"))
+        data1 = etf.term_to_binary(Term.Atom('hello'))
         expected1 = bytes([131, ord('d'), 0, 5, 104, 101, 108, 108, 111])
         self.assertEqual(data1, expected1)
 
-        data2 = etf.term_to_binary(Term.Atom('hello', encoding="utf8"))
+        data2 = etf.term_to_binary(Term.Atom('hello'))
         expected2 = bytes([131, ord('v'), 0, 5, 104, 101, 108, 108, 111])
         self.assertEqual(data2, expected2)
 

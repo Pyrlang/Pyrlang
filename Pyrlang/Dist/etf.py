@@ -117,8 +117,7 @@ def _bytes_to_atom(name: bytes, encoding: str, options: dict):
     if options.get("atoms_as_strings", False):
         return name.decode(encoding)
 
-    return Atom(text=name.decode(encoding),
-                encoding=encoding)
+    return Atom(text=name.decode(encoding))
 
 
 def binary_to_term_2(data: bytes, options: dict = None):
@@ -404,7 +403,6 @@ def _pack_int(val):
 
 # TODO: maybe move this into atom class
 def _pack_atom(text: str, encoding: str) -> bytes:
-    # TODO: probably should be latin1 not utf8?
     return bytes([TAG_ATOM_EXT if encoding.startswith("latin")
                   else TAG_ATOM_UTF8_EXT]) \
            + util.to_u16(len(text)) \
@@ -524,7 +522,7 @@ def term_to_binary_2(val):
         return _pack_atom('undefined', 'latin-1')
 
     elif isinstance(val, Atom):
-        return _pack_atom(val.text_, val.enc_)
+        return _pack_atom(val.text_, "utf8")
 
     elif isinstance(val, Pid):
         return _pack_pid(val)

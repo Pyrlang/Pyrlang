@@ -7,7 +7,7 @@ Elixir, Alpaca, Luaerl, LFE, Clojerl and such.
 
 With just a few lines of startup code your Python program becomes an Erlang 
 network node, participating in the Erlang cluster.
- 
+
  
 Documentation
 -------------
@@ -33,28 +33,6 @@ Features
 *   `Pyrlang.gen` module helps decode `gen_server`-style calls (you still have
     to handle the value yourself). See `example10` (Elixir) for a 
     `gen_server:call` implementation.
-
-
-| Erlang               | Python                              | Notes                                                                                 |
-|----------------------|-------------------------------------|---------------------------------------------------------------------------------------|
-| Atom                 | `Pyrlang.Atom`                      | Can use `str()` or access `text_` field directly. Can decode UTF-8 atoms too          |
-| Float                | Python `float`                      |                                                                                       |
-| Integer (small, big) | Python `integer`                    | Python is capable if big integers too                                                 |
-| List (well formed)   | Python `list`                       | Use helper functions in `Pyrlang.Term.list` module to convert to string               |
-| List (improper)      | `tuple` (`list`, `Pyrlang.AnyTerm`) | A tuple with list and the tail element of the improper list                           |
-|                      |                                     | Sending an improper list to Erlang requires use of `Pyrlang.ImproperList` helper      |         
-| String               | Python `list`                       | Use helper functions in `Pyrlang.Term.list` module to convert to string               |
-| ASCII or UTF8 String or List of bytes | Python `bytes`     | If string contained only ASCII or UTF8, bytes will arrive                             | 
-| Tuple                | Python `tuple`                      |                                                                                       |
-| Map                  | Python `dict`                       |                                                                                       |
-| Binary               | Python `bytes`                      |                                                                                       |
-| Bitstring            | `tuple` (`bytes`, `int`)            | A tuple of bytes and `last_byte_bits:int` defining incomplete last byte               |
-|                      |                                     | Sending a bitstring to Erlang requires use of `Pyrlang.BitString` helper              |
-| Pid                  | `Pyrlang.Pid`                       | Always long external Pids with a node name in them                                    |
-| Reference            | `Pyrlang.Reference`                 | Always long external Refs with a node name in them                                    |
-| Lambda (fun)         | `Pyrlang.Fun`                       | A class which holds parsed fun fields, not usable or useful in Python                 |
-|                      | Any other object                    | Any unknown Python object will be encoded as {'Classname', #{field1 => value1...}}    |
-
 
 Building
 --------
