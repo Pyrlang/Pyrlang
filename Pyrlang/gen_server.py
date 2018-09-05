@@ -1,0 +1,88 @@
+# Copyright 2018, Erlang Solutions Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import logging
+from typing import Union
+
+from Pyrlang import Process, gen, Atom
+from Pyrlang.bases import BaseNode
+from Pyrlang.gen import GenIncomingMessage, GenIncomingCall
+from Pyrlang.util import as_str
+
+LOG = logging.getLogger("Pyrlang.OTP")
+
+
+class GenException(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("GenException: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class GenServer(Process):
+    """ Inherit from this instead of inheriting from the
+        :py:class:`~Pyrlang.process.Process` to gain the ability to convert
+        incoming ``gen:call`` messages into regular Python method calls.
+    """
+    def __init__(self, node: Union[str, BaseNode],
+                 accepted_calls: Union[list, None] = None):
+        """
+        :param accepted_calls: None or list of strings, defines allowed names
+            which will be converted into method calls on ``self``. A call name
+            is first element of the tuple (atom, binary or ASCII string).
+        """
+        super().__init__(node)
+
+        if accepted_calls is None: accepted_calls = []
+        self.gen_accepted_calls_ = {k: True for k in accepted_calls}
+        """ List of strings with allowed messages which will be converted into 
+            method calls. A incoming call is identified by its first element 
+            (which must be atom, binary or string). 
+        """
+
+    def handle_info(self, msg):
+        """ Similar to Erlang/OTP - handler receives all messages which were
+            not recognized by gen message parser.
+        """
+        pass
+
+    def handle_one_inbox_message(self, msg):
+        sys_msg = gen.parse_gen_message(msg, node_name=self.node_name_)
+
+        if isinstance(sys_msg, str):
+            return self.handle_info()
+        elif isinstance(sys_msg, GenIncomingMessage):
+            LOG.info("In call %s", sys_msg)
+            result = self._handle_incoming_call(sys_msg)
+
+            LOG.debug("Replying with result=%s", result)
+            sys_msg.reply(local_pid=self.pid_, result=result)
+        else:
+            LOG.info("Unhandled sys message %s", sys_msg)
+
+    def _handle_incoming_call(self, im: GenIncomingMessage):
+        # TODO: noreply, and other stop codes
+        call_msg = im.message_
+        if isinstance(call_msg, tuple):
+            f_name = as_str(call_msg[0])
+            f_args = list(call_msg[1:])
+        else:
+            f_name = as_str(call_msg)
+            f_args = []
+
+        if f_name not in self.gen_accepted_calls_:
+            raise GenException("Call to method %s is not in accepted_calls list"
+                               % f_name)
+
+        method = getattr(self, f_name)
+        LOG.debug("method=%s", method)
+        return method(*f_args)

@@ -71,6 +71,8 @@ changes required.
     rex
     net_kernel
     gen
+    gen_server
+    Notebook.notebook
 
 
 Indices and tables

@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import logging
 import traceback
 
 from Pyrlang import Term, gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
+
+LOG = logging.getLogger("Pyrlang.Rex")
 
 
 class Rex(Process):
@@ -25,6 +27,10 @@ class Rex(Process):
         Erlang ``rpc:call`` sends a ``$gen_call`` styled message to the
         registered name ``rex`` on the remote node which we parse and attempt
         to execute.
+
+        .. seealso::
+            :py:mod:`~Pyrlang.gen` module documentation and
+            :py:func:`~Pyrlang.gen.parse_gen_call` function
     """
 
     def __init__(self, node: Node) -> None:
@@ -47,16 +53,19 @@ class Rex(Process):
             :param msg: A tuple with Atom ``$gen_call`` as the first element
             :return: None
         """
-        gencall = gen.parse_gen_call(msg)
+        gencall = gen.parse_gen_call(msg, node_name=self.node_name_)
         if isinstance(gencall, str):
-            print("REX:", gencall)
+            LOG.debug("REX: %s", gencall)
             return
 
         # Find and run the thing
         try:
-            pmod = __import__(gencall.get_mod_str(), fromlist=[''])
-            pfun = getattr(pmod, gencall.get_fun_str())
-            args = gencall.get_args()
+            pmod = __import__(gencall.mod_, fromlist=[''])
+            pfun = getattr(pmod, gencall.fun_)
+            args = gencall.args_
+            # For calls to Pyrlang.Notebook.notebook module, always prepend node_name
+            if gencall.mod_ == "Pyrlang.Notebook.notebook" and gencall.fun_ == "new_context":
+                args.insert(0, self.node_name_)
 
             # Call the thing
             val = pfun(*args)

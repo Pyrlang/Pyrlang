@@ -200,12 +200,11 @@ class Node(BaseNode):
 
         receiver_obj = self.where_is(receiver)
         if receiver_obj is not None:
-            LOG.info("Send local reg=%s receiver=%s msg=%s" % (
-                receiver, receiver_obj, message))
+            LOG.info("Send local reg=%s receiver=%s msg=%s",
+                     receiver, receiver_obj, message)
             receiver_obj.inbox_.put(message)
         else:
-            LOG.warning(
-                "Send to unregistered name %s ignored" % receiver)
+            LOG.warning("Send to unknown %s ignored", receiver)
 
     def _send_local(self, receiver, message) -> None:
         """ Try find a process by pid and drop a message into its ``inbox_``.
@@ -235,7 +234,7 @@ class Node(BaseNode):
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        LOG.debug("send to %s <- %s", receiver, message)
+        # LOG.debug("send to %s <- %s", receiver, message)
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
@@ -264,7 +263,7 @@ class Node(BaseNode):
         raise NodeException("Don't know how to send to %s" % receiver)
 
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
-        LOG.debug("send_remote to %s <- %s" % (receiver, message))
+        # LOG.debug("send_remote to %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return self.dist_command(receiver_node=dst_node,
                                  message=m)

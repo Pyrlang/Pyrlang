@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" The module implements incoming TCP distribution connection (i.e. initiated
-    by another node with the help of EPMD).
+""" The module implements incoming TCP distribution protocol (i.e. initiated
+    by another node with the help of EPMD). Protocol only performs handling of
+    incoming data, the socket is handled by the Async Engine (Pyrlang.Engine).
 """
 
 import logging
@@ -28,11 +29,7 @@ LOG = logging.getLogger("Pyrlang.Dist")
 
 
 class InDistProtocol(BaseDistProtocol):
-    """ Handles incoming connections from other nodes.
-
-        Behaves like a ``Greenlet`` but the actual Greenlet run procedure and
-        the recv loop around this protocol are located in the
-        ``util.make_handler_in`` helper function.
+    """ Protocol handles incoming connections from other nodes.
     """
 
     DISCONNECTED = 'disconn'
@@ -43,6 +40,7 @@ class InDistProtocol(BaseDistProtocol):
     def __init__(self, node_name: str, engine: BaseEngine):
         BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
         self.state_ = self.DISCONNECTED
+        """ State for the finite state machine. """
 
     def on_connected(self, host_port):
         BaseDistProtocol.on_connected(self, host_port=host_port)

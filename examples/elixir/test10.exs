@@ -14,9 +14,9 @@ IO.puts "Test10 trying to connect to py@127.0.0.1 and send some hellos"
 my_process = {:"my_process", :"py@127.0.0.1"}
 IO.puts "Calling my_process via a tuple with hello"
 val1 = GenServer.call(my_process, "hello")
-:io.format "Result=~p", [val1]
+:io.format "Result of calling by name ~p~n", [val1]
 
 # Now that we know val1 is remote pid, we can call it again via a pid
-IO.puts "Calling my_process via a pid with hello"
-val2 = GenServer.call(val1, "hello")
-:io.format "Result=~p", [val2]
+IO.puts "Calling my_process via a pid with hello_again"
+val2 = GenServer.call(val1, "hello_again")
+:io.format "Result of calling again by pid ~p~n", [val2]

@@ -11,22 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-""" Implement shared pieces of Erlang node negotiation and distribution
-    protocol
-"""
-
-DIST_VSN = 5
-DIST_VSN_PAIR = (DIST_VSN, DIST_VSN)
-" Supported distribution protocol version (MAX,MIN). "
+from Pyrlang import Atom
 
 
-def dist_version_check(max_min: tuple) -> bool:
-    """ Check pair of versions against version which is supported by us
-
-        :type max_min: tuple(int, int)
-        :param max_min: (Max, Min) version pair for peer-supported dist version
-    """
-    return max_min[0] >= DIST_VSN >= max_min[1]
-
-# __all__ = ['DIST_VSN', 'DIST_VSN_PAIR']
+def as_str(x):
+    if isinstance(x, bytes):
+        return x.decode("latin1")
+    elif isinstance(x, str):
+        return x
+    elif isinstance(x, Atom):
+        return x.text_
+    raise Exception("Expected a binary, atom or a string, got %s" % x)

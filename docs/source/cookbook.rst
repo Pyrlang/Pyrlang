@@ -75,6 +75,12 @@ function which will transparently pass all args to the ``print`` operator.
 
     rpc:call('py@127.0.0.1', 'Pyrlang.logger', 'tty', ["Hello World"]).
 
+.. note::
+    You do not need to import module to perform the call, this will be done by Rex.
+
+.. note::
+    Module and function name can be atoms, strings (non-unicode) or binaries.
+
 Function call result or error will be sent back to the caller.
 In case of error, Erlang exit exception will be created with the exception
 value from Python.

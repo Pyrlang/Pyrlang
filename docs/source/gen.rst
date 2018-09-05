@@ -1,5 +1,5 @@
-gen module
-==========
+gen module - Generic OTP-style calls
+====================================
 
 .. automodule:: Pyrlang.gen
     :members:

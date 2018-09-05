@@ -1,3 +1,17 @@
+# Copyright 2018, Erlang Solutions Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 import traceback
 from typing import Type
@@ -159,7 +173,7 @@ def _read_loop(proto: BaseProtocol, sock: socket.socket):
 
         proto.periodic_check()
 
-        ready = select.select([sock], [], [], 0.001)
+        ready = select.select([sock], [], [], 0)
         try:
             if ready[0]:
                 data = sock.recv(4096)
@@ -184,7 +198,7 @@ def _read_loop(proto: BaseProtocol, sock: socket.socket):
             else:
                 # HACK to keep idle CPU down to 0.3% while trying to maintain
                 # lower latency
-                select.select([sock], [], [], 0.1)
+                select.select([sock], [], [], 0.05)
                 # gevent.sleep(0.1)
 
         except select.error:

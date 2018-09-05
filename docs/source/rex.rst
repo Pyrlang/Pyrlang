@@ -1,5 +1,5 @@
-rex module
-==========
+rex module - Remote Execution
+=============================
 
 .. automodule:: Pyrlang.rex
     :members:

@@ -8,36 +8,34 @@
 #
 
 import sys
+
 sys.path.insert(0, ".")
 
 import logging
+from Pyrlang.gen_server import GenServer
 from Pyrlang import Node, Atom, Process, gen
-from Pyrlang import GeventEngine as Engine
-# from Pyrlang import AsyncioEngine as Engine
+# from Pyrlang import GeventEngine as Engine
+from Pyrlang import AsyncioEngine as Engine
 
 LOG = logging.getLogger("+++EXAMPLE10+++")
-LOG.setLevel(logging.DEBUG)
+logging.getLogger("").setLevel(logging.DEBUG)
 
 
-class MyProcess(Process):
+class MyProcess(GenServer):
     def __init__(self, node) -> None:
-        Process.__init__(self, node)
+        GenServer.__init__(self, node,
+                           accepted_calls=['hello', 'hello_again'])
         node.register_name(self, Atom('my_process'))
         LOG.info("registering process - 'my_process'")
 
-    def handle_one_inbox_message(self, msg):
-        LOG.info("Incoming to %s %s %s", self.pid_, type(self.pid_), msg)
-        gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
+    def hello(self):
+        """ This is called via ``gen_server:call`` """
+        return self.pid_
 
-        if isinstance(gencall, str):
-            LOG.error("MyProcess gen parse error: %s", gencall)
-            return
-        else:
-            LOG.info("Incoming gen_call %s", gencall)
-            # Here handle_call would match on the `message_` field of gencall
-
-        LOG.info("replying with my pid %s", self.pid_)
-        gencall.reply(local_pid=self.pid_, result=self.pid_)
+    @staticmethod
+    def hello_again():
+        """ This is called from Elixir test after ``hello`` returned success. """
+        return b'Approved!'
 
 
 def main():

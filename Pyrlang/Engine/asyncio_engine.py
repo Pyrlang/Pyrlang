@@ -1,4 +1,19 @@
+# Copyright 2018, Erlang Solutions Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
+import select
 import socket
 import traceback
 from typing import Type
@@ -17,7 +32,7 @@ class AsyncioQueue(BaseQueue):
         self.q_ = Queue()
 
     def put(self, v):
-        self.q_.put(v)
+        self.q_.put_nowait(v)
 
     def is_empty(self):
         return self.q_.empty()
@@ -152,20 +167,24 @@ async def _read_loop(proto: BaseProtocol,
 
         proto.periodic_check()
 
-        data = await ev_loop.sock_recv(sock, 4096)
-        collected += data
+        ready = select.select([sock], [], [], 0)
+        if ready[0]:
+            data = await ev_loop.sock_recv(sock, 4096)
+            collected += data
 
-        # Try and consume repeatedly if multiple messages arrived
-        # in the same packet
-        while True:
-            collected1 = proto.on_incoming_data(collected)
-            if collected1 is None:
-                LOG.error("Protocol requested to disconnect the socket")
-                await sock.close()
-                proto.on_connection_lost()
-                return
+            # Try and consume repeatedly if multiple messages arrived
+            # in the same packet
+            while True:
+                collected1 = proto.on_incoming_data(collected)
+                if collected1 is None:
+                    LOG.error("Protocol requested to disconnect the socket")
+                    await sock.close()
+                    proto.on_connection_lost()
+                    return
 
-            if collected1 == collected:
-                break  # could not consume any more
+                if collected1 == collected:
+                    break  # could not consume any more
 
-            collected = collected1
+                collected = collected1
+
+        await asyncio.sleep(0.05)
