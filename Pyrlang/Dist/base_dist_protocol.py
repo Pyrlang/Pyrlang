@@ -204,13 +204,21 @@ class BaseDistProtocol(BaseProtocol):
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            return n.monitor_process(origin=sender,
-                                     target=target)
+            from Pyrlang.node import ProcessNotFoundError
+            try:
+                return n.monitor_process(origin=sender,
+                                         target=target)
+            except ProcessNotFoundError:
+                pass
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            return n.demonitor_process(origin=sender,
-                                       target=target)
+            from Pyrlang.node import ProcessNotFoundError
+            try:
+                return n.demonitor_process(origin=sender,
+                                           target=target)
+            except ProcessNotFoundError:
+                pass
 
         else:
             LOG.error("Unhandled 'p' message: %s; %s", control_term, msg_term)

@@ -32,6 +32,12 @@ class NodeException(Exception):
         Exception.__init__(self, msg, *args, **kwargs)
 
 
+class ProcessNotFoundError(NodeException):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("NoProcess: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
 class Node(BaseNode):
     """ Implements an Erlang node which has a network name, a dictionary of 
         processes and registers itself via EPMD.
@@ -285,7 +291,7 @@ class Node(BaseNode):
             :param receiver_node: Name of a remote node
             :param message: A crafted tuple with command name and some more
                 values
-            :raises: NodeException
+            :raises NodeException: if unable to find or connect to the node
         """
         if receiver_node not in self.dist_nodes_:
             LOG.info("Connect to node %s", receiver_node)
@@ -320,6 +326,7 @@ class Node(BaseNode):
                 the target from now
             :type target: Pid or Atom
             :param target: Name or pid of a monitor target process
+            :raises ProcessNotFound: if target does not exist
        """
         target_proc = self.where_is(target)
         LOG.info("MonitorP: orig=%s targ=%s -> %s", origin, target, target_proc)
@@ -327,7 +334,8 @@ class Node(BaseNode):
             target_proc.monitors_.add(origin)
         else:
             msg = "Monitor target %s does not exist" % target
-            raise NodeException(msg)
+            LOG.error(msg)
+            raise ProcessNotFoundError(msg)
 
         # if the origin is local, register monitor in it
         if origin.is_local_to(self):
@@ -344,13 +352,15 @@ class Node(BaseNode):
             :type target: Pid or Atom
             :param target: Name or pid of a monitor target process, possibly
                 it does not exist
+            :raises ProcessNotFound: if target does not exist
         """
         target_proc = self.where_is(target)
         if target_proc is not None:
             target_proc.monitors_.discard(origin)
         else:
             msg = "Demonitor target %s does not exist" % target
-            raise NodeException(msg)
+            LOG.error(msg)
+            raise ProcessNotFoundError(msg)
 
         # if the origin is local, unregister monitor from it
         if origin.is_local_to(self):
@@ -358,4 +368,4 @@ class Node(BaseNode):
             origin_p.monitor_targets_.discard(target_proc.pid_)
 
 
-__all__ = ['Node', 'NodeException']
+__all__ = ['Node', 'NodeException', 'ProcessNotFoundError']

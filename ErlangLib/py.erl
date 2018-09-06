@@ -47,18 +47,20 @@ new_context(Node, Options) ->
 
 
 %% @doc Perform a remote call with default timeout of 5s and no keyword args
-call(Ctx, Path, Args) -> call(Ctx, Path, Args, #{}, 5000).
+call(Ctx, Path, Args) -> call(Ctx, Path, Args, #{}).
 
 %% @doc Perform a remote call with default timeout of 5s
-call(Ctx, Path, Args, KeywordArgs) -> call(Ctx, Path, Args, KeywordArgs, 5000).
+call(Ctx, Path, Args, KeywordArgs) ->
+    call(Ctx, Path, Args, KeywordArgs, #{timeout => 5000}).
 
 %% @doc Perform a remote call. A value reference id is returned, which is a
 %% numeric index in remote notebook history. Value reference can be reused as
 %% an argument in upcoming calls.
-call(#pyrlang_ctx{remote_pid = Pid}, Path, Args, KeywordArgs, Timeout) ->
-    case gen_server:call(Pid, {call, #{path => Path,
-                                       args => Args,
-                                       kwargs => KeywordArgs}}, Timeout)
+call(#pyrlang_ctx{remote_pid = Pid}, Path, Args, KeywordArgs, Options) ->
+    Timeout = maps:get(timeout, Options, 5000),
+    case gen_server:call(Pid, {nb_call, #{path => Path,
+                                          args => Args,
+                                          kwargs => KeywordArgs}}, Timeout)
     of
         {ok, VRef} -> #pyrlang_value_ref{id = VRef}
     end.
@@ -70,4 +72,4 @@ call(#pyrlang_ctx{remote_pid = Pid}, Path, Args, KeywordArgs, Timeout) ->
 -spec retrieve(#pyrlang_ctx{}, #pyrlang_value_ref{}) ->
     {ok, any()} | {error, not_found}.
 retrieve(#pyrlang_ctx{remote_pid = Pid}, #pyrlang_value_ref{id = Id}) ->
-    gen_server:call(Pid, {retrieve, Id}).
+    gen_server:call(Pid, {nb_retrieve, Id}).

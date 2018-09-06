@@ -39,9 +39,11 @@ class BaseEngine:
         pass
 
     def sleep(self, seconds: float):
+        """ Sleeps given amount of seconds in a nice compatible way. """
         raise NotImplementedError()
 
     def queue_new(self) -> BaseQueue:
+        """ Creates a new Queue object compatible with the current async engine. """
         raise NotImplementedError()
 
     def connect_with(self, protocol_class: Type[BaseProtocol], host_port: tuple,
@@ -72,7 +74,9 @@ class BaseEngine:
         raise NotImplementedError()
 
     def run_forever(self):
+        """ Continues running event loop forever. """
         raise NotImplementedError()
 
     def call_later(self, t: float, fn):
+        """ Schedules fn to be called after sleep(t). """
         raise NotImplementedError()
