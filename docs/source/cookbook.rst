@@ -30,7 +30,9 @@ Start the Node
         main()
 
 Here ``event_engine`` is a pluggable adapter which allows Pyrlang to run both
-with gevent and asyncio-driven event loops. Pyrlang in this case performs mostly
+with gevent (:py:class:`~Pyrlang.Engine.gevent_engine.GeventEngine`)
+and asyncio-driven (:py:class:`~Pyrlang.Engine.asyncio_engine.AsyncioEngine`)
+event loops. Pyrlang in this case performs mostly
 protocols handling, while event engine will open connections, start tasks
 and sleep asynchronously.
 

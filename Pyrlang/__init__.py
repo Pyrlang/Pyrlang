@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 
 from Pyrlang.node import Node, NodeException
 from Pyrlang.process import Process
+from Pyrlang.gen_server import GenServer
+from Pyrlang.util import start_pyrlang
 
 from Pyrlang import Term
 from Pyrlang.Term.atom import Atom
@@ -27,14 +28,8 @@ from Pyrlang.Term.fun import Fun
 from Pyrlang.Engine.gevent_engine import GeventEngine
 from Pyrlang.Engine.asyncio_engine import AsyncioEngine
 
+start_pyrlang()
 
-def init():
-    lg = logging.getLogger("Pyrlang")
-    lg.setLevel(logging.DEBUG)
-
-
-init()
-
-__all__ = ['Node', 'NodeException', 'Process', 'Term',
-           'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
+__all__ = ['Node', 'NodeException', 'Process', 'GenServer',
+           'Term', 'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
            'GeventEngine', 'AsyncioEngine']

@@ -204,7 +204,7 @@ class Node(BaseNode):
         if receiver_obj is not None:
             LOG.info("Send local reg=%s receiver=%s msg=%s",
                      receiver, receiver_obj, message)
-            receiver_obj.inbox_.put(message)
+            receiver_obj.deliver_message(msg=message)
         else:
             LOG.warning("Send to unknown %s ignored", receiver)
 
@@ -220,7 +220,7 @@ class Node(BaseNode):
         dst = self.where_is(receiver)
         if dst is not None:
             LOG.debug("Node._send_local: to %s <- %s", receiver, message)
-            dst.inbox_.put(message)
+            dst.deliver_message(msg=message)
         else:
             LOG.warning("Node._send_local: receiver %s does not exist", receiver)
 

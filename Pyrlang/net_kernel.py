@@ -14,7 +14,7 @@
 
 import logging
 
-from Pyrlang import Term, Atom
+from Pyrlang.Term.atom import Atom
 from Pyrlang.gen_server import GenServer
 from Pyrlang.node import Node
 
@@ -28,26 +28,11 @@ class NetKernel(GenServer):
 
     def __init__(self, node: Node) -> None:
         GenServer.__init__(self, node, accepted_calls=['is_auth'])
-        node.register_name(self, Term.Atom('net_kernel'))
+        node.register_name(self, Atom('net_kernel'))
 
     @staticmethod
     def is_auth():
         return Atom('yes')
-
-    # def handle_one_inbox_message(self, msg):
-    #     gencall = gen.parse_gen_message(msg, node_name=self.node_name_)
-    #     if not isinstance(gencall, gen.GenIncomingMessage):
-    #         LOG.debug("Not a GenIncomingMessage: %s", gencall)
-    #         return
-    #
-    #     # Incoming gen_call packet to net_kernel, might be that net_adm:ping
-    #     msg = gencall.message_
-    #
-    #     if isinstance(msg[0], Term.Atom) and msg[0].text_ == 'is_auth':
-    #         gencall.reply(local_pid=self.pid_,
-    #                       result=Term.Atom('yes'))
-    #     else:
-    #         LOG.error("Unknown message %s", msg)
 
 
 __all__ = ['NetKernel']

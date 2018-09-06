@@ -14,9 +14,16 @@
 
 """ A helper module to assist with gen:call-style message parsing and replying.
     A generic incoming message looks like ``{$gen_call, {From, Ref}, Message}``.
+
+    .. warning::
+        This is a low level utility module. For handling GenServer-style calls
+        please consider inheriting your Process from
+        :py:class:`~Pyrlang.gen_server.GenServer` and following the docs.
 """
 
-from Pyrlang import Term, Pid, Reference
+from Pyrlang.Term.atom import Atom
+from Pyrlang.Term.pid import Pid
+from Pyrlang.Term.reference import Reference
 from Pyrlang.util import as_str
 
 
@@ -117,7 +124,7 @@ def parse_gen_call(msg, node_name: str):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], Term.Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Atom) or msg[0].text_ != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, _call_mfa_gl) = msg
@@ -148,7 +155,7 @@ def parse_gen_message(msg, node_name: str):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], Term.Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Atom) or msg[0].text_ != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, gcmsg) = msg

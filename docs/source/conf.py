@@ -159,6 +159,3 @@ texinfo_documents = [
      author, 'Pyrlang', 'Python x Erlang interop library.',
      'Miscellaneous'),
 ]
-
-
-

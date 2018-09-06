@@ -36,8 +36,7 @@ class BaseEngine:
     """
 
     def __init__(self):
-        log_fmt = '%(asctime)-15s [%(name)s] %(module)s:%(lineno)i: %(message)s'
-        logging.basicConfig(format=log_fmt)
+        pass
 
     def sleep(self, seconds: float):
         raise NotImplementedError()
@@ -73,9 +72,6 @@ class BaseEngine:
         raise NotImplementedError()
 
     def run_forever(self):
-        raise NotImplementedError()
-
-    def socket_send_all(self, sock, msg):
         raise NotImplementedError()
 
     def call_later(self, t: float, fn):

@@ -11,12 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+""" Example of how to inherit from GenServer:
+
+.. code-block:: python
+
+    class MyProcess(GenServer):
+        def __init__(self, node) -> None:
+            GenServer.__init__(self, node, accepted_calls=['hello'])
+
+        def hello(self):
+            return self.pid_
+"""
+
 import logging
 from typing import Union
 
-from Pyrlang import Process, gen, Atom
+from Pyrlang.process import Process
+from Pyrlang import gen
+# from Pyrlang.Term.atom import Atom
 from Pyrlang.bases import BaseNode
-from Pyrlang.gen import GenIncomingMessage, GenIncomingCall
+from Pyrlang.gen import GenIncomingMessage
 from Pyrlang.util import as_str
 
 LOG = logging.getLogger("Pyrlang.OTP")
@@ -31,8 +46,7 @@ class GenException(Exception):
 class GenServer(Process):
     """ Inherit from this instead of inheriting from the
         :py:class:`~Pyrlang.process.Process` to gain the ability to convert
-        incoming ``gen:call`` messages into regular Python method calls.
-    """
+        incoming ``gen:call`` messages into regular Python method calls. """
     def __init__(self, node: Union[str, BaseNode],
                  accepted_calls: Union[list, None] = None):
         """

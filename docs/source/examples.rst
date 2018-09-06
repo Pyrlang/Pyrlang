@@ -3,7 +3,7 @@ Examples!
 
 Talk is cheap! Show me some code!
 
-Have a look in :doc:`getting_started` too!
+Have a look in :doc:`cookbook` too!
 
 Some examples are located in ``examples/`` directory. And there are convenient
 ``Makefile`` targets to call them, just use your Bash autocomplete when typing

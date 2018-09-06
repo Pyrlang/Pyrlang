@@ -226,11 +226,10 @@ class BaseDistProtocol(BaseProtocol):
         self._schedule_periodic_ping_remote()
 
         if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
-            LOG.debug("pinging remote...")
             self._send_packet4(b'')
 
     def _schedule_periodic_ping_remote(self):
-        self.engine_.call_later(5.0, self._periodic_ping_remote)
+        self.engine_.call_later(15.0, self._periodic_ping_remote)
 
     def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
@@ -291,7 +290,6 @@ class BaseDistProtocol(BaseProtocol):
         """ Handle incoming dist packets in the connected state. """
         # TODO: Update timeout timer, that we have connectivity still
         if data == b'':
-            LOG.debug("responding to a remote ping...")
             self._send_packet4(b'')
             return True  # this was a keepalive
 

@@ -30,9 +30,10 @@ Features
 *   Supports `net_adm` pings
 *   Supports RPC calls. An RPC call can propagate an exception from 
     Python to Erlang;
-*   `Pyrlang.gen` module helps decode `gen_server`-style calls (you still have
-    to handle the value yourself). See `example10` (Elixir) for a 
-    `gen_server:call` implementation.
+*   `Pyrlang.GenServer` descendant from `Pyrlang.Process` allows accepting
+    generic calls mapped to Python class members
+*   For low level operation `Pyrlang.gen` module helps decode `gen`-style calls 
+    
 
 Building
 --------
@@ -54,12 +55,4 @@ you can run `make` to see other output formats.
 Examples
 --------
 
-Running `make example1` will run a simple test which starts a node at `py@127.0.0.1`.
-See top comment in `examples/01_simple_node.py`.
-
-Running `make example2` will create a `MyProcess` Python class inherited from
-`Process`, register self under a name and await for message from a connected
-Erlang node (see top comment in `examples/02_registered_process.py`) 
-
-Running `make example10a` and `make example10b` in two console tabs will start
-a Python `gen_server`-like process and Elixir client will do a call to it.
+See the documentation page for Examples description.

@@ -49,8 +49,10 @@ class AsyncioEngine(BaseEngine):
     """ Compatibility driver for Asyncio.
         Create it before creating Node and pass as argument 'engine' like so:
 
-        e = AsyncioEngine()
-        node = Node(name="py@127.0.0.1", cookie="COOKIE", engine=e)
+        .. code-block:: python
+
+            e = AsyncioEngine()
+            node = Node(name="py@127.0.0.1", cookie="COOKIE", engine=e)
     """
 
     def __init__(self):
@@ -127,9 +129,6 @@ class AsyncioEngine(BaseEngine):
 
     def run_forever(self):
         self.loop_.run_forever()
-
-    def socket_send_all(self, sock, msg):
-        self.loop_.run_until_complete(self.loop_.sock_sendall(sock, msg))
 
     def call_later(self, t: float, fn):
         self.loop_.create_task(_call_later_helper(t, fn))

@@ -49,8 +49,10 @@ class GeventEngine(BaseEngine):
     """ Compatibility driver for Gevent.
         Create it before creating Node and pass as argument 'engine' like so:
 
-        e = GeventEngine()
-        node = Node(name="py@127.0.0.1", cookie="COOKIE", engine=e)
+        .. code-block:: python
+
+            e = GeventEngine()
+            node = Node(name="py@127.0.0.1", cookie="COOKIE", engine=e)
     """
 
     def __init__(self):

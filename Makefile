@@ -1,4 +1,4 @@
-PY=python3
+PY=PYRLANG_ENABLE_LOG_FORMAT=1 PYRLANG_LOG_LEVEL=DEBUG python3
 
 .PHONY: example1
 example1:

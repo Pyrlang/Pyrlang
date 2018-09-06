@@ -23,6 +23,7 @@ changes required.
     :caption: Contents:
 
     examples
+    configuration
     cookbook
     data_types
 

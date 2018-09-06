@@ -16,19 +16,24 @@
 import sys
 sys.path.insert(0, ".")
 
+import logging
+
 from Pyrlang import Node, Atom, Process
 # from Pyrlang import GeventEngine as Engine
 from Pyrlang import AsyncioEngine as Engine
+
+LOG = logging.getLogger("+++EXAMPLE2+++")
+logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class MyProcess(Process):
     def __init__(self, node) -> None:
         Process.__init__(self, node)
         node.register_name(self, Atom('my_process'))  # optional
-        print("Example2: registering process - 'my_process'")
+        LOG.info("Registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
-        print("Example2: Incoming", msg)
+        LOG.info("Incoming %s", msg)
 
 
 def main():
