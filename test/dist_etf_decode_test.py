@@ -30,8 +30,8 @@ class TestETFDecode(unittest.TestCase):
         """ Try a simple ASCII string """
         b1 = bytes([131, 107, 0, 5, 104, 101, 108, 108, 111])
         (t1, tail) = etf.binary_to_term(b1)
-        self.assertTrue(isinstance(t1, str))
-        self.assertEqual(t1, "hello")
+        self.assertTrue(isinstance(t1, bytes))
+        self.assertEqual(t1, b"hello")
         self.assertEqual(tail, b'')
 
     def test_decode_unicode_string(self):
