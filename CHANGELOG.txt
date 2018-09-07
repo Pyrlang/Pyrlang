@@ -1,5 +1,5 @@
-0.5.3 (2018-09-07)
-------------------
+0.6 (2018-09-07)
+----------------
 
 *   Notebook-style remote calls (simplified flow for Python calls) which store
     results remotely until they are needed.

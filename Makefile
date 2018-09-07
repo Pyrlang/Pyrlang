@@ -27,5 +27,7 @@ docs:
 
 .PHONY: test
 test:
-	$(PY) test/dist_etf_decode_test.py && \
-	$(PY) test/dist_etf_transitive_test.py
+	for f in $(shell ls test/*_test.py); do \
+		echo "RUNNING $$f"; \
+		$(PY) $$f; \
+	done

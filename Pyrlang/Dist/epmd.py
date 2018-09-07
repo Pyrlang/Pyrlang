@@ -72,7 +72,7 @@ class EPMDClient:
         """ Closing EPMD connection removes the node from available EPMD nodes
             list.
         """
-        print("EPMD: Close")
+        LOG.info("Closing EPMD socket")
         self.sock_.close()
         self.sock_ = None
 

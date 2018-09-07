@@ -59,7 +59,7 @@ class BaseEngine:
         """
         raise NotImplementedError()
 
-    def socket_module():
+    def socket_module(self):
         """ Returns current socket module (modified to be compatible with the
             current async library). Used functions are:
             *   socket.create_connection
@@ -79,4 +79,7 @@ class BaseEngine:
 
     def call_later(self, t: float, fn):
         """ Schedules fn to be called after sleep(t). """
+        raise NotImplementedError()
+
+    def destroy(self):
         raise NotImplementedError()

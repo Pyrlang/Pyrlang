@@ -126,6 +126,14 @@ class GeventEngine(BaseEngine):
     def call_later(self, t: float, fn):
         self.spawn(lambda: _call_later_helper(t, fn))
 
+    def destroy(self):
+        from greenlet import greenlet
+        import gc
+        gevent.killall([obj for obj in gc.get_objects()
+                        if isinstance(obj, greenlet)])
+
+        # gevent.get_hub().destroy()
+
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #
@@ -178,7 +186,9 @@ def make_serve_loop(protocol_class: Type[BaseProtocol],
 def _read_loop(proto: BaseProtocol, sock: socket.socket):
     collected = b''
     while True:
-        # LOG.debug("loop")
+        if proto.close_requested_:
+            return _disconnect(proto, sock, "Socket close requested")
+
         proto.periodic_check()
         try:
             s_read, s_write, s_error = select.select([sock], [sock], [sock], 0)

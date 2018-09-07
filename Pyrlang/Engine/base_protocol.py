@@ -22,6 +22,10 @@ class BaseProtocol:
     """
     def __init__(self, *_args, **_kwargs):
         self.send_buffer_ = b''
+        """ Collects outgoing data. """
+        
+        self.close_requested_ = False
+        """ Set this to True and the connection will be closed soon. """
 
     def on_connected(self, host_port: tuple):
         pass
@@ -45,3 +49,7 @@ class BaseProtocol:
 
     def send(self, msg: bytes):
         self.send_buffer_ += msg
+
+    def destroy(self):
+        """ Stop due to an external demand. """
+        self.close_requested_ = True

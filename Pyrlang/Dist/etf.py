@@ -257,7 +257,7 @@ def binary_to_term_2(data: bytes, options: dict = None):
         id_len = 4 * term_len
         id1 = tail[1:id_len + 1]
 
-        ref = reference.Reference(node=node,
+        ref = reference.Reference(node_name=node,
                                   creation=creation,
                                   refid=id1)
         return ref, tail[id_len + 1:]
@@ -422,7 +422,7 @@ def _pack_pid(val) -> bytes:
 # TODO: maybe move this into ref class
 def _pack_ref(val) -> bytes:
     data = bytes([TAG_NEW_REF_EXT]) + util.to_u16(len(val.id_) // 4) + \
-           term_to_binary_2(val.node_) + bytes([val.creation_]) + val.id_
+           term_to_binary_2(val.node_name_) + bytes([val.creation_]) + val.id_
     return data
 
 

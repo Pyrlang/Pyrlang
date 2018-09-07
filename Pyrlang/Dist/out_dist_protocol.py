@@ -66,7 +66,7 @@ class OutDistProtocol(BaseDistProtocol):
         """ :return: Pyrlang.node.Node
         """
         from Pyrlang.node import Node  # todo: slow?
-        return Node.all_nodes[self.node_name_]
+        return Node.all_nodes.get(self.node_name_, None)
 
     def _send_name(self):
         """ Create and send first welcome packet. """

@@ -19,6 +19,7 @@ from typing import Dict, Union
 from Pyrlang.Engine.base_engine import BaseEngine
 from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
+from Pyrlang.Dist.base_dist_protocol import BaseDistProtocol
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.bases import BaseNode
 from Pyrlang.process import Process
@@ -95,12 +96,12 @@ class Node(BaseNode):
         # integer.
         self.node_opts_ = NodeOpts(cookie=cookie)
 
-        self.dist_nodes_ = {}  # type: Dict[str, Node]
+        self.dist_nodes_ = {}  # type: Dict[str, BaseDistProtocol]
         self.dist_ = ErlangDistribution(node_name=node_name, engine=engine)
 
         # This is important before we can begin spawning processes
         # to get the correct node creation
-        self.dist_.connect(self)
+        self.dist_.connect()
 
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
@@ -176,12 +177,6 @@ class Node(BaseNode):
             :param name: The name to register with
         """
         self.reg_names_[name] = proc.pid_
-
-    def stop(self) -> None:
-        """ Sets the mark that the node is done, closes connections.
-        """
-        self.is_exiting_ = True
-        self.dist_.disconnect()
 
     def where_is(self, ident) -> Union[Process, None]:
         """ Look up a registered name or pid.
@@ -305,11 +300,10 @@ class Node(BaseNode):
 
             # block until connected, and get the connected message
             LOG.info("Wait for 'node_connected'")
-            # msg = self.inbox_.receive_wait(
-            #     filter_fn=lambda m: m[0] == 'node_connected'
-            # )
             while receiver_node not in self.dist_nodes_:
                 self.engine_.sleep(0.1)
+                if self.is_exiting_:
+                    return
 
             LOG.info("Connected")
 
@@ -366,6 +360,27 @@ class Node(BaseNode):
         if origin.is_local_to(self):
             origin_p = self.where_is(origin)
             origin_p.monitor_targets_.discard(target_proc.pid_)
+
+    def destroy(self):
+        """ Closes incoming and outgoing connections and destroys the local
+            node. """
+        self.is_exiting_ = True
+
+        import copy
+        all_processes = copy.copy(self.processes_)
+        for p in all_processes.values():
+            p.exit(Atom('killed'))
+        self.processes_.clear()
+        self.reg_names_.clear()
+
+        for dproto in self.dist_nodes_.values():
+            dproto.destroy()
+        self.dist_nodes_.clear()
+
+        self.dist_.destroy()
+        del Node.all_nodes[self.node_name_]
+
+        self.engine_.destroy()
 
 
 __all__ = ['Node', 'NodeException', 'ProcessNotFoundError']

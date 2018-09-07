@@ -59,7 +59,7 @@ class ErlangDistribution:
 
         self.epmd_ = EPMDClient(engine)
 
-    def connect(self, node) -> bool:
+    def connect(self) -> bool:
         """ Looks up EPMD daemon and connects to it trying to discover other 
             Erlang nodes.
         """
@@ -73,7 +73,13 @@ class ErlangDistribution:
         """ Finish EPMD connection, this will remove the node from the list of
             available nodes on EPMD
         """
+        self.in_srv_.close()
         self.epmd_.close()
+
+    def destroy(self):
+        LOG.info("Stopping dist service")
+        self.disconnect()
+        del self.epmd_
 
     def connect_to_node(self, local_node: str, remote_node: str,
                         engine: BaseEngine):

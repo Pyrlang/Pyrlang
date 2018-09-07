@@ -133,6 +133,10 @@ class AsyncioEngine(BaseEngine):
     def call_later(self, t: float, fn):
         self.loop_.create_task(_call_later_helper(t, fn))
 
+    def destroy(self):
+        self.loop_.stop()
+        # self.loop_.close()
+
 #
 # Helpers for serving incoming connections and reading from the connected socket
 #
@@ -171,7 +175,9 @@ async def _read_loop(proto: BaseProtocol,
                      ev_loop: asyncio.AbstractEventLoop):
     collected = b''
     while True:
-        # LOG.debug("loop")
+        if proto.close_requested_:
+            return _disconnect(proto, sock, "Socket close requested")
+
         proto.periodic_check()
         try:
             s_read, s_write, s_error = select.select([sock], [sock], [sock], 0)

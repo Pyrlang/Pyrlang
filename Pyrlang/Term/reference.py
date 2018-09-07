@@ -23,9 +23,9 @@ class Reference:
         unique data, but it might change.
     """
 
-    def __init__(self, node: Atom, creation: int, refid: bytes) -> None:
+    def __init__(self, node_name: Atom, creation: int, refid: bytes) -> None:
         # Node the ref comes from
-        self.node_ = node
+        self.node_name_ = node_name
         # Identification bytes, guaranteed to be unique on the creating node
         self.id_ = refid
         self.creation_ = creation
@@ -36,7 +36,7 @@ class Reference:
         if len(self.id_) == 12:
             v = struct.unpack(">III", self.id_)
             return "Ref<%d,%d,%d,%d>@%s" % \
-                   (self.creation_, v[0], v[1], v[2], self.node_.text_)
+                   (self.creation_, v[0], v[1], v[2], self.node_name_.text_)
         else:
             return "Ref<%d,%s>" % (self.creation_,
                                    util.hex_bytes(self.id_, ","))
