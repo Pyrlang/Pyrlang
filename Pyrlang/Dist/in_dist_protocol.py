@@ -26,6 +26,7 @@ from Pyrlang.Dist.base_dist_protocol import *
 from Pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang.Dist")
+LOG.setLevel(logging.INFO)
 
 
 class InDistProtocol(BaseDistProtocol):

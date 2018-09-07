@@ -25,6 +25,7 @@
 """
 
 import logging
+import traceback
 from typing import Union
 
 from Pyrlang.process import Process
@@ -56,6 +57,8 @@ class GenServer(Process):
         """
         super().__init__(node)
 
+        self.traceback_depth_ = 10
+
         if accepted_calls is None:
             accepted_calls = []
         self.gen_accepted_calls_ = {k: True for k in accepted_calls}
@@ -80,10 +83,7 @@ class GenServer(Process):
 
         elif isinstance(sys_msg, GenIncomingMessage):
             LOG.info("In call %s", sys_msg)
-            result = self._handle_incoming_call(sys_msg)
-
-            LOG.debug("Replying with result=%s", result)
-            sys_msg.reply(local_pid=self.pid_, result=result)
+            self._handle_incoming_call(sys_msg)
 
         else:
             LOG.info("Unhandled sys message %s", sys_msg)
@@ -102,6 +102,16 @@ class GenServer(Process):
             raise GenException("Call to method %s is not in accepted_calls list"
                                % f_name)
 
-        method = getattr(self, f_name)
-        LOG.debug("method=%s", method)
-        return method(*f_args)
+        try:
+            method = getattr(self, f_name)
+            LOG.debug("method=%s", method)
+            result = method(*f_args)
+            LOG.debug("Replying with result=%s", result)
+            im.reply(local_pid=self.pid_, result=result)
+
+        except Exception as excpt:
+            # Send an error
+            if self.traceback_depth_ > 0:
+                excpt.traceback = traceback.format_exc(self.traceback_depth_)
+
+            im.reply_exit(local_pid=self.pid_, reason=excpt)

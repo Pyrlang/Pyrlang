@@ -26,6 +26,7 @@ from Pyrlang.Engine.base_engine import BaseEngine
 from Pyrlang.Engine.base_protocol import BaseProtocol
 
 LOG = logging.getLogger("Pyrlang.Dist")
+LOG.setLevel(logging.INFO)
 
 # Distribution protocol delivers pairs of (control_term, message).
 # http://erlang.org/doc/apps/erts/erl_dist_protocol.html

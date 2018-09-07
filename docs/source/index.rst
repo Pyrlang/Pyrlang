@@ -26,13 +26,33 @@ changes required.
     configuration
     cookbook
     data_types
+    calling_python
 
-    node
-    process
+
+Pyrlang Modules
+---------------
 
 .. toctree::
     :maxdepth: 1
-    :caption: Erlang Data Types Support
+
+    node
+    process
+    rex
+    gen
+    net_kernel
+    gen_server
+    Notebook.notebook
+    Engine.base_engine
+    Engine.base_protocol
+    Engine.asyncio_engine
+    Engine.gevent_engine
+
+
+Erlang Data Types in Pyrlang
+----------------------------
+
+.. toctree::
+    :maxdepth: 1
 
     Term.atom
     Term.bitstring
@@ -42,9 +62,12 @@ changes required.
     Term.pid
     Term.reference
 
+
+Distribution Protocol Implementation
+------------------------------------
+
 .. toctree::
     :maxdepth: 1
-    :caption: Distribution Support
 
     Dist.distribution
     Dist.epmd
@@ -53,27 +76,6 @@ changes required.
     Dist.in_dist_protocol
     Dist.out_dist_protocol
     Dist.base_dist_protocol
-
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Internal - Switchable Async Engine
-
-    Engine.base_engine
-    Engine.base_protocol
-    Engine.asyncio_engine
-    Engine.gevent_engine
-
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Other modules
-
-    rex
-    net_kernel
-    gen
-    gen_server
-    Notebook.notebook
 
 
 Indices and tables

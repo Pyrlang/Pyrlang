@@ -178,8 +178,8 @@ Now sending from Erlang is easy:
     (erl@127.0.0.1) 1> {my_process, 'py@127.0.0.1'} ! hello.
 
 
-TODO Remote Calculations on Python Node
----------------------------------------
+Remote Calculations on Python Node
+----------------------------------
 
 **Problem:**
 While it is possible to subclass the :py:class:`~Pyrlang.process.Process`
@@ -193,9 +193,8 @@ over the wire until they are ready.
 A notebook-like remote execution API, where intermediate call results are stored
 in history log and can be referred by name or index.
 
-.. todo::
-    Describe how chain of calculations can be performed remotely in
-    **direct mode** (one by one) using the new API.
+There is helper Erlang module called ``py.erl``, please use it and see
+:doc:`calling_python` for an example.
 
 
 TODO Lazy Remote Calculations on Python Node
