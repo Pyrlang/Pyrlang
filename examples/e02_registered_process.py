@@ -13,9 +13,6 @@
 # Erl command:  {my_process, 'py@127.0.0.1'} ! hello.
 #
 
-import sys
-sys.path.insert(0, ".")
-
 import logging
 
 from Pyrlang import Node, Atom, Process

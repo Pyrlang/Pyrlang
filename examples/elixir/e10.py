@@ -7,10 +7,6 @@
 # Run `make example10b` to run Elixir client which will perform the call
 #
 
-import sys
-
-sys.path.insert(0, ".")
-
 import logging
 from Pyrlang.gen_server import GenServer
 from Pyrlang import Node, Atom, Process, gen

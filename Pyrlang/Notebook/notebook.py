@@ -105,7 +105,8 @@ class Notebook(GenServer):
         return Atom('error'), Atom('not_found')
 
     def _resolve_path(self, p: List[str]) -> Callable:
-        """ Imports p[0] and then follows the list p, applying getattr repeatedly. """
+        """ Imports p[0] and then follows the list p, by applying getattr()
+            repeatedly. """
         if isinstance(p, str):
             p = [p]
 

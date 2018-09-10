@@ -16,8 +16,13 @@
     get_type/1,
     new_context/1,
     new_context/2,
-    retrieve/2
+    retrieve/2,
+    batch_call/3,
+    batch_call/4,
+    batch_new/0,
+    batch_run/3
 ]).
+
 
 %% Creates a remote notebook object which will handle the calls on this context
 -record(pyrlang_ctx, {
@@ -25,6 +30,14 @@
     remote_pid :: pid(),
     ref = erlang:make_ref() :: reference() % to identify context in value refs
 }).
+
+%% Stores a list of commands to run remotely. Each command returns some value
+%% which now is known by its index only, and this value can be used in
+%% subsequent commands as a object to call upon, or as any argument.
+-record(pyrlang_batch, {
+    batch = [] :: list(map()) % list of ids and calls to run
+}).
+
 
 %% Refers to a remote value saved as integer index automatically or a named one
 -record(pyrlang_value_ref, {
@@ -73,9 +86,14 @@ call(Ctx, Path, Args, KeywordArgs) ->
 %% numeric index in remote notebook history. Value reference can be reused as
 %% an argument in upcoming calls.
 %% Options can have keys:
-%%  *   timeout: gen_server:call timeout, ms
-%%  *   immediate (bool): if true, the {value, Result} will be returned,
-%%      otherwise it will be stored remotely and you get a #pyrlang_value_ref{}
+%%  *   'timeout' (default 5000): gen_server:call timeout, ms. Use of atom
+%%      'infinity' is allowed but is not recommended
+%%  *   immediate (bool, default FALSE): if true, the {value, Result} will be
+%%      returned, otherwise it will be stored remotely and you get a
+%%      #pyrlang_value_ref{}
+-spec call(#pyrlang_ctx{}, list(string() | binary() | atom()), Args :: list(),
+           KwArgs :: map(), Options :: map()
+          ) -> {ok, string(), #pyrlang_value_ref{}} | {value, any()}.
 call(#pyrlang_ctx{remote_pid = Pid,
                   ref        = CtxRef},
      Path, Args, KeywordArgs, Options
@@ -83,6 +101,23 @@ call(#pyrlang_ctx{remote_pid = Pid,
     Timeout = maps:get(timeout, Options, 5000),
     Immediate = maps:get(immediate, Options, false),
 
+    {Path1, Args1, KeywordArgs1} = prepare_call(Path, Args, KeywordArgs),
+
+    CallMap = make_call_map(Path1, Args1, KeywordArgs1),
+    case gen_server:call(Pid,
+                         {nb_call, CallMap#{immediate => Immediate}},
+                         Timeout)
+    of
+        {ok, Type, VRef} -> % value stored remotely
+            #pyrlang_value_ref{id          = VRef,
+                               remote_type = Type,
+                               ref         = CtxRef};
+        {value, V} ->
+            V % immediate return, remote history was not updated
+    end.
+
+
+prepare_call(Path, Args, KeywordArgs) ->
     %% For path first element - it might be a value reference
     Path1 = [convert_valueref(erlang:hd(Path)) | erlang:tl(Path)],
 
@@ -93,21 +128,15 @@ call(#pyrlang_ctx{remote_pid = Pid,
     {KwargsKeys, KwargsValues} = lists:unzip(maps:to_list(KeywordArgs)),
     KwargsValues1 = lists:map(fun convert_valueref/1, KwargsValues),
     KeywordArgs1 = maps:from_list(lists:zip(KwargsKeys, KwargsValues1)),
+    {Path1, Args1, KeywordArgs1}.
 
-    case gen_server:call(Pid,
-                         {nb_call, #{path => Path1,
-                                     args => Args1,
-                                     kwargs => KeywordArgs1,
-                                     immediate => Immediate}},
-                         Timeout)
-    of
-        {ok, Type, VRef} -> % value stored remotely
-            #pyrlang_value_ref{id          = VRef,
-                               remote_type = Type,
-                               ref         = CtxRef};
-        {value, V} ->
-            V % immediate return, remote history was not updated
-    end.
+
+%% @doc Create a map with call path and args (used to encode Python call args
+%% for single calls and for remote batches)
+make_call_map(Path, Args, KeywordArgs) ->
+    #{path => Path,
+      args => Args,
+      kwargs => KeywordArgs}.
 
 
 %% @doc Given a value, replaces #pyrlang_value_ref{} records with simpler tuples
@@ -128,3 +157,55 @@ retrieve(#pyrlang_ctx{remote_pid = Pid,
 
 retrieve(#pyrlang_ctx{}, #pyrlang_value_ref{}) ->
     erlang:error({error, ref_does_not_match}).
+
+
+%% @doc Create an empty batch for running remotely on Python side.
+%% Add more calls with `batch_call/4` then execute with `batch_run/3`
+batch_new() ->
+    #pyrlang_batch{}.
+
+
+%% @doc Builds a data structure for execution of multiple commands remotely on
+%% Python side. For each added call returned value can be reused similar to
+%% `py:call` - you can refer to it in the first element of the `Path` and args.
+batch_call(#pyrlang_batch{} = Batch, Path, Args) ->
+    batch_call(Batch, Path, Args, #{}).
+
+batch_call(#pyrlang_batch{batch = Cmds} = Batch, Path, Args, KeywordArgs) ->
+    {Path1, Args1, KeywordArgs1} = prepare_call(Path, Args, KeywordArgs),
+    Call0 = make_call_map(Path1, Args1, KeywordArgs1),
+    Ret = {'$pyrlangval', erlang:make_ref()},
+    Call1 = Call0#{ret => Ret},
+    Batch1 = Batch#pyrlang_batch{batch = Cmds ++ [Call1]},
+    {Batch1, Ret}.
+
+
+%% @doc Performs remote execution of sequence of calls on Python (remote) side.
+%% If 'immediate' option was overridden to false, result of the chain call will
+%% be stored remotely in  history.
+%% Options can have keys:
+%%  *   'timeout' (default 5000): gen_server:call timeout, ms. Use of atom
+%%      'infinity' is allowed but is not recommended
+%%  *   immediate (bool, default FALSE): if true, the {value, Result} will be
+%%      returned, otherwise it will be stored remotely and you get a
+%%      #pyrlang_value_ref{}
+-spec batch_run(#pyrlang_ctx{}, #pyrlang_batch{}, Options :: map())
+               -> {ok, string(), #pyrlang_value_ref{}} | {value, any()}.
+batch_run(#pyrlang_ctx{remote_pid = Pid,
+                       ref        = CtxRef},
+          #pyrlang_batch{batch = S},
+          Options) ->
+    Timeout = maps:get(timeout, Options, 5000),
+    Immediate = maps:get(immediate, Options, true),
+
+    Options = #{immediate => Immediate,
+                timeout => Timeout},
+    case gen_server:call(Pid, {nb_batch, S, Options}, Timeout)
+    of
+        {ok, Type, VRef} -> % value stored remotely
+            #pyrlang_value_ref{id          = VRef,
+                               remote_type = Type,
+                               ref         = CtxRef};
+        {value, V} ->
+            V % immediate return, remote history was not updated
+    end.

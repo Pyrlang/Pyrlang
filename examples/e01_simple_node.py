@@ -10,8 +10,6 @@
 # Before starting example1 try in Erlang shell: `erlang:register(shell, self()).`
 # Shell process will receive 'hello' (type `flush().` to see)
 #
-import sys
-sys.path.insert(0, ".")
 
 from Pyrlang import Node, Atom
 # from Pyrlang import GeventEngine as Engine
