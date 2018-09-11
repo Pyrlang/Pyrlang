@@ -234,3 +234,25 @@ and their result will be transparently 'replied' back to the caller.
         def hello(self):
             return self.pid_
 
+When you perform a ``gen_server:call`` with an atom, the atom becomes Python
+method name:
+
+.. code-block:: python
+
+    # 1> gen_server:call(Pid, my_method)
+    # becomes a call to
+    class MyClass:
+        def my_method(self):
+            pass # return None -> atom 'undefined' in Erlang
+
+When you perform a ``gen_server:call`` with a tuple where first element is an
+atom, the atom becomes Python method name, and following tuple elements become
+python **\*args**.
+
+.. code-block:: python
+
+    # 1> gen_server:call(Pid, {my_method, 1000, "hello"})
+    # becomes a call to
+    class MyClass:
+        def my_method(self, i: int, s: bytes):
+            pass # return None -> atom 'undefined' in Erlang
