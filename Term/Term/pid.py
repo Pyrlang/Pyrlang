@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.Term.atom import Atom
-from Pyrlang.bases import BasePid
+from Term.bases import BasePid
 
 PID_MARKER = "pyrlang.Pid"
 

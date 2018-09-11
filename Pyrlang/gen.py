@@ -21,10 +21,10 @@
         :py:class:`~Pyrlang.gen_server.GenServer` and following the docs.
 """
 
-from Pyrlang.Term.atom import Atom
-from Pyrlang.Term.pid import Pid
-from Pyrlang.Term.reference import Reference
 from Pyrlang.util import as_str
+from Term.atom import Atom
+from Term.pid import Pid
+from Term.reference import Reference
 
 
 class GenBase:

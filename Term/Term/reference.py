@@ -14,8 +14,8 @@
 
 import struct
 
-from Pyrlang.Dist import util
-from Pyrlang.Term.atom import Atom
+from Term import util
+from Term.atom import Atom
 
 REF_MARKER = "pyrlang.Ref"
 

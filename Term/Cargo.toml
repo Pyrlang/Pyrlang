@@ -1,0 +1,13 @@
+[package]
+name = "term_codec"
+version = "0.1.0"
+authors = ["Dmytro Lytovchenko <dmytro.lytovchenko@erlang-solutions.com>"]
+edition = "2018"
+
+[lib]
+name = "term_codec"
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.4"
+features = ["extension-module"]

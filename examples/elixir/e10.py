@@ -8,8 +8,10 @@
 #
 
 import logging
+
+from Term import Atom
 from Pyrlang.gen_server import GenServer
-from Pyrlang import Node, Atom, Process, gen
+from Pyrlang import Node
 from Pyrlang import GeventEngine as Engine
 # from Pyrlang import AsyncioEngine as Engine
 

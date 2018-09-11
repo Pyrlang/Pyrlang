@@ -26,13 +26,13 @@ import struct
 
 from zlib import decompressobj
 
-from Pyrlang.Dist import util
-from Pyrlang.Term.atom import Atom
-from Pyrlang.Term.fun import Fun
-from Pyrlang.Term.list import NIL, ImproperList
-from Pyrlang.Term.pid import Pid
-from Pyrlang.Term.bitstring import BitString
-from Pyrlang.Term import reference
+from Term import util
+from Term.atom import Atom
+from Term.fun import Fun
+from Term.list import NIL, ImproperList
+from Term.pid import Pid
+from Term.bitstring import BitString
+from Term.reference import Reference
 
 ETF_VERSION_TAG = 131
 
@@ -73,9 +73,9 @@ def incomplete_data(where=""):
         decoding.
     """
     if where:
-        raise ETFDecodeException("Incomplete data")
-    else:
         raise ETFDecodeException("Incomplete data at " + where)
+    else:
+        raise ETFDecodeException("Incomplete data")
 
 
 def binary_to_term(data: bytes, options: dict = None):
@@ -257,9 +257,9 @@ def binary_to_term_2(data: bytes, options: dict = None):
         id_len = 4 * term_len
         id1 = tail[1:id_len + 1]
 
-        ref = reference.Reference(node_name=node,
-                                  creation=creation,
-                                  refid=id1)
+        ref = Reference(node_name=node,
+                        creation=creation,
+                        refid=id1)
         return ref, tail[id_len + 1:]
 
     if tag == TAG_MAP_EXT:
@@ -438,7 +438,7 @@ def _is_a_simple_object(obj):
            or type(obj) == float \
            or isinstance(obj, Atom) \
            or isinstance(obj, Pid) \
-           or isinstance(obj, reference.Reference)
+           or isinstance(obj, Reference)
 
 
 def _serialize_object(obj, cd: set = None):
@@ -527,7 +527,7 @@ def term_to_binary_2(val):
     elif isinstance(val, Pid):
         return _pack_pid(val)
 
-    elif isinstance(val, reference.Reference):
+    elif isinstance(val, Reference):
         return _pack_ref(val)
 
     elif type(val) == bytes:

@@ -14,10 +14,10 @@
 import logging
 from typing import Callable, List, Tuple, Dict
 
-from Pyrlang.Term.atom import Atom
-from Pyrlang.Term.pid import Pid
 from Pyrlang.gen_server import GenServer
 from Pyrlang.util import as_str
+from Term.atom import Atom
+from Term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang.Notebook")
 

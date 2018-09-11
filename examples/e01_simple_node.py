@@ -11,7 +11,8 @@
 # Shell process will receive 'hello' (type `flush().` to see)
 #
 
-from Pyrlang import Node, Atom
+from Pyrlang import Node
+from Term import Atom
 # from Pyrlang import GeventEngine as Engine
 from Pyrlang import AsyncioEngine as Engine
 

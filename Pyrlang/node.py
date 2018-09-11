@@ -17,12 +17,13 @@ import logging
 from typing import Dict, Union
 
 from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Term import *
 from Pyrlang.Dist.distribution import ErlangDistribution
 from Pyrlang.Dist.base_dist_protocol import BaseDistProtocol
 from Pyrlang.Dist.node_opts import NodeOpts
 from Pyrlang.bases import BaseNode
 from Pyrlang.process import Process
+from Term.atom import Atom
+from Term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang")
 

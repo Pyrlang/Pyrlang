@@ -1,5 +1,6 @@
 ROOT=$(shell pwd)
-PY=PYTHONPATH=$(ROOT) PYRLANG_ENABLE_LOG_FORMAT=1 PYRLANG_LOG_LEVEL=DEBUG python3
+PYPATH_SET=PYTHONPATH=$(ROOT):$(ROOT)/Term
+PY=$(PYPATH_SET) PYRLANG_ENABLE_LOG_FORMAT=1 PYRLANG_LOG_LEVEL=DEBUG python3
 ERLLIBDIR=$(ROOT)/ErlangLib
 ERL=erl -pa $(ERLLIBDIR) $(ROOT)/examples -name erl@127.0.0.1 -setcookie COOKIE
 
@@ -36,13 +37,17 @@ example10b:
 	elixir --name elixir@127.0.0.1 --cookie COOKIE \
 		examples/elixir/test10.exs
 
+.PHONY: erlshell
+erlshell:
+	$(ERL)
+
 .PHONY: deps
 deps:
 	pip3 install -r requirements.txt
 
 .PHONY: docs
 docs:
-	cd docs && $(MAKE) html
+	cd docs && $(PYPATH_SET) $(MAKE) html
 
 .PHONY: test
 test:

@@ -48,19 +48,22 @@ Pyrlang Modules
     Engine.gevent_engine
 
 
-Erlang Data Types in Pyrlang
-----------------------------
+.. comment::
 
-.. toctree::
-    :maxdepth: 1
+    Erlang Data Types in Pyrlang
+    ----------------------------
 
-    Term.atom
-    Term.bitstring
-    Term.erl_typing
-    Term.fun
-    Term.list
-    Term.pid
-    Term.reference
+    .. toctree::
+        :maxdepth: 1
+
+        Term.atom
+        Term.bitstring
+        Term.erl_typing
+        Term.fun
+        Term.list
+        Term.pid
+        Term.reference
+        Dist.etf
 
 
 Distribution Protocol Implementation
@@ -71,7 +74,6 @@ Distribution Protocol Implementation
 
     Dist.distribution
     Dist.epmd
-    Dist.etf
     Dist.node_opts
     Dist.in_dist_protocol
     Dist.out_dist_protocol

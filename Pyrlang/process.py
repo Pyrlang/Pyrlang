@@ -13,13 +13,11 @@
 # limitations under the License.
 import logging
 
-# import gevent
-# from gevent import Greenlet
 from typing import Set, Union
 
 from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Term.pid import Pid
 from Pyrlang.bases import BaseNode, BaseProcess
+from Term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang")
 

@@ -30,7 +30,6 @@ from typing import Union
 
 from Pyrlang.process import Process
 from Pyrlang import gen
-# from Pyrlang.Term.atom import Atom
 from Pyrlang.bases import BaseNode
 from Pyrlang.gen import GenIncomingMessage
 from Pyrlang.util import as_str

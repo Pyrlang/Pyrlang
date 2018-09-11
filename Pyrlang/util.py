@@ -14,7 +14,7 @@
 import logging
 from typing import Union
 
-from Pyrlang.Term.atom import Atom
+from Term.atom import Atom
 
 
 def start_pyrlang():

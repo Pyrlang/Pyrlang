@@ -31,7 +31,7 @@ start() ->
     Result2 = py:retrieve(Ctx, Result2Ref),
     io:format("EXAMPLE4: Result2 (retrieved) = ~p~n", [Result2]),
     io:format("NOTE: Result2 will be different from Result1 because the batch "
-                ++ "was executed once again.~n"),
+                ++ "was executed twice!~n"),
 
     %% Done with the remote context. Remote notebook object will be dropped.
     py:destroy(Ctx),

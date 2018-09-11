@@ -19,7 +19,8 @@
 import random
 import logging
 
-from Pyrlang.Dist import util, dist_protocol
+from Term import util
+from Pyrlang.Dist import dist_protocol
 from Pyrlang.Dist.base_dist_protocol import *
 from Pyrlang.Engine.base_engine import BaseEngine
 
