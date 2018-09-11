@@ -131,17 +131,17 @@ Python nodes.
     {S1, R1} = py:batch_call(S0, [<<"datetime">>, "datetime", now], []),
     {S2, R2} = py:batch_call(S1, [datetime, datetime, <<"now">>], [], #{}),
     %% Subtract two datetimes
-    {S3, Diff} = py:batch_call(S2, [DT2, '__sub__'], [DT1], #{}),
+    {S3, Diff} = py:batch_call(S2, [R2, '__sub__'], [R1], #{}),
 
     %% Call Diff.total_seconds() and retrieve the value without storing it
     %% in remote history.
-    {S4, _R4} = py:batch_call(S3, [Diff, <<"total_seconds">>]),
+    {S4, _R4} = py:batch_call(S3, [Diff, <<"total_seconds">>], []),
 
     %% Create a remote notebook object (context) on Python side
-    Ctx  = py:new_context('py@127.0.0.1'),
+    Ctx = py:new_context('py@127.0.0.1'),
 
     %% will retrieve because immediate=true by default
-    Result2 = py:batch_run(Ctx, S4),
+    Result = py:batch_run(Ctx, S4),
 
     %% Done with the remote context. Remote notebook object will be dropped.
     py:destroy(Ctx).

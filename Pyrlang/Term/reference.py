@@ -17,6 +17,8 @@ import struct
 from Pyrlang.Dist import util
 from Pyrlang.Term.atom import Atom
 
+REF_MARKER = "pyrlang.Ref"
+
 
 class Reference:
     """ Represents a reference value from Erlang, typically it has 12 bytes of
@@ -43,3 +45,19 @@ class Reference:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+    # Eq, Ne and Hash are used for having this class as a dict key
+
+    def equals(self, other) -> bool:
+        return isinstance(other, Reference) \
+               and self.node_name_ == other.node_name_ \
+               and self.id_ == other.id_ \
+               and self.creation_ == other.creation_
+
+    __eq__ = equals
+
+    def __ne__(self, other):
+        return not self.equals(other)
+
+    def __hash__(self):
+        return hash((REF_MARKER, self.node_name_, self.id_, self.creation_))

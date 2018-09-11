@@ -20,6 +20,7 @@
     batch_call/3,
     batch_call/4,
     batch_new/0,
+    batch_run/2,
     batch_run/3
 ]).
 
@@ -174,10 +175,10 @@ batch_call(#pyrlang_batch{} = Batch, Path, Args) ->
 batch_call(#pyrlang_batch{batch = Cmds} = Batch, Path, Args, KeywordArgs) ->
     {Path1, Args1, KeywordArgs1} = prepare_call(Path, Args, KeywordArgs),
     Call0 = make_call_map(Path1, Args1, KeywordArgs1),
-    Ret = {'$pyrlangval', erlang:make_ref()},
+    Ret = erlang:make_ref(),
     Call1 = Call0#{ret => Ret},
     Batch1 = Batch#pyrlang_batch{batch = Cmds ++ [Call1]},
-    {Batch1, Ret}.
+    {Batch1, {'$pyrlangval', Ret}}.
 
 
 %% @doc Performs remote execution of sequence of calls on Python (remote) side.
@@ -189,6 +190,8 @@ batch_call(#pyrlang_batch{batch = Cmds} = Batch, Path, Args, KeywordArgs) ->
 %%  *   immediate (bool, default FALSE): if true, the {value, Result} will be
 %%      returned, otherwise it will be stored remotely and you get a
 %%      #pyrlang_value_ref{}
+batch_run(Ctx, Batch) -> batch_run(Ctx, Batch, #{}).
+
 -spec batch_run(#pyrlang_ctx{}, #pyrlang_batch{}, Options :: map())
                -> {ok, string(), #pyrlang_value_ref{}} | {value, any()}.
 batch_run(#pyrlang_ctx{remote_pid = Pid,
@@ -198,9 +201,9 @@ batch_run(#pyrlang_ctx{remote_pid = Pid,
     Timeout = maps:get(timeout, Options, 5000),
     Immediate = maps:get(immediate, Options, true),
 
-    Options = #{immediate => Immediate,
+    Options1 = #{immediate => Immediate,
                 timeout => Timeout},
-    case gen_server:call(Pid, {nb_batch, S, Options}, Timeout)
+    case gen_server:call(Pid, {nb_batch, S, Options1}, Timeout)
     of
         {ok, Type, VRef} -> % value stored remotely
             #pyrlang_value_ref{id          = VRef,

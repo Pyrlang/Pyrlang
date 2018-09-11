@@ -252,7 +252,7 @@ class BaseDistProtocol(BaseProtocol):
             (_, from_pid, to_pid, ref, reason) = m
             ctrl = (CONTROL_TERM_MONITOR_P_EXIT,
                     from_pid, to_pid, ref, reason)
-            LOG.info("Monitor proc exit: %s with %s" % (from_pid, reason))
+            LOG.info("Monitor proc exit: %s with %s", from_pid, reason)
             return self._control_message(ctrl, None)
 
         LOG.error("Unhandled message to InConnection %s" % m)

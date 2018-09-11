@@ -1,4 +1,4 @@
-%% For this demo please make sure that Example 2 is running in a separate
+%% For this demo please make sure that `make pynode` is running in a separate
 %% console tab.
 
 -module(e03_call_python).
