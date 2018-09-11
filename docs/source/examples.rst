@@ -37,6 +37,16 @@ send message to it by name.
     ``{my_process, 'py@127.0.0.1'} ! {hello, 123, [<<"test">>, self()]}.``
 *   In Python terminal tab observe log message about incoming data.
 
+Examples 3 and 4: Calling/Batch Python
+--------------------------------------
+
+Examples are ``.erl`` files which demonstrate how remote notebook-style calls
+and batch calls will work with Erlang and Python.
+
+*   ``make pynode`` (same as ``make example2``) to get a running Python node.
+*   ``make example3`` or ``make example4`` and observe what it prints.
+
+
 Example 10: Elixir and GenServer
 --------------------------------
 

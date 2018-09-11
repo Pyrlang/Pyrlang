@@ -1,17 +1,19 @@
 import unittest
 
-import sys
 from time import sleep
-
-sys.path.insert(0, ".")
 
 from Pyrlang import Node, Atom
 from Pyrlang.Engine.base_engine import BaseEngine
 from Pyrlang.Engine.asyncio_engine import AsyncioEngine
-from Pyrlang.Engine.gevent_engine import GeventEngine
+# from Pyrlang.Engine.gevent_engine import GeventEngine
 
 
 def start_stop_with(ev_engine: BaseEngine, py_node_name: str):
+    """ Starts the local node node, tries to connect to an externally started
+        Erlang node, then stops the local node. Checks whether reference to it
+        died (whether GC was able to claim it).
+        TODO: It doesn't always claim it. Probably not a bug?
+    """
     node = Node(node_name=py_node_name + "@127.0.0.1",
                 cookie="COOKIE",
                 engine=ev_engine)

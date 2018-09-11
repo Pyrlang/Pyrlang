@@ -1,4 +1,7 @@
 # Byte-compiled / optimized / DLL files
+.idea/
+*.beam
+erl_crash.dump
 __pycache__/
 *.py[cod]
 *$py.class

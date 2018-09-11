@@ -1,9 +1,5 @@
 import unittest
 
-import sys
-
-sys.path.insert(0, '.')
-
 from Pyrlang.Dist import etf
 from Pyrlang import Term
 from Pyrlang.Term.bitstring import BitString
