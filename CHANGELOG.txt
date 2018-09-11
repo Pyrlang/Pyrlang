@@ -1,3 +1,9 @@
+0.7 (2018-09-11)
+----------------
+*   Added Erlang examples 3 and 4, also makefile target for convenience: `make pynode`
+    which will run Pyrlang as an idle node.
+*   Batch calls added (see docs for calling Python and examples 3, 4).
+
 0.6 (2018-09-07)
 ----------------
 
