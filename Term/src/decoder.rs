@@ -1,19 +1,24 @@
+use cpython::{Python, PyString, PyObject, ToPyObject, PythonObject};
 use byte::BytesExt;
 use byte::ctx::Str;
 use compress::zlib;
-use pyo3::prelude::*;
+//use pyo3::prelude::*;
 use std::io::{Read, BufReader};
 
 //use super::wrappers::{Atom};
 use super::consts::*;
+use super::errors::CodecError;
 
 
-pub struct Decoder {
+pub struct Decoder<'a> {
+  py: Python<'a>,
 }
 
 
-impl Decoder {
-  pub fn new() -> Decoder { Decoder {} }
+impl <'a> Decoder<'a> {
+  pub fn new(py: Python) -> Decoder {
+    Decoder { py }
+  }
 
 
   /// Strips 131 byte header and unpacks if the data was compressed.
@@ -58,7 +63,7 @@ impl Decoder {
     let tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
     match tag {
       TAG_ATOM_EXT => self.parse_atom(offset, in_bytes),
-      TAG_ATOM_UTF8_EXT => self.parse_atom_utf8(offset, in_bytes),
+      TAG_ATOM_UTF8_EXT => self.parse_atom(offset, in_bytes),
       _ => Err(CodecError::UnknownTermTagByte { b: tag }),
     }
   }
@@ -72,24 +77,24 @@ impl Decoder {
     let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
     let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
 
-    let gil = Python::acquire_gil();
-    let py = gil.python();
-    let result = PyString::new(py, txt);
-    Ok(result.to_object(py))
+//    let gil = Python::acquire_gil();
+//    let py = gil.python();
+    let result = PyString::new(self.py, txt);
+    Ok(result.into_object())
   }
-
-
-  fn parse_atom_utf8(&self,
-                     offset: &mut usize,
-                     in_bytes: &[u8]) -> Result<PyObject, CodecError>
-  {
-    //let remaining = in_bytes.len() - offset;
-    let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
-    let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
-
-    let gil = Python::acquire_gil();
-    let py = gil.python();
-    let result = PyString::new(py, txt);
-    Ok(result.to_object(py))
-  }
+//
+//
+//  fn parse_atom_utf8(&self,
+//                     offset: &mut usize,
+//                     in_bytes: &[u8]) -> Result<PyObject, CodecError>
+//  {
+//    //let remaining = in_bytes.len() - offset;
+//    let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
+//    let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
+//
+//    let gil = Python::acquire_gil();
+//    let py = gil.python();
+//    let result = PyString::new(py, txt);
+//    Ok(result.to_object(py))
+//  }
 }

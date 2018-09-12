@@ -8,8 +8,8 @@ edition = "2018"
 name = "term_codec"
 crate-type = ["cdylib"]
 
-[dependencies.pyo3]
-version = "0.4"
+[dependencies.cpython]
+version = "0.2"
 features = ["extension-module"]
 
 [dependencies]
