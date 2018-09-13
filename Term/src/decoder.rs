@@ -1,23 +1,38 @@
-use cpython::{Python, PyString, PyObject, ToPyObject, PythonObject};
+use cpython::{Python, PyString, PyObject, PythonObject, ObjectProtocol};
 use byte::BytesExt;
 use byte::ctx::Str;
 use compress::zlib;
-//use pyo3::prelude::*;
 use std::io::{Read, BufReader};
 
-//use super::wrappers::{Atom};
 use super::consts::*;
 use super::errors::CodecError;
 
 
 pub struct Decoder<'a> {
   py: Python<'a>,
+  atom_obj: Option<PyObject>,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum AtomRepresentation {
+  TermAtom,
+  Bytes,
+  String,
 }
 
 
 impl <'a> Decoder<'a> {
-  pub fn new(py: Python) -> Decoder {
-    Decoder { py }
+  pub fn new(py: Python, aopt: AtomRepresentation) -> Decoder {
+    let atom_m = py.import("Term.atom").unwrap();
+    let atom_obj = if aopt == AtomRepresentation::TermAtom {
+      Some(atom_m.get(py, "Atom").unwrap())
+    } else {
+      None
+    };
+    Decoder {
+      py,
+      atom_obj
+    }
   }
 
 
@@ -39,13 +54,10 @@ impl <'a> Decoder<'a> {
       let tail1 = &in_bytes[*offset..in_bytes.len()];
       let mut decompressed = Vec::<u8>::new();
       let mut d = zlib::Decoder::new(BufReader::new(tail1));
-      d.read_to_end(&mut decompressed);
+      d.read_to_end(&mut decompressed).unwrap();
       if decompressed.len() != decomp_size as usize {
         return Err(CodecError::CompressedSizeMismatch)
       }
-//    if len(decomp) != decomp_size:
-//    # Data corruption?
-//    raise ETFDecodeException("Compressed size mismatch with actual")
       return self.binary_to_term_2(decompressed.as_ref())
     }
 
@@ -69,32 +81,30 @@ impl <'a> Decoder<'a> {
   }
 
 
-  fn parse_atom(&self,
-                offset: &mut usize,
+  fn parse_atom(&self, offset: &mut usize,
                 in_bytes: &[u8]) -> Result<PyObject, CodecError>
   {
     //let remaining = in_bytes.len() - offset;
     let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
     let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
 
-//    let gil = Python::acquire_gil();
-//    let py = gil.python();
-    let result = PyString::new(self.py, txt);
+    //let result = PyString::new(self.py, txt);
+    let result = self.create_atom(txt)?;
     Ok(result.into_object())
   }
-//
-//
-//  fn parse_atom_utf8(&self,
-//                     offset: &mut usize,
-//                     in_bytes: &[u8]) -> Result<PyObject, CodecError>
-//  {
-//    //let remaining = in_bytes.len() - offset;
-//    let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
-//    let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
-//
-//    let gil = Python::acquire_gil();
-//    let py = gil.python();
-//    let result = PyString::new(py, txt);
-//    Ok(result.to_object(py))
-//  }
+
+
+  fn create_atom(&self, txt: &str) -> Result<PyObject, CodecError> {
+    let py_txt = PyString::new(self.py, txt);
+    match &self.atom_obj {
+      None => {
+        // Return as a string
+        return Ok(py_txt.into_object())
+      },
+      Some(atom_obj) => {
+        // Construct Atom object (Note: performance cost)
+        Ok(atom_obj.call(self.py, (py_txt,), None)?)
+      },
+    } // match
+  }
 }

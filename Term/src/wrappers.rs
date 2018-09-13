@@ -1,20 +1,8 @@
-//use pyo3::prelude::*;
+//use cpython::{PyResult};
 //
-//
-//#[pyclass]
-//pub struct Atom {
-//  text_: String,
-//}
-//
-//
-//#[pymethods]
-//impl Atom {
-////  #[new]
-////  fn __new__(obj: &PyRawObject, t: String) -> PyResult<()> {
-////    obj.init(|_| {
-////      Atom {
-////        text_: t,
-////      }
-////    })
-////  }
-//}
+//py_class!(pub class Atom |py| {
+//  data text_: String;
+//  def __new__(_cls, text: String) -> PyResult<Atom> {
+//      Atom::create_instance(py, text)
+//  }
+//});

@@ -145,6 +145,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "native_codec_impl"
+version = "0.1.0"
+dependencies = [
+ "byte 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "compress 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpython 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "num"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -312,16 +323,6 @@ dependencies = [
  "quote 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.14.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "term_codec"
-version = "0.1.0"
-dependencies = [
- "byte 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "compress 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpython 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

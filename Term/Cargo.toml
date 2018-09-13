@@ -1,11 +1,11 @@
 [package]
-name = "term_codec"
+name = "native_codec_impl"
 version = "0.1.0"
 authors = ["Dmytro Lytovchenko <dmytro.lytovchenko@erlang-solutions.com>"]
 edition = "2018"
 
 [lib]
-name = "term_codec"
+name = "native_codec_impl"
 crate-type = ["cdylib"]
 
 [dependencies.cpython]
@@ -13,6 +13,7 @@ version = "0.2"
 features = ["extension-module"]
 
 [dependencies]
+lazy_static = "1.1.0"
 byte = "0.2"
 compress = "0.1.2"
 failure = "0.1.2"
