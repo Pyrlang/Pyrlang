@@ -1,19 +1,20 @@
 #[macro_use] extern crate cpython;
 extern crate compress;
 extern crate byte;
-#[macro_use] extern crate lazy_static;
+//#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate failure;
 
-use cpython::{PyResult, PyErr, Python, PyModule, PyObject, PyBytes, PyDict};
+use cpython::*;
 
-use self::decoder::{Decoder, AtomRepresentation};
-use self::errors::{CodecError};
+use self::decoder::{Decoder, wrap_decode_result};
+use self::errors::{CodecError, pyResult_from};
 
 mod consts;
 mod decoder;
 mod encoder;
 mod errors;
 mod wrappers;
+mod helpers;
 
 py_exception!(term_codec, PyCodecError);
 
@@ -21,25 +22,25 @@ py_exception!(term_codec, PyCodecError);
 /// Strips 131 byte header and unpacks if the data was compressed.
 fn binary_to_term(py: Python, b: PyBytes,
                   opts: PyObject) -> PyResult<PyObject> {
-  let mut dec_state = Decoder::new(
-    py, AtomRepresentation::String,
-  );
-  Ok(dec_state.binary_to_term(b.data(py))?)
+  let mut dec_state = Decoder::new(py, opts)?;
+  pyResult_from(dec_state.binary_to_term(b.data(py)))
 }
 
 
 fn binary_to_term_2(py: Python, b: PyBytes,
                     opts: PyObject) -> PyResult<PyObject> {
+  let mut dec_state = Decoder::new(py, opts)?;
+  let result = dec_state.binary_to_term_2(b.data(py));
+  pyResult_from(wrap_decode_result(py, result))
+}
+
+
+fn term_to_binary(_py: Python, _b: PyBytes) -> PyResult<PyObject> {
   Err(PyErr::from(CodecError::NotImpl))
 }
 
 
-fn term_to_binary(py: Python, b: PyBytes) -> PyResult<PyObject> {
-  Err(PyErr::from(CodecError::NotImpl))
-}
-
-
-fn term_to_binary_2(py: Python, b: PyBytes) -> PyResult<PyObject> {
+fn term_to_binary_2(_py: Python, _b: PyBytes) -> PyResult<PyObject> {
   Err(PyErr::from(CodecError::NotImpl))
 }
 

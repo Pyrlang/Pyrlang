@@ -74,13 +74,14 @@ def incomplete_data(where=""):
         raise PyCodecError("Incomplete data")
 
 
-def binary_to_term(data: bytes, options: dict = None):
+def binary_to_term(data: bytes, options: dict = None) -> (any, bytes):
     """ Strip 131 header and unpack if the data was compressed.
 
         :param data: The incoming encoded data with the 131 byte
         :param options: See description on top of the module
         :raises ETFDecodeException: when the tag is not 131, when compressed
             data is incomplete or corrupted
+        :returns: Remaining unconsumed bytes
     """
     if options is None:
         options = {}
@@ -116,7 +117,7 @@ def _bytes_to_atom(name: bytes, encoding: str, options: dict):
     return Atom(text=name.decode(encoding))
 
 
-def binary_to_term_2(data: bytes, options: dict = None):
+def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
     """ Proceed decoding after leading tag has been checked and removed.
 
         Erlang lists are decoded into ``term.List`` object, whose ``elements_``

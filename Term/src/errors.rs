@@ -1,5 +1,5 @@
-use cpython::{PyErr, PyTuple, PyString};
-use cpython::{Python, PythonObject};
+use cpython::*;
+
 use super::PyCodecError;
 
 #[derive(Debug, Fail)]
@@ -18,7 +18,11 @@ pub enum CodecError {
   PythonError { txt: String },
   #[fail(display="Unrecognized term tag byte: {}", b)]
   UnknownTermTagByte { b: u8 },
+  #[fail(display="Bad options passed: {}", txt)]
+  BadOptions { txt: String },
 }
+
+pub type CodecResult<T> = Result<T, CodecError>;
 
 
 impl std::convert::From<PyErr> for CodecError {
@@ -55,5 +59,14 @@ impl std::convert::From<CodecError> for PyErr {
       pvalue: Some(err_val),
       ptraceback: None,
     }
+  }
+}
+
+
+/// Repacks CodecResult<T> into PyResult<T>
+pub fn pyResult_from<T>(r: Result<T, CodecError>) -> Result<T, PyErr> {
+  match r {
+    Ok(x) => Ok(x),
+    Err(e) => Err(PyErr::from(e)),
   }
 }
