@@ -163,9 +163,14 @@ class TestETFDecode(unittest.TestCase):
 
         # Test data is [1, ok]
         data2 = bytes([131, py_impl.TAG_LIST_EXT,
-                       0, 0, 0, 2, 97, 1, 100, 0, 2, 111, 107, 106])
+                       0, 0, 0, 2,
+                       py_impl.TAG_SMALL_INT, 1,
+                       py_impl.TAG_ATOM_EXT, 0, 2, 111, 107,
+                       py_impl.TAG_NIL_EXT])
         (val2, tail2) = codec.binary_to_term(data2, None)
-        self.assertTrue(isinstance(val2, list))
+        self.assertTrue(isinstance(val2, list),
+                        "Expected list, got: %s (%s)"
+                        % (val2.__class__.__name__, val2))
         self.assertEqual(val2, [1, Atom("ok")])
         self.assertEqual(tail2, b'')
 

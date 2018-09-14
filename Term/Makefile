@@ -17,7 +17,7 @@ clearterminal:
 test: clearterminal compile
 	for f in $(shell ls test/*_test.py); do \
 		echo "RUNNING $$f"; \
-		$(PY) $$f; \
+		$(PY) $$f || exit 1; \
 	done
 
 .PHONY: clearterminal dtest

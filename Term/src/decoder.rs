@@ -6,6 +6,7 @@ use std::io::{Read, BufReader};
 use std::str;
 
 use super::helpers;
+use super::helpers::{AtomRepresentation, ByteStringRepresentation};
 use super::consts::*;
 use super::errors::*;
 
@@ -14,20 +15,6 @@ use super::errors::*;
 enum Encoding {
   Latin1,
   UTF8
-}
-
-
-#[derive(Eq, PartialEq)]
-enum AtomRepresentation {
-  TermAtom,
-  Bytes,
-  Str,
-}
-
-
-enum ByteStringRepresentation {
-  Bytes,
-  Str
 }
 
 
@@ -45,34 +32,8 @@ impl <'a> Decoder<'a> {
     // If opts is None, make it empty Dict, otherwise take it as PyDict
     let opts1 = helpers::maybe_dict(py, opts);
 
-    // Option: "atom" => "bytes" | "str" | "Atom" (as Atom class, default)
-    let aopt_s: String = helpers::get_str_opt(
-      py, &opts1, "atom", "Atom"
-    )?;
-    let aopt = match aopt_s.as_ref() {
-      "bytes" => AtomRepresentation::Bytes,
-      "str" => AtomRepresentation::Str,
-      "Atom" => AtomRepresentation::TermAtom,
-      other => {
-        let txt = format!(
-          "'atom' option is '{}' while expected: bytes, str, Atom", other);
-        return Err(CodecError::BadOptions {txt})
-      }
-    };
-
-    // Option: "byte_string" => "bytes" | "str" (default: str)
-    let s8opt_s: String = helpers::get_str_opt(
-      py, &opts1, "byte_string", "str"
-    )?;
-    let s8opt = match s8opt_s.as_ref() {
-      "bytes" => ByteStringRepresentation::Bytes,
-      "str" => ByteStringRepresentation::Str,
-      other => {
-        let txt = format!(
-          "'byte_string' option is '{}' while expected: bytes, str", other);
-        return Err(CodecError::BadOptions {txt})
-      }
-    };
+    let aopt = helpers::get_atom_opt(py, &opts1)?;
+    let s8opt = helpers::get_byte_str_opt(py, &opts1)?;
 
     Ok(Decoder {
       py,
@@ -118,7 +79,7 @@ impl <'a> Decoder<'a> {
     if tag == TAG_COMPRESSED {
       let decomp_size = in_bytes.read_with::<u32>(offset, byte::BE)?;
 
-      let tail1 = &in_bytes[*offset..in_bytes.len()];
+      let tail1 = &in_bytes[*offset..];
       let mut decompressed = Vec::<u8>::new();
       let mut d = zlib::Decoder::new(BufReader::new(tail1));
       d.read_to_end(&mut decompressed).unwrap();
@@ -131,7 +92,7 @@ impl <'a> Decoder<'a> {
     }
 
     // Second byte was not consumed, so restart parsing from the second byte
-    let tail2 = &in_bytes[1..in_bytes.len()];
+    let tail2 = &in_bytes[1..];
     let r2 = self.binary_to_term_2(tail2);
     return wrap_decode_result(self.py, r2)
   }
@@ -143,25 +104,28 @@ impl <'a> Decoder<'a> {
                                 in_bytes: &'inp [u8]
                                 ) -> CodecResult<(PyObject, &'inp [u8])>
   {
-    let offset = &mut 0;
-    let tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
+    let tag = in_bytes[0];
     match tag {
       TAG_ATOM_EXT =>
-        self.parse_atom::<u16>(offset, in_bytes, Encoding::Latin1),
+        self.parse_atom::<u16>(&in_bytes[1..], Encoding::Latin1),
       TAG_ATOM_UTF8_EXT =>
-        self.parse_atom::<u16>(offset, in_bytes, Encoding::UTF8),
+        self.parse_atom::<u16>(&in_bytes[1..], Encoding::UTF8),
       TAG_SMALL_ATOM_EXT =>
-        self.parse_atom::<u8>(offset, in_bytes, Encoding::Latin1),
+        self.parse_atom::<u8>(&in_bytes[1..], Encoding::Latin1),
       TAG_SMALL_ATOM_UTF8_EXT =>
-        self.parse_atom::<u8>(offset, in_bytes, Encoding::UTF8),
-      TAG_BINARY_EXT =>
-        self.parse_binary(offset, in_bytes),
+        self.parse_atom::<u8>(&in_bytes[1..], Encoding::UTF8),
+      TAG_BINARY_EXT => self.parse_binary(&in_bytes[1..]),
       TAG_NIL_EXT => {
         let empty_list = PyList::new(self.py, empty::slice());
         Ok((empty_list.into_object(), &in_bytes[1..]))
       },
-      TAG_STRING_EXT =>
-        self.parse_string(offset, in_bytes), // 16-bit length ASCII string
+      TAG_LIST_EXT => self.parse_list(&in_bytes[1..]),
+      TAG_STRING_EXT => self.parse_string(&in_bytes[1..]), // 16-bit sz bytestr
+      TAG_SMALL_INT => {
+        let val = in_bytes[1];
+        let py_val = val.to_py_object(self.py);
+        Ok((py_val.into_object(), &in_bytes[2..]))
+      },
       _ =>
         Err(CodecError::UnknownTermTagByte { b: tag }),
     }
@@ -171,19 +135,18 @@ impl <'a> Decoder<'a> {
   /// Parses bytes after Atom tag (100) or Atom Utf8 (118)
   /// Returns: Tuple (string | bytes | Atom object, remaining bytes)
   #[inline]
-  fn parse_atom<'inp, T>(
-    &mut self, offset: &mut usize, in_bytes: &'inp [u8],
-    coding: Encoding,
-  ) -> CodecResult<(PyObject, &'inp [u8])>
+  fn parse_atom<'inp, T>(&mut self, in_bytes: &'inp [u8],
+    coding: Encoding) -> CodecResult<(PyObject, &'inp [u8])>
     where usize: std::convert::From<T>,
           T: byte::TryRead<'inp, byte::ctx::Endian>
   {
+    let offset = &mut 0usize;
     let sz = in_bytes.read_with::<T>(offset, byte::BE)?;
     let txt = in_bytes.read_with::<&str>(offset,
                                          Str::Len(usize::from(sz)))?;
 
     let result = self.create_atom(txt)?.into_object();
-    let remaining = &in_bytes[*offset..in_bytes.len()];
+    let remaining = &in_bytes[*offset..];
     Ok((result, remaining))
   }
 
@@ -212,8 +175,9 @@ impl <'a> Decoder<'a> {
 
   /// Given input _after_ binary tag, parse remaining bytes
   #[inline]
-  fn parse_binary<'inp>(&self, offset: &mut usize,
-                        in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])> {
+  fn parse_binary<'inp>(&self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
     let sz = in_bytes.read_with::<u32>(offset, byte::BE)? as usize;
     if *offset + sz > in_bytes.len() {
       return Err(CodecError::BinaryInputTooShort)
@@ -222,15 +186,16 @@ impl <'a> Decoder<'a> {
     let py_bytes = PyBytes::new(self.py, bin);
 
     *offset += sz;
-    let remaining = &in_bytes[*offset..in_bytes.len()];
+    let remaining = &in_bytes[*offset..];
     Ok((py_bytes.into_object(), remaining))
   }
 
 
   /// Given input _after_ string tag, parse remaining bytes as an ASCII string
   #[inline]
-  fn parse_string<'inp>(&self, offset: &mut usize,
-                        in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])> {
+  fn parse_string<'inp>(&self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
     let sz = in_bytes.read_with::<u16>(offset, byte::BE)? as usize;
     if *offset + sz > in_bytes.len() {
       return Err(CodecError::StrInputTooShort)
@@ -250,8 +215,41 @@ impl <'a> Decoder<'a> {
       },
     };
 
-    let remaining = &in_bytes[*offset..in_bytes.len()];
+    let remaining = &in_bytes[*offset..];
     Ok((result, remaining))
+  }
+
+
+  /// Given input _after_ the list tag, parse the list elements and tail
+  #[inline]
+  fn parse_list<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])> {
+    let offset = &mut 0usize;
+    let sz = in_bytes.read_with::<u32>(offset, byte::BE)? as usize;
+
+    let mut lst = Vec::<PyObject>::with_capacity(sz);
+
+    // Read list elements, one by one
+    let mut tail = &in_bytes[*offset..];
+    for i in 0..sz {
+      let (val, new_tail) = self.binary_to_term_2(tail)?;
+      tail = new_tail;
+      lst.push(val);
+    }
+
+    let py_lst = PyList::new(self.py, lst.as_ref());
+
+    // Check whether last element is a NIL, or something else
+    if tail[0] == TAG_NIL_EXT {
+      // We are looking at a proper list, so just return the result
+      Ok((py_lst.into_object(), &tail[1..]))
+    } else {
+      // We are looking at an improper list
+      let (tail_val, tail_bytes) = self.binary_to_term_2(tail)?;
+      // TODO: wrap head, tail in a list
+      let pair: Vec<PyObject> = vec![py_lst.into_object(), tail_val];
+      let py_pair = PyTuple::new(self.py, &pair);
+      Ok((py_pair.into_object(), tail_bytes))
+    }
   }
 }
 
