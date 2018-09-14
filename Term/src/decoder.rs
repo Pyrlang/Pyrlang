@@ -88,6 +88,7 @@ impl <'a> Decoder<'a> {
       return Err(CodecError::EmptyInput)
     }
 
+    // Read first byte of term, it might be a compressed term marker
     let tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
     if tag == TAG_COMPRESSED {
       let decomp_size = in_bytes.read_with::<u32>(offset, byte::BE)?;
@@ -130,6 +131,10 @@ impl <'a> Decoder<'a> {
         self.parse_atom::<u8>(offset, in_bytes, Encoding::UTF8),
       TAG_BINARY_EXT =>
         self.parse_binary(offset, in_bytes),
+      TAG_NIL_EXT => {
+        let empty_list = PyList::new(self.py, empty::slice());
+        Ok((empty_list.into_object(), &in_bytes[1..]))
+      },
       _ =>
         Err(CodecError::UnknownTermTagByte { b: tag }),
     }

@@ -1,6 +1,7 @@
 #[macro_use] extern crate cpython;
 extern crate compress;
 extern crate byte;
+extern crate empty;
 //#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate failure;
 

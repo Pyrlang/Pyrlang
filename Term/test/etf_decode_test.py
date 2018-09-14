@@ -130,6 +130,29 @@ class TestETFDecode(unittest.TestCase):
 
     # ----------------
 
+    def test_decode_list_py(self):
+        self._decode_list(py_impl)
+
+    def test_decode_list_native(self):
+        self._decode_list(native_impl)
+
+    def _decode_list(self, codec):
+        """ Try decode some list values """
+        data1 = bytes([131, py_impl.TAG_NIL_EXT])
+        (val1, tail1) = codec.binary_to_term(data1, None)
+        self.assertEqual([], val1)
+        self.assertEqual(tail1, b'')
+
+        # Test data is [1, ok]
+        data2 = bytes([131, py_impl.TAG_LIST_EXT,
+                       0, 0, 0, 2, 97, 1, 100, 0, 2, 111, 107, 106])
+        (val2, tail2) = codec.binary_to_term(data2, None)
+        self.assertTrue(isinstance(val2, list))
+        self.assertEqual(val2, [1, Atom("ok")])
+        self.assertEqual(tail2, b'')
+
+    # ----------------
+
     def test_decode_map_py(self):
         self._decode_map(py_impl)
 
