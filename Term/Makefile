@@ -1,3 +1,4 @@
+PYPATH_SET=PYTHONPATH=$(ROOT)
 LIBNAME=native_codec_impl
 ROOT=$(shell pwd)
 PY=PYTHONPATH=$(ROOT):$(ROOT)/target/debug python3
@@ -10,7 +11,7 @@ compile:
 
 .PHONY: clearterminal
 clearterminal:
-	tput reset
+	clear && printf '\e[3J'
 
 .PHONY: test
 test: clearterminal compile
@@ -22,3 +23,7 @@ test: clearterminal compile
 .PHONY: clearterminal dtest
 dtest: compile
 	PYTHONPATH=$(ROOT):$(ROOT)/target/debug gdb --args python3 test/rust_extension_test.py
+
+.PHONY: docs
+docs:
+	cd docs && $(PYPATH_SET) $(MAKE) html

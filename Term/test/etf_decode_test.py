@@ -35,13 +35,15 @@ class TestETFDecode(unittest.TestCase):
     def _decode_atom_as_string(self, codec):
         """ Try an atom 'hello' to a Python string """
         b1 = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
-        (t2, tail2) = codec.binary_to_term(b1, {"atom": "string"})
-        self.assertTrue(isinstance(t2, str))
+        (t2, tail2) = codec.binary_to_term(b1, {"atom": "str"})
+        self.assertTrue(isinstance(t2, str),
+                        "Expected str, have: " + t2.__class__.__name__)
         self.assertEqual(t2, "hello")
         self.assertEqual(tail2, b'')
 
         (t3, tail3) = codec.binary_to_term(b1, {"atom": "bytes"})
-        self.assertTrue(isinstance(t2, bytes))
+        self.assertTrue(isinstance(t3, bytes),
+                        "Expected bytes, have: " + t3.__class__.__name__)
         self.assertEqual(t3, b'hello')
         self.assertEqual(tail3, b'')
 

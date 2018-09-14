@@ -14,15 +14,10 @@
 
 """ Module implements encoder and decoder from ETF (Erlang External Term Format)
     used by the network distribution layer.
-
-    Encoding terms takes optional 'options' argument. Default is ``None`` but
-    it can be a dictionary with the following optional keys:
-
-    *   "atoms_as_strings", default False. Always converts atoms to Python
-        strings. This is potentially faster than using the Atom wrapper class.
 """
 
 import struct
+from typing import Callable
 
 from zlib import decompressobj
 
@@ -60,6 +55,9 @@ TAG_ATOM_UTF8_EXT = 118
 TAG_SMALL_ATOM_UTF8_EXT = 119
 
 
+# This is Python variant of codec exception when Python impl is used.
+# Otherwise native lib defines its own exception with same name.
+# To use this, import via codec.py
 class PyCodecError(Exception):
     pass
 
@@ -78,8 +76,10 @@ def binary_to_term(data: bytes, options: dict = None) -> (any, bytes):
     """ Strip 131 header and unpack if the data was compressed.
 
         :param data: The incoming encoded data with the 131 byte
-        :param options: See description on top of the module
-        :raises ETFDecodeException: when the tag is not 131, when compressed
+        :param options:
+               * "atom": "str" | "bytes" | "Atom", default "Atom".
+                 Returns atoms as strings, as bytes or as atom.Atom class objects
+        :raises PyCodecError: when the tag is not 131, when compressed
             data is incomplete or corrupted
         :returns: Remaining unconsumed bytes
     """
@@ -102,19 +102,38 @@ def binary_to_term(data: bytes, options: dict = None) -> (any, bytes):
     return binary_to_term_2(data[1:], options)
 
 
-def _bytes_to_atom(name: bytes, encoding: str, options: dict):
+def _bytes_to_atom(name: bytes, encoding: str, create_atom_fn: Callable):
     """ Recognize familiar atom values. """
     if name == b'true':
         return True
-    if name == b'false':
+    elif name == b'false':
         return False
-    if name == b'undefined':
+    elif name == b'undefined':
         return None
+    else:
+        return create_atom_fn(name, encoding)
 
-    if options.get("atoms_as_strings", False):
-        return name.decode(encoding)
 
+def _create_atom_bytes(name: bytes, _encoding: str) -> bytes:
+    return name
+
+
+def _create_atom_str(name: bytes, encoding: str) -> str:
+    return name.decode(encoding)
+
+
+def _create_atom_atom(name: bytes, encoding: str) -> Atom:
     return Atom(text=name.decode(encoding))
+
+
+def _get_create_atom_fn(opt: str) -> Callable:
+    if opt == "Atom":
+        return _create_atom_atom
+    elif opt == "str":
+        return _create_atom_str
+    elif opt == "bytes":
+        return _create_atom_bytes
+    raise PyCodecError("Option 'atom' is '%s'; expected 'str', 'bytes', 'Atom'")
 
 
 def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
@@ -124,20 +143,29 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         field contains the data, ``tail_`` field has the optional tail and a
         helper function exists to assist with extracting an unicode string.
 
-        Atoms are decoded into ``Atom``. Pids and refs into ``Pid``
-        and ``Reference`` respectively. Maps are decoded into Python
-        ``dict``. Binaries and bit strings are decoded into ``bytes``
+        Atoms are decoded to :py:class:`~Term.atom.Atom` or optionally to bytes
+        or to strings.
+        Pids are decoded into :py:class:`~Term.pid.Pid`.
+        Refs decoded to and :py:class:`~Term.reference.Reference`.
+        Maps are decoded into Python ``dict``.
+        Binaries are decoded into ``bytes``
         object and bitstrings into a pair of ``(bytes, last_byte_bits:int)``.
 
-        :param options: See description on top of the module
+        :param options: dict(str, _);
+                * "atom": "str" | "bytes" | "Atom"; default "Atom".
+                  Returns atoms as strings, as bytes or as atom.Atom class objects
         :param data: Bytes containing encoded term without 131 header
-        :return: Tuple (Value, TailBytes) The function consumes as much data as
+        :return: Tuple[Value, Tail: bytes]
+            The function consumes as much data as
             possible and returns the tail. Tail can be used again to parse
             another term if there was any.
-        :raises ETFDecodeException: on various errors or on an unsupported tag
+        :raises PyCodecError(str): on various errors
     """
     if options is None:
         options = {}
+
+    create_atom_fn = _get_create_atom_fn(options.get("atom", "Atom"))
+
     tag = data[0]
 
     if tag in [TAG_ATOM_EXT, TAG_ATOM_UTF8_EXT]:
@@ -151,7 +179,7 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
 
         name = data[3:len_expected]
         enc = 'latin-1' if tag == TAG_ATOM_EXT else 'utf8'
-        return _bytes_to_atom(name, enc, options), data[len_expected:]
+        return _bytes_to_atom(name, enc, create_atom_fn), data[len_expected:]
 
     if tag in [TAG_SMALL_ATOM_EXT, TAG_SMALL_ATOM_UTF8_EXT]:
         len_data = len(data)
@@ -162,7 +190,7 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         name = data[2:len_expected]
 
         enc = 'latin-1' if tag == TAG_SMALL_ATOM_EXT else 'utf8'
-        return _bytes_to_atom(name, enc, options), data[len_expected:]
+        return _bytes_to_atom(name, enc, create_atom_fn), data[len_expected:]
 
     if tag == TAG_NIL_EXT:
         return [], data[1:]

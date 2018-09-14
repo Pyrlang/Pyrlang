@@ -49,7 +49,7 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_BIT_BINARIES |
                   DFLAG_NEW_FLOATS |
                   DFLAG_MAP_TAG |
-                  DFLAG_UTF8_ATOMS |
+                  DFLAG_UTF8_ATOMS | DFLAG_SMALL_ATOM_TAGS |
                   DFLAG_DIST_MONITOR_NAME |
                   DFLAG_DIST_MONITOR)
 """ Default flags value represents current Pyrlang library features

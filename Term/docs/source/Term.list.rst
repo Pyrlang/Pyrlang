@@ -1,7 +1,7 @@
 Term.list
 =========
 
-.. automodule:: Pyrlang.Term.list
+.. automodule:: Term.list
     :members:
     :undoc-members:
     :show-inheritance:

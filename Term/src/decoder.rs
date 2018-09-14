@@ -10,10 +10,17 @@ use super::errors::*;
 
 
 #[derive(Eq, PartialEq)]
-pub enum AtomRepresentation {
+enum Encoding {
+  Latin1,
+  UTF8
+}
+
+
+#[derive(Eq, PartialEq)]
+enum AtomRepresentation {
   TermAtom,
   Bytes,
-  String,
+  Str,
 }
 
 
@@ -25,24 +32,20 @@ pub struct Decoder<'a> {
 
 
 impl <'a> Decoder<'a> {
+  /// Create decoder instance. Parse options.
   pub fn new(py: Python, opts: PyObject) -> CodecResult<Decoder> {
     // If opts is None, make it empty Dict, otherwise take it as PyDict
-    let opts1 = if opts == py.None() {
-      PyDict::new(py)
-    } else {
-      PyDict::extract(py, &opts).unwrap()
-    };
+    let opts1 = helpers::maybe_dict(py, opts);
 
-    // Option: "atom" => "bytes" | "string" | "Atom" (as Atom class, default)
-    let aopt = match helpers::get_str_opt(py, opts1,
-                                          "atom",
-                                          "Atom")?.as_ref() {
+    // Option: "atom" => "bytes" | "str" | "Atom" (as Atom class, default)
+    let aopt_s: String = helpers::get_str_opt(py, opts1, "atom", "Atom")?;
+    let aopt = match aopt_s.as_ref() {
       "bytes" => AtomRepresentation::Bytes,
-      "string" => AtomRepresentation::String,
+      "str" => AtomRepresentation::Str,
       "Atom" => AtomRepresentation::TermAtom,
       other => {
         let txt = format!(
-          "'atom' option is '{}' while expected: bytes, string, Atom", other);
+          "'atom' option is '{}' while expected: bytes, str, Atom", other);
         return Err(CodecError::BadOptions {txt})
       }
     };
@@ -72,7 +75,8 @@ impl <'a> Decoder<'a> {
   }
 
 
-  /// Strips 131 byte header and unpacks if the data was compressed.
+  /// Strip 131 byte header and uncompress if the data was compressed.
+  /// Return: PyTuple(PyObject, Bytes) or CodecError
   pub fn binary_to_term(&mut self, in_bytes: &[u8]) -> CodecResult<PyObject>
   {
     let offset = &mut 0;
@@ -116,23 +120,35 @@ impl <'a> Decoder<'a> {
     let offset = &mut 0;
     let tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
     match tag {
-      TAG_ATOM_EXT => self.parse_atom(offset, in_bytes),
-      TAG_ATOM_UTF8_EXT => self.parse_atom(offset, in_bytes),
-      _ => Err(CodecError::UnknownTermTagByte { b: tag }),
+      TAG_ATOM_EXT =>
+        self.parse_atom::<u16>(offset, in_bytes, Encoding::Latin1),
+      TAG_ATOM_UTF8_EXT =>
+        self.parse_atom::<u16>(offset, in_bytes, Encoding::UTF8),
+      TAG_SMALL_ATOM_EXT =>
+        self.parse_atom::<u8>(offset, in_bytes, Encoding::Latin1),
+      TAG_SMALL_ATOM_UTF8_EXT =>
+        self.parse_atom::<u8>(offset, in_bytes, Encoding::UTF8),
+      TAG_BINARY_EXT =>
+        self.parse_binary(offset, in_bytes),
+      _ =>
+        Err(CodecError::UnknownTermTagByte { b: tag }),
     }
   }
 
 
   /// Parses bytes after Atom tag (100) or Atom Utf8 (118)
   /// Returns: Tuple (string | bytes | Atom object, remaining bytes)
-  fn parse_atom<'inp>(&mut self, offset: &mut usize,
-                in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  #[inline]
+  fn parse_atom<'inp, T>(
+    &mut self, offset: &mut usize, in_bytes: &'inp [u8],
+    coding: Encoding) -> CodecResult<(PyObject, &'inp [u8])>
+    where usize: std::convert::From<T>,
+          T: byte::TryRead<'inp, byte::ctx::Endian>
   {
-    //let remaining = in_bytes.len() - offset;
-    let sz = in_bytes.read_with::<u16>(offset, byte::BE)?;
-    let txt = in_bytes.read_with::<&str>(offset, Str::Len(sz as usize))?;
+    let sz = in_bytes.read_with::<T>(offset, byte::BE)?;
+    let txt = in_bytes.read_with::<&str>(offset,
+                                         Str::Len(usize::from(sz)))?;
 
-    //let result = PyString::new(self.py, txt);
     let result = self.create_atom(txt)?.into_object();
     let remaining = &in_bytes[*offset..in_bytes.len()];
     Ok((result, remaining))
@@ -146,7 +162,7 @@ impl <'a> Decoder<'a> {
         let py_bytes = PyBytes::new(self.py, txt.as_ref());
         Ok(py_bytes.into_object())
       },
-      AtomRepresentation::String => {
+      AtomRepresentation::Str => {
         // Return as a string
         let py_txt = PyString::new(self.py, txt);
         Ok(py_txt.into_object())
@@ -160,6 +176,22 @@ impl <'a> Decoder<'a> {
     } // match
   }
 
+
+  /// Given input _after_ binary tag, parse remaining bytes
+  #[inline]
+  fn parse_binary<'inp>(&self, offset: &mut usize,
+                        in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])> {
+    let sz = in_bytes.read_with::<u32>(offset, byte::BE)? as usize;
+    if *offset + sz > in_bytes.len() {
+      return Err(CodecError::BinaryInputTooShort)
+    }
+    let bin = &in_bytes[*offset..(*offset+sz)];
+    let py_bytes = PyBytes::new(self.py, bin);
+
+    *offset += sz;
+    let remaining = &in_bytes[*offset..in_bytes.len()];
+    Ok((py_bytes.into_object(), remaining))
+  }
 }
 
 

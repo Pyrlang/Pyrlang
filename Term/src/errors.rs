@@ -20,6 +20,8 @@ pub enum CodecError {
   UnknownTermTagByte { b: u8 },
   #[fail(display="Bad options passed: {}", txt)]
   BadOptions { txt: String },
+  #[fail(display="Input too short while decoding a binary")]
+  BinaryInputTooShort,
 }
 
 pub type CodecResult<T> = Result<T, CodecError>;
