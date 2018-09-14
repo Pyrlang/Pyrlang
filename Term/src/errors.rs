@@ -22,6 +22,8 @@ pub enum CodecError {
   BadOptions { txt: String },
   #[fail(display="Input too short while decoding a binary")]
   BinaryInputTooShort,
+  #[fail(display="Input too short while decoding a string")]
+  StrInputTooShort,
 }
 
 pub type CodecResult<T> = Result<T, CodecError>;

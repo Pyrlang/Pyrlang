@@ -3,6 +3,7 @@ use byte::BytesExt;
 use byte::ctx::Str;
 use compress::zlib;
 use std::io::{Read, BufReader};
+use std::str;
 
 use super::helpers;
 use super::consts::*;
@@ -24,10 +25,17 @@ enum AtomRepresentation {
 }
 
 
+enum ByteStringRepresentation {
+  Bytes,
+  Str
+}
+
+
 pub struct Decoder<'a> {
   py: Python<'a>,
   cached_atom_class: Option<PyObject>,
   atom_representation: AtomRepresentation,
+  bytestring_repr: ByteStringRepresentation,
 }
 
 
@@ -38,7 +46,9 @@ impl <'a> Decoder<'a> {
     let opts1 = helpers::maybe_dict(py, opts);
 
     // Option: "atom" => "bytes" | "str" | "Atom" (as Atom class, default)
-    let aopt_s: String = helpers::get_str_opt(py, opts1, "atom", "Atom")?;
+    let aopt_s: String = helpers::get_str_opt(
+      py, &opts1, "atom", "Atom"
+    )?;
     let aopt = match aopt_s.as_ref() {
       "bytes" => AtomRepresentation::Bytes,
       "str" => AtomRepresentation::Str,
@@ -50,10 +60,25 @@ impl <'a> Decoder<'a> {
       }
     };
 
+    // Option: "byte_string" => "bytes" | "str" (default: str)
+    let s8opt_s: String = helpers::get_str_opt(
+      py, &opts1, "byte_string", "str"
+    )?;
+    let s8opt = match s8opt_s.as_ref() {
+      "bytes" => ByteStringRepresentation::Bytes,
+      "str" => ByteStringRepresentation::Str,
+      other => {
+        let txt = format!(
+          "'byte_string' option is '{}' while expected: bytes, str", other);
+        return Err(CodecError::BadOptions {txt})
+      }
+    };
+
     Ok(Decoder {
       py,
       atom_representation: aopt,
       cached_atom_class: None,
+      bytestring_repr: s8opt,
     })
   }
 
@@ -135,6 +160,8 @@ impl <'a> Decoder<'a> {
         let empty_list = PyList::new(self.py, empty::slice());
         Ok((empty_list.into_object(), &in_bytes[1..]))
       },
+      TAG_STRING_EXT =>
+        self.parse_string(offset, in_bytes), // 16-bit length ASCII string
       _ =>
         Err(CodecError::UnknownTermTagByte { b: tag }),
     }
@@ -197,6 +224,34 @@ impl <'a> Decoder<'a> {
     *offset += sz;
     let remaining = &in_bytes[*offset..in_bytes.len()];
     Ok((py_bytes.into_object(), remaining))
+  }
+
+
+  /// Given input _after_ string tag, parse remaining bytes as an ASCII string
+  #[inline]
+  fn parse_string<'inp>(&self, offset: &mut usize,
+                        in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])> {
+    let sz = in_bytes.read_with::<u16>(offset, byte::BE)? as usize;
+    if *offset + sz > in_bytes.len() {
+      return Err(CodecError::StrInputTooShort)
+    }
+
+    let result = match self.bytestring_repr {
+      ByteStringRepresentation::Str => {
+        let rust_str = in_bytes.read_with::<&str>(
+          offset, Str::Len(sz as usize)
+        )?;
+        PyString::new(self.py, rust_str).into_object()
+      },
+      ByteStringRepresentation::Bytes => {
+        let offset1 = *offset;
+        *offset += sz;
+        PyBytes::new(self.py, &in_bytes[offset1..(offset1 + sz)]).into_object()
+      },
+    };
+
+    let remaining = &in_bytes[*offset..in_bytes.len()];
+    Ok((result, remaining))
   }
 }
 

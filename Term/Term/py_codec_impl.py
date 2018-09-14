@@ -86,8 +86,10 @@ def binary_to_term(data: bytes, options: dict = None) -> (any, bytes):
 
         :param data: The incoming encoded data with the 131 byte
         :param options:
-               * "atom": "str" | "bytes" | "Atom", default "Atom".
-                 Returns atoms as strings, as bytes or as atom.Atom class objects
+               * "atom": "str" | "bytes" | "Atom" (default "Atom").
+                 Returns atoms as strings, as bytes or as atom.Atom objects.
+               * "byte_string": "str" | "bytes" (default "str").
+                 Returns 8-bit strings as Python str or bytes.
         :raises PyCodecError: when the tag is not 131, when compressed
             data is incomplete or corrupted
         :returns: Remaining unconsumed bytes
@@ -123,26 +125,40 @@ def _bytes_to_atom(name: bytes, encoding: str, create_atom_fn: Callable):
         return create_atom_fn(name, encoding)
 
 
-def _create_atom_bytes(name: bytes, _encoding: str) -> bytes:
-    return name
-
-
-def _create_atom_str(name: bytes, encoding: str) -> str:
-    return name.decode(encoding)
-
-
-def _create_atom_atom(name: bytes, encoding: str) -> Atom:
-    return Atom(text=name.decode(encoding))
-
-
 def _get_create_atom_fn(opt: str) -> Callable:
+    def _create_atom_bytes(name: bytes, _encoding: str) -> bytes:
+        return name
+
+    def _create_atom_str(name: bytes, encoding: str) -> str:
+        return name.decode(encoding)
+
+    def _create_atom_atom(name: bytes, encoding: str) -> Atom:
+        return Atom(text=name.decode(encoding))
+
     if opt == "Atom":
         return _create_atom_atom
     elif opt == "str":
         return _create_atom_str
     elif opt == "bytes":
         return _create_atom_bytes
+
     raise PyCodecError("Option 'atom' is '%s'; expected 'str', 'bytes', 'Atom'")
+
+
+def _get_create_str_fn(opt: str) -> Callable:
+    """ A tool function to create either a str or bytes from a 8-bit string. """
+    def _create_str_bytes(name: bytes) -> bytes:
+        return name
+
+    def _create_str_str(name: bytes) -> str:
+        return name.decode("latin-1")
+
+    if opt == "str":
+        return _create_str_str
+    elif opt == "bytes":
+        return _create_str_bytes
+
+    raise PyCodecError("Option 'byte_string' is '%s'; expected 'str', 'bytes'")
 
 
 def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
@@ -163,6 +179,8 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         :param options: dict(str, _);
                 * "atom": "str" | "bytes" | "Atom"; default "Atom".
                   Returns atoms as strings, as bytes or as atom.Atom class objects
+               * "byte_string": "str" | "bytes" (default "str").
+                 Returns 8-bit strings as Python str or bytes.
         :param data: Bytes containing encoded term without 131 header
         :return: Tuple[Value, Tail: bytes]
             The function consumes as much data as
@@ -174,6 +192,7 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         options = {}
 
     create_atom_fn = _get_create_atom_fn(options.get("atom", "Atom"))
+    create_str_fn = _get_create_str_fn(options.get("byte_string", "str"))
 
     tag = data[0]
 
@@ -214,7 +233,7 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         if len_expected > len_data:
             return incomplete_data()
 
-        return data[3:len_expected], data[len_expected:]
+        return create_str_fn(data[3:len_expected]), data[len_expected:]
 
     if tag == TAG_LIST_EXT:
         if len(data) < 5:

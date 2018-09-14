@@ -26,7 +26,7 @@ class TestETFDecode(unittest.TestCase):
                     0, 5,
                     104, 101, 108, 108, 111])
         (t1, tail1) = codec.binary_to_term(b1, None)
-        self.assertTrue(isinstance(t1, Atom))
+        self.assertTrue(isinstance(t1, Atom), "Result must be Atom object")
         self.assertEqual(t1.text_, "hello")
         self.assertEqual(tail1, b'')
 
@@ -34,7 +34,7 @@ class TestETFDecode(unittest.TestCase):
                     5,
                     104, 101, 108, 108, 111])
         (t2, tail2) = codec.binary_to_term(b2, None)
-        self.assertTrue(isinstance(t2, Atom))
+        self.assertTrue(isinstance(t2, Atom), "Result must be Atom object")
         self.assertEqual(t2.text_, "hello")
         self.assertEqual(tail2, b'')
 
@@ -43,8 +43,8 @@ class TestETFDecode(unittest.TestCase):
                     0, 6,
                     108, 195, 164, 103, 101, 116])
         (t1, tail1) = codec.binary_to_term(b1, None)
-        self.assertTrue(isinstance(t1, Atom))
-        self.assertTrue(isinstance(t1.text_, str))
+        self.assertTrue(isinstance(t1, Atom), "Result must be Atom object")
+        self.assertTrue(isinstance(t1.text_, str), "Result .text_ field must be str")
         self.assertEqual(t1.text_, u"läget")
         self.assertEqual(tail1, b'')
 
@@ -58,7 +58,9 @@ class TestETFDecode(unittest.TestCase):
 
     def _decode_atom_as_string(self, codec):
         """ Try an atom 'hello' to a Python string """
-        b1 = bytes([131, py_impl.TAG_ATOM_EXT, 0, 5, 104, 101, 108, 108, 111])
+        b1 = bytes([131, py_impl.TAG_ATOM_EXT,
+                    0, 5,
+                    104, 101, 108, 108, 111])
         (t2, tail2) = codec.binary_to_term(b1, {"atom": "str"})
         self.assertTrue(isinstance(t2, str),
                         "Expected str, have: " + t2.__class__.__name__)
@@ -74,24 +76,40 @@ class TestETFDecode(unittest.TestCase):
     # ----------------
 
     def test_decode_str_py(self):
-        self._decode_str(py_impl)
+        self._decode_str_ascii(py_impl)
+        self._decode_str_unicode(py_impl)
 
     def test_decode_str_native(self):
-        self._decode_str(native_impl)
+        self._decode_str_ascii(native_impl)
+        self._decode_str_unicode(native_impl)
 
-    def _decode_str(self, codec):
-        """ Try a simple ASCII string """
-        b1 = bytes([131, 107, 0, 5, 104, 101, 108, 108, 111])
-        (t1, tail) = codec.binary_to_term(b1, None)
-        self.assertTrue(isinstance(t1, bytes))
-        self.assertEqual(t1, b"hello")
-        self.assertEqual(tail, b'')
+    def _decode_str_ascii(self, codec):
+        """ A string with bytes, encoded as optimized byte array. """
+        b1 = bytes([131, py_impl.TAG_STRING_EXT,
+                    0, 5,
+                    104, 101, 108, 108, 111])
+        (t1, tail1) = codec.binary_to_term(b1, None)
+        self.assertTrue(isinstance(t1, str), "Result must be str")
+        self.assertEqual(t1, "hello")
+        self.assertEqual(tail1, b'')
 
-        # Try a string with emoji, a list of unicode integers
-        b1 = bytes([131, 108, 0, 0, 0, 3, 98, 0, 0, 38, 34, 97, 32, 98, 0, 0,
-                    38, 35, 106])
+        (t2, tail2) = codec.binary_to_term(b1, {"byte_string": "bytes"})
+        self.assertTrue(isinstance(t2, bytes),
+                        "Result must be bytes, got " + t2.__class__.__name__)
+        self.assertEqual(t2, b"hello")
+        self.assertEqual(tail2, b'')
+
+    def _decode_str_unicode(self, codec):
+        """ A string with emoji, encoded as a list of unicode integers. """
+        b1 = bytes([131, py_impl.TAG_LIST_EXT,
+                    0, 0, 0, 3,  # length
+                    py_impl.TAG_INT, 0, 0, 38, 34,  # 32-bit radiation hazard
+                    py_impl.TAG_SMALL_INT, 32,      # 8-bit space (32)
+                    py_impl.TAG_INT, 0, 0, 38, 35,  # 32-bit bio-hazard
+                    py_impl.TAG_NIL_EXT  # list tail: NIL
+                    ])
         (t1, tail) = codec.binary_to_term(b1, None)
-        self.assertTrue(isinstance(t1, list))
+        self.assertTrue(isinstance(t1, list), "Result must be a list")
         self.assertEqual(tail, b'')
         self.assertEqual(list_to_unicode_str(t1), u"☢ ☣")
 
