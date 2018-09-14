@@ -30,6 +30,6 @@ pub const TAG_PID_EXT: u8 = 103;
 pub const TAG_SMALL_ATOM_EXT: u8 = 115;
 pub const TAG_SMALL_ATOM_UTF8_EXT: u8 = 119;
 pub const TAG_SMALL_BIG_EXT: u8 = 110;
-pub const TAG_SMALL_INT: u8 = 97;
+pub const TAG_SMALL_UINT: u8 = 97;
 pub const TAG_SMALL_TUPLE_EXT: u8 = 104;
 pub const TAG_STRING_EXT: u8 = 107;

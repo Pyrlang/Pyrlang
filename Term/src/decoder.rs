@@ -105,31 +105,50 @@ impl <'a> Decoder<'a> {
                                 ) -> CodecResult<(PyObject, &'inp [u8])>
   {
     let tag = in_bytes[0];
+    let tail = &in_bytes[1..];
     match tag {
       TAG_ATOM_EXT =>
-        self.parse_atom::<u16>(&in_bytes[1..], Encoding::Latin1),
+        self.parse_atom::<u16>(tail, Encoding::Latin1),
       TAG_ATOM_UTF8_EXT =>
-        self.parse_atom::<u16>(&in_bytes[1..], Encoding::UTF8),
+        self.parse_atom::<u16>(tail, Encoding::UTF8),
       TAG_SMALL_ATOM_EXT =>
-        self.parse_atom::<u8>(&in_bytes[1..], Encoding::Latin1),
+        self.parse_atom::<u8>(tail, Encoding::Latin1),
       TAG_SMALL_ATOM_UTF8_EXT =>
-        self.parse_atom::<u8>(&in_bytes[1..], Encoding::UTF8),
-      TAG_BINARY_EXT => self.parse_binary(&in_bytes[1..]),
+        self.parse_atom::<u8>(tail, Encoding::UTF8),
+      TAG_BINARY_EXT => self.parse_binary(tail),
       TAG_NIL_EXT => {
         let empty_list = PyList::new(self.py, empty::slice());
-        Ok((empty_list.into_object(), &in_bytes[1..]))
+        Ok((empty_list.into_object(), tail))
       },
-      TAG_LIST_EXT => self.parse_list(&in_bytes[1..]),
-      TAG_STRING_EXT => self.parse_string(&in_bytes[1..]), // 16-bit sz bytestr
-      TAG_SMALL_INT => {
-        let val = in_bytes[1];
-        let py_val = val.to_py_object(self.py);
-        Ok((py_val.into_object(), &in_bytes[2..]))
-      },
+      TAG_LIST_EXT => self.parse_list(tail),
+      TAG_STRING_EXT => self.parse_string(tail), // 16-bit sz bytestr
+      TAG_SMALL_UINT => self.parse_number::<u8>(tail),
+      TAG_INT => self.parse_number::<i32>(tail),
+      TAG_NEW_FLOAT_EXT => self.parse_number::<f64>(tail),
       _ =>
         Err(CodecError::UnknownTermTagByte { b: tag }),
     }
   }
+
+  #[inline]
+  fn parse_number<'inp, T>(&self, in_bytes: &'inp [u8])
+    -> CodecResult<(PyObject, &'inp [u8])>
+    where T: byte::TryRead<'inp, byte::ctx::Endian> + ToPyObject
+  {
+    let offset = &mut 0usize;
+    let val = in_bytes.read_with::<T>(offset, byte::BE)?;
+    let py_val = val.to_py_object(self.py);
+    Ok((py_val.into_object(), &in_bytes[*offset..]))
+  }
+
+
+//  #[inline]
+//  fn parse_bin_float<'inp>(&self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+//  {
+//    let val = in_bytes[1];
+//    let py_val = val.to_py_object(self.py);
+//    Ok((py_val.into_object(), &in_bytes[2..]))
+//  }
 
 
   /// Parses bytes after Atom tag (100) or Atom Utf8 (118)
@@ -152,6 +171,7 @@ impl <'a> Decoder<'a> {
 
 
   // TODO: Make 3 functions and store fun pointer
+  #[inline]
   fn create_atom(&mut self, txt: &str) -> CodecResult<PyObject> {
     match self.atom_representation {
       AtomRepresentation::Bytes => {
@@ -245,7 +265,6 @@ impl <'a> Decoder<'a> {
     } else {
       // We are looking at an improper list
       let (tail_val, tail_bytes) = self.binary_to_term_2(tail)?;
-      // TODO: wrap head, tail in a list
       let pair: Vec<PyObject> = vec![py_lst.into_object(), tail_val];
       let py_pair = PyTuple::new(self.py, &pair);
       Ok((py_pair.into_object(), tail_bytes))
