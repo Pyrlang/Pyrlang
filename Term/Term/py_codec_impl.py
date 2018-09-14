@@ -31,28 +31,37 @@ from Term.reference import Reference
 
 ETF_VERSION_TAG = 131
 
-TAG_NEW_FLOAT_EXT = 70
-TAG_BIT_BINARY_EXT = 77
-TAG_COMPRESSED = 80
-TAG_SMALL_INT = 97
-TAG_INT = 98
-TAG_FLOAT_EXT = 99
 TAG_ATOM_EXT = 100
-TAG_PID_EXT = 103
-TAG_SMALL_TUPLE_EXT = 104
-TAG_LARGE_TUPLE_EXT = 105
-TAG_NIL_EXT = 106
-TAG_STRING_EXT = 107
-TAG_LIST_EXT = 108
+TAG_ATOM_UTF8_EXT = 118
+
 TAG_BINARY_EXT = 109
-TAG_SMALL_BIG_EXT = 110
+TAG_BIT_BINARY_EXT = 77
+
+TAG_COMPRESSED = 80
+
+TAG_FLOAT_EXT = 99
+
+TAG_INT = 98
+
 TAG_LARGE_BIG_EXT = 111
+TAG_LARGE_TUPLE_EXT = 105
+TAG_LIST_EXT = 108
+
+TAG_MAP_EXT = 116
+
+TAG_NEW_FLOAT_EXT = 70
 TAG_NEW_FUN_EXT = 112
 TAG_NEW_REF_EXT = 114
+TAG_NIL_EXT = 106
+
+TAG_PID_EXT = 103
+
 TAG_SMALL_ATOM_EXT = 115
-TAG_MAP_EXT = 116
-TAG_ATOM_UTF8_EXT = 118
 TAG_SMALL_ATOM_UTF8_EXT = 119
+TAG_SMALL_BIG_EXT = 110
+TAG_SMALL_INT = 97
+TAG_SMALL_TUPLE_EXT = 104
+TAG_STRING_EXT = 107
 
 
 # This is Python variant of codec exception when Python impl is used.
@@ -427,11 +436,11 @@ def _pack_int(val):
 
 
 # TODO: maybe move this into atom class
-def _pack_atom(text: str, encoding: str) -> bytes:
-    return bytes([TAG_ATOM_EXT if encoding.startswith("latin")
-                  else TAG_ATOM_UTF8_EXT]) \
-           + util.to_u16(len(text)) \
-           + bytes(text, encoding)
+def _pack_atom(text: str) -> bytes:
+    atom_bytes = bytes(text, "utf8")
+    if len(atom_bytes) < 256:
+        return bytes([TAG_SMALL_ATOM_UTF8_EXT, len(atom_bytes)]) + atom_bytes
+    return bytes([TAG_ATOM_UTF8_EXT]) + util.to_u16(len(atom_bytes)) + atom_bytes
 
 
 # TODO: maybe move this into pid class
@@ -544,10 +553,10 @@ def term_to_binary_2(val):
         return _pack_float(val)
 
     elif val is None:
-        return _pack_atom('undefined', 'latin-1')
+        return _pack_atom('undefined')
 
     elif isinstance(val, Atom):
-        return _pack_atom(val.text_, "utf8")
+        return _pack_atom(val.text_)
 
     elif isinstance(val, Pid):
         return _pack_pid(val)

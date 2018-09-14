@@ -12,16 +12,40 @@ from Term.list import list_to_unicode_str
 class TestETFDecode(unittest.TestCase):
     def test_decode_atom_py(self):
         self._decode_atom(py_impl)
+        self._decode_atom_utf8(py_impl)
 
     def test_decode_atom_native(self):
         self._decode_atom(native_impl)
+        self._decode_atom_utf8(native_impl)
 
     def _decode_atom(self, codec):
-        """ Try an atom 'hello' """
-        b1 = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
+        """ Try an atom 'hello' encoded as Latin1 atom (16-bit length)
+            or small atom (8bit length)
+        """
+        b1 = bytes([131, py_impl.TAG_ATOM_EXT,
+                    0, 5,
+                    104, 101, 108, 108, 111])
         (t1, tail1) = codec.binary_to_term(b1, None)
         self.assertTrue(isinstance(t1, Atom))
         self.assertEqual(t1.text_, "hello")
+        self.assertEqual(tail1, b'')
+
+        b2 = bytes([131, py_impl.TAG_SMALL_ATOM_EXT,
+                    5,
+                    104, 101, 108, 108, 111])
+        (t2, tail2) = codec.binary_to_term(b2, None)
+        self.assertTrue(isinstance(t2, Atom))
+        self.assertEqual(t2.text_, "hello")
+        self.assertEqual(tail2, b'')
+
+    def _decode_atom_utf8(self, codec):
+        b1 = bytes([131, py_impl.TAG_ATOM_UTF8_EXT,
+                    0, 6,
+                    108, 195, 164, 103, 101, 116])
+        (t1, tail1) = codec.binary_to_term(b1, None)
+        self.assertTrue(isinstance(t1, Atom))
+        self.assertTrue(isinstance(t1.text_, str))
+        self.assertEqual(t1.text_, u"läget")
         self.assertEqual(tail1, b'')
 
     # ----------------
@@ -34,7 +58,7 @@ class TestETFDecode(unittest.TestCase):
 
     def _decode_atom_as_string(self, codec):
         """ Try an atom 'hello' to a Python string """
-        b1 = bytes([131, 100, 0, 5, 104, 101, 108, 108, 111])
+        b1 = bytes([131, py_impl.TAG_ATOM_EXT, 0, 5, 104, 101, 108, 108, 111])
         (t2, tail2) = codec.binary_to_term(b1, {"atom": "str"})
         self.assertTrue(isinstance(t2, str),
                         "Expected str, have: " + t2.__class__.__name__)

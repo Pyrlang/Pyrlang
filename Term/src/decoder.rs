@@ -141,7 +141,8 @@ impl <'a> Decoder<'a> {
   #[inline]
   fn parse_atom<'inp, T>(
     &mut self, offset: &mut usize, in_bytes: &'inp [u8],
-    coding: Encoding) -> CodecResult<(PyObject, &'inp [u8])>
+    coding: Encoding,
+  ) -> CodecResult<(PyObject, &'inp [u8])>
     where usize: std::convert::From<T>,
           T: byte::TryRead<'inp, byte::ctx::Endian>
   {
