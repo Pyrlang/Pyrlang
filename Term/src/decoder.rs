@@ -7,7 +7,7 @@ use std::str;
 
 use super::helpers;
 use super::helpers::{AtomRepresentation, ByteStringRepresentation};
-use super::consts::*;
+use super::consts;
 use super::errors::*;
 
 
@@ -21,6 +21,7 @@ enum Encoding {
 pub struct Decoder<'a> {
   py: Python<'a>,
   cached_atom_class: Option<PyObject>,
+  cached_pid_class: Option<PyObject>,
   atom_representation: AtomRepresentation,
   bytestring_repr: ByteStringRepresentation,
 }
@@ -39,6 +40,7 @@ impl <'a> Decoder<'a> {
       py,
       atom_representation: aopt,
       cached_atom_class: None,
+      cached_pid_class: None,
       bytestring_repr: s8opt,
     })
   }
@@ -61,6 +63,23 @@ impl <'a> Decoder<'a> {
   }
 
 
+  /// Return cached value of Pid class used for decoding. Otherwise if not
+  /// found - import and cache it locally.
+  fn get_pid_class(&mut self) -> PyObject {
+    match &self.cached_pid_class {
+      Some(ref a) => {
+        a.clone_ref(self.py)
+      },
+      None => {
+        let pid_m = self.py.import("Term.pid").unwrap();
+        let pid_cls = pid_m.get(self.py, "Pid").unwrap();
+        self.cached_pid_class = Some(pid_cls.clone_ref(self.py));
+        pid_cls
+      },
+    }
+  }
+
+
   /// Strip 131 byte header and uncompress if the data was compressed.
   /// Return: PyTuple(PyObject, Bytes) or CodecError
   pub fn binary_to_term(&mut self, in_bytes: &[u8]) -> CodecResult<PyObject>
@@ -68,7 +87,7 @@ impl <'a> Decoder<'a> {
     let offset = &mut 0;
 
     let pre_tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
-    if pre_tag != ETF_VERSION_TAG {
+    if pre_tag != consts::ETF_VERSION_TAG {
       return Err(CodecError::UnsupportedETFVersion)
     } else if in_bytes.is_empty() {
       return Err(CodecError::EmptyInput)
@@ -76,7 +95,7 @@ impl <'a> Decoder<'a> {
 
     // Read first byte of term, it might be a compressed term marker
     let tag = in_bytes.read_with::<u8>(offset, byte::BE)?;
-    if tag == TAG_COMPRESSED {
+    if tag == consts::TAG_COMPRESSED {
       let decomp_size = in_bytes.read_with::<u32>(offset, byte::BE)?;
 
       let tail1 = &in_bytes[*offset..];
@@ -107,35 +126,35 @@ impl <'a> Decoder<'a> {
     let tag = in_bytes[0];
     let tail = &in_bytes[1..];
     match tag {
-      TAG_ATOM_EXT =>
+      consts::TAG_ATOM_EXT =>
         self.parse_atom::<u16>(tail, Encoding::Latin1),
-      TAG_ATOM_UTF8_EXT =>
+      consts::TAG_ATOM_UTF8_EXT =>
         self.parse_atom::<u16>(tail, Encoding::UTF8),
-      TAG_SMALL_ATOM_EXT =>
+      consts::TAG_SMALL_ATOM_EXT =>
         self.parse_atom::<u8>(tail, Encoding::Latin1),
-      TAG_SMALL_ATOM_UTF8_EXT =>
+      consts::TAG_SMALL_ATOM_UTF8_EXT =>
         self.parse_atom::<u8>(tail, Encoding::UTF8),
-      TAG_BINARY_EXT => self.parse_binary(tail),
-      TAG_NIL_EXT => {
+      consts::TAG_BINARY_EXT => self.parse_binary(tail),
+      consts::TAG_NIL_EXT => {
         let empty_list = PyList::new(self.py, empty::slice());
         Ok((empty_list.into_object(), tail))
       },
-      TAG_LIST_EXT => self.parse_list(tail),
-      TAG_STRING_EXT => self.parse_string(tail), // 16-bit sz bytestr
-      TAG_SMALL_UINT => self.parse_number::<u8>(tail),
-      TAG_INT => self.parse_number::<i32>(tail),
-      TAG_NEW_FLOAT_EXT => self.parse_number::<f64>(tail),
-      TAG_MAP_EXT => self.parse_map(tail),
-      TAG_SMALL_TUPLE_EXT => {
+      consts::TAG_LIST_EXT => self.parse_list(tail),
+      consts::TAG_STRING_EXT => self.parse_string(tail), // 16-bit sz bytestr
+      consts::TAG_SMALL_UINT => self.parse_number::<u8>(tail),
+      consts::TAG_INT => self.parse_number::<i32>(tail),
+      consts::TAG_NEW_FLOAT_EXT => self.parse_number::<f64>(tail),
+      consts::TAG_MAP_EXT => self.parse_map(tail),
+      consts::TAG_SMALL_TUPLE_EXT => {
         let arity = tail[0] as usize;
         self.parse_tuple(&in_bytes[2..], arity)
       },
-      TAG_LARGE_TUPLE_EXT => {
+      consts::TAG_LARGE_TUPLE_EXT => {
         let arity = tail.read_with::<u32>(&mut 0usize, byte::BE)?;
         self.parse_tuple(&in_bytes[5..], arity as usize)
       },
-      _ =>
-        Err(CodecError::UnknownTermTagByte { b: tag }),
+      consts::TAG_PID_EXT => self.parse_pid(tail),
+      _ => Err(CodecError::UnknownTermTagByte { b: tag }),
     }
   }
 
@@ -194,9 +213,8 @@ impl <'a> Decoder<'a> {
       },
       AtomRepresentation::TermAtom => {
         // Construct Atom object (Note: performance cost)
-        let py_txt = PyString::new(self.py, txt);
         let atom_obj = self.get_atom_class();
-        Ok(atom_obj.call(self.py, (py_txt,), None)?)
+        Ok(atom_obj.call(self.py, (txt,), None)?)
       },
     } // match
   }
@@ -268,14 +286,13 @@ impl <'a> Decoder<'a> {
     let py_lst = PyList::new(self.py, lst.as_ref());
 
     // Check whether last element is a NIL, or something else
-    if tail[0] == TAG_NIL_EXT {
+    if tail[0] == consts::TAG_NIL_EXT {
       // We are looking at a proper list, so just return the result
       Ok((py_lst.into_object(), &tail[1..]))
     } else {
       // We are looking at an improper list
       let (tail_val, tail_bytes) = self.binary_to_term_2(tail)?;
-      let pair: Vec<PyObject> = vec![py_lst.into_object(), tail_val];
-      let py_pair = PyTuple::new(self.py, &pair);
+      let py_pair = PyTuple::new(self.py, &[py_lst.into_object(), tail_val]);
       Ok((py_pair.into_object(), tail_bytes))
     }
   }
@@ -325,6 +342,23 @@ impl <'a> Decoder<'a> {
     Ok((py_result.into_object(), tail))
   }
 
+
+  /// Given input _after_ the PID tag byte, parse an external pid
+  #[inline]
+  fn parse_pid<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let (node, tail1) = self.binary_to_term_2(in_bytes)?;
+    let offset = &mut 0usize;
+    let id: u32 = tail1.read_with::<u32>(offset, byte::BE)?;
+    let serial: u32 = tail1.read_with::<u32>(offset, byte::BE)?;
+    let creation: u8 = tail1.read_with::<u8>(offset, byte::BE)?;
+
+    let pid_obj = self.get_pid_class();
+    let remaining = &tail1[*offset..];
+    let py_pid = pid_obj.call(self.py, (node, id, serial, creation), None)?;
+    Ok((py_pid.into_object(), remaining))
+  }
+
 }
 // end impl
 
@@ -336,8 +370,7 @@ pub fn wrap_decode_result(
   match result_pair {
     Ok((result, tail)) => {
       let py_tail = PyBytes::new(py, tail);
-      let elems: Vec<PyObject> = vec![result, py_tail.into_object()];
-      let result = PyTuple::new(py, &elems);
+      let result = PyTuple::new(py, &[result, py_tail.into_object()]);
       Ok(result.into_object())
     }
     Err(e) => Err(e),
