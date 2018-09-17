@@ -20,10 +20,13 @@ enum Encoding {
 
 pub struct Decoder<'a> {
   py: Python<'a>,
-  cached_atom_class: Option<PyObject>,
-  cached_pid_class: Option<PyObject>,
   atom_representation: AtomRepresentation,
   bytestring_repr: ByteStringRepresentation,
+
+  cached_atom_pyclass: Option<PyObject>,
+  cached_pid_pyclass: Option<PyObject>,
+  cached_ref_pyclass: Option<PyObject>,
+  cached_fun_pyclass: Option<PyObject>,
 }
 
 
@@ -39,44 +42,12 @@ impl <'a> Decoder<'a> {
     Ok(Decoder {
       py,
       atom_representation: aopt,
-      cached_atom_class: None,
-      cached_pid_class: None,
       bytestring_repr: s8opt,
+      cached_atom_pyclass: None,
+      cached_pid_pyclass: None,
+      cached_ref_pyclass: None,
+      cached_fun_pyclass: None,
     })
-  }
-
-
-  /// Return cached value of atom class used for decoding. Otherwise if not
-  /// found - import and cache it locally.
-  fn get_atom_class(&mut self) -> PyObject {
-    match &self.cached_atom_class {
-      Some(ref a) => {
-        a.clone_ref(self.py)
-      },
-      None => {
-        let atom_m = self.py.import("Term.atom").unwrap();
-        let atom_cls = atom_m.get(self.py, "Atom").unwrap();
-        self.cached_atom_class = Some(atom_cls.clone_ref(self.py));
-        atom_cls
-      },
-    }
-  }
-
-
-  /// Return cached value of Pid class used for decoding. Otherwise if not
-  /// found - import and cache it locally.
-  fn get_pid_class(&mut self) -> PyObject {
-    match &self.cached_pid_class {
-      Some(ref a) => {
-        a.clone_ref(self.py)
-      },
-      None => {
-        let pid_m = self.py.import("Term.pid").unwrap();
-        let pid_cls = pid_m.get(self.py, "Pid").unwrap();
-        self.cached_pid_class = Some(pid_cls.clone_ref(self.py));
-        pid_cls
-      },
-    }
   }
 
 
@@ -154,9 +125,72 @@ impl <'a> Decoder<'a> {
         self.parse_tuple(&in_bytes[5..], arity as usize)
       },
       consts::TAG_PID_EXT => self.parse_pid(tail),
+      consts::TAG_NEW_REF_EXT => self.parse_ref(tail),
+      consts::TAG_NEW_FUN_EXT => self.parse_fun(tail),
       _ => Err(CodecError::UnknownTermTagByte { b: tag }),
     }
   }
+
+
+  /// Return cached value of atom class used for decoding. Otherwise if not
+  /// found - import and cache it locally.
+  fn get_atom_pyclass(&mut self) -> PyObject {
+    match &self.cached_atom_pyclass {
+      Some(ref a) => a.clone_ref(self.py),
+      None => {
+        let atom_m = self.py.import("Term.atom").unwrap();
+        let atom_cls = atom_m.get(self.py, "Atom").unwrap();
+        self.cached_atom_pyclass = Some(atom_cls.clone_ref(self.py));
+        atom_cls
+      },
+    }
+  }
+
+
+  /// Return cached value of Pid class used for decoding. Otherwise if not
+  /// found - import and cache it locally.
+  fn get_pid_pyclass(&mut self) -> PyObject {
+    match &self.cached_pid_pyclass {
+      Some(ref a) => a.clone_ref(self.py),
+      None => {
+        let pid_m = self.py.import("Term.pid").unwrap();
+        let pid_cls = pid_m.get(self.py, "Pid").unwrap();
+        self.cached_pid_pyclass = Some(pid_cls.clone_ref(self.py));
+        pid_cls
+      },
+    }
+  }
+
+
+  /// Return cached value of Reference class used for decoding. Otherwise if not
+  /// found - import and cache it locally.
+  fn get_ref_pyclass(&mut self) -> PyObject {
+    match &self.cached_ref_pyclass {
+      Some(ref a) => a.clone_ref(self.py),
+      None => {
+        let ref_m = self.py.import("Term.reference").unwrap();
+        let ref_cls = ref_m.get(self.py, "Reference").unwrap();
+        self.cached_ref_pyclass = Some(ref_cls.clone_ref(self.py));
+        ref_cls
+      },
+    }
+  }
+
+
+  /// Return cached value of Fun class used for decoding. Otherwise if not
+  /// found - import and cache it locally.
+  fn get_fun_pyclass(&mut self) -> PyObject {
+    match &self.cached_fun_pyclass {
+      Some(ref a) => a.clone_ref(self.py),
+      None => {
+        let fun_m = self.py.import("Term.fun").unwrap();
+        let fun_cls = fun_m.get(self.py, "Fun").unwrap();
+        self.cached_fun_pyclass = Some(fun_cls.clone_ref(self.py));
+        fun_cls
+      },
+    }
+  }
+
 
   #[inline]
   fn parse_number<'inp, T>(&self, in_bytes: &'inp [u8])
@@ -213,7 +247,7 @@ impl <'a> Decoder<'a> {
       },
       AtomRepresentation::TermAtom => {
         // Construct Atom object (Note: performance cost)
-        let atom_obj = self.get_atom_class();
+        let atom_obj = self.get_atom_pyclass();
         Ok(atom_obj.call(self.py, (txt,), None)?)
       },
     } // match
@@ -353,10 +387,72 @@ impl <'a> Decoder<'a> {
     let serial: u32 = tail1.read_with::<u32>(offset, byte::BE)?;
     let creation: u8 = tail1.read_with::<u8>(offset, byte::BE)?;
 
-    let pid_obj = self.get_pid_class();
     let remaining = &tail1[*offset..];
+    let pid_obj = self.get_pid_pyclass();
     let py_pid = pid_obj.call(self.py, (node, id, serial, creation), None)?;
     Ok((py_pid.into_object(), remaining))
+  }
+
+
+  /// Given input _after_ the Reference tag byte, parse an external reference
+  #[inline]
+  fn parse_ref<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
+    let term_len: u16 = in_bytes.read_with::<u16>(offset, byte::BE)?;
+
+    let (node, tail1) = self.binary_to_term_2(&in_bytes[*offset..])?;
+
+    let creation: u8 = tail1[0];
+    let last_index = 1 + (term_len as usize) * 4;
+    let id: &[u8] = &tail1[1..last_index];
+
+    let remaining = &tail1[last_index..];
+    let ref_obj = self.get_ref_pyclass();
+    let py_ref = ref_obj.call(self.py, (node, creation, id), None)?;
+    Ok((py_ref.into_object(), remaining))
+  }
+
+
+  /// Given input _after_ the Fun tag byte, parse a fun (not useful in Python
+  /// but we store all parts of it and can reconstruct it, if it will be sent out)
+  #[inline]
+  fn parse_fun<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
+    let size = in_bytes.read_with::<u32>(offset, byte::BE)?;
+    let arity = in_bytes.read_with::<u8>(offset, byte::BE)? as usize;
+
+    let uniq_md5 = &in_bytes[*offset..*offset+16];
+    *offset += 16;
+
+    let index = in_bytes.read_with::<u32>(offset, byte::BE)?;
+    let num_free = in_bytes.read_with::<u32>(offset, byte::BE)?;
+
+    let tail0 = &in_bytes[*offset..];
+    let (module, tail1) = self.binary_to_term_2(tail0)?;
+    let (old_index, tail2) = self.binary_to_term_2(tail1)?;
+    let (old_uniq, tail3) = self.binary_to_term_2(tail2)?;
+    let (pid, tail4) = self.binary_to_term_2(tail3)?;
+
+    // Decode num_free free variables following after pid
+    let mut frozen_vars = Vec::<PyObject>::with_capacity(arity);
+    let mut tail = tail4;
+    for _i in 0..num_free {
+      let (py_val, tail_new) = self.binary_to_term_2(tail)?;
+      tail = tail_new;
+      frozen_vars.push(py_val);
+    }
+    let py_frozen_vars = PyTuple::new(self.py, frozen_vars.as_ref());
+
+    let fun_obj = self.get_fun_pyclass();
+    let py_fun = fun_obj.call(self.py,
+                              (module, arity, pid,
+                               index, uniq_md5,
+                               old_index, old_uniq,
+                               py_frozen_vars.into_object()),
+                              None)?;
+    Ok((py_fun.into_object(), tail))
   }
 
 }
