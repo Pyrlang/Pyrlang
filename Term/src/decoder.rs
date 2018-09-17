@@ -11,7 +11,7 @@ use super::consts::*;
 use super::errors::*;
 
 
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 enum Encoding {
   Latin1,
   UTF8
@@ -94,7 +94,7 @@ impl <'a> Decoder<'a> {
     // Second byte was not consumed, so restart parsing from the second byte
     let tail2 = &in_bytes[1..];
     let r2 = self.binary_to_term_2(tail2);
-    return wrap_decode_result(self.py, r2)
+    wrap_decode_result(self.py, r2)
   }
 
 
@@ -125,6 +125,15 @@ impl <'a> Decoder<'a> {
       TAG_SMALL_UINT => self.parse_number::<u8>(tail),
       TAG_INT => self.parse_number::<i32>(tail),
       TAG_NEW_FLOAT_EXT => self.parse_number::<f64>(tail),
+      TAG_MAP_EXT => self.parse_map(tail),
+      TAG_SMALL_TUPLE_EXT => {
+        let arity = tail[0] as usize;
+        self.parse_tuple(&in_bytes[2..], arity)
+      },
+      TAG_LARGE_TUPLE_EXT => {
+        let arity = tail.read_with::<u32>(&mut 0usize, byte::BE)?;
+        self.parse_tuple(&in_bytes[5..], arity as usize)
+      },
       _ =>
         Err(CodecError::UnknownTermTagByte { b: tag }),
     }
@@ -155,7 +164,7 @@ impl <'a> Decoder<'a> {
   /// Returns: Tuple (string | bytes | Atom object, remaining bytes)
   #[inline]
   fn parse_atom<'inp, T>(&mut self, in_bytes: &'inp [u8],
-    coding: Encoding) -> CodecResult<(PyObject, &'inp [u8])>
+                         _coding: Encoding) -> CodecResult<(PyObject, &'inp [u8])>
     where usize: std::convert::From<T>,
           T: byte::TryRead<'inp, byte::ctx::Endian>
   {
@@ -250,7 +259,7 @@ impl <'a> Decoder<'a> {
 
     // Read list elements, one by one
     let mut tail = &in_bytes[*offset..];
-    for i in 0..sz {
+    for _i in 0..sz {
       let (val, new_tail) = self.binary_to_term_2(tail)?;
       tail = new_tail;
       lst.push(val);
@@ -270,7 +279,54 @@ impl <'a> Decoder<'a> {
       Ok((py_pair.into_object(), tail_bytes))
     }
   }
+
+
+  /// Given input _after_ the TAG_MAP_EXT byte, parse map key/value pairs.
+  #[inline]
+  fn parse_map<'inp>(&mut self,
+                     in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
+    let arity = in_bytes.read_with::<u32>(offset, byte::BE)? as usize;
+
+    let mut result = PyDict::new(self.py);
+
+    // Read key/value pairs two at a time
+    let mut tail = &in_bytes[*offset..];
+    for _i in 0..arity {
+      let (py_key, tail1) = self.binary_to_term_2(tail)?;
+      let (py_val, tail2) = self.binary_to_term_2(tail1)?;
+      tail = tail2;
+      result.set_item(self.py, py_key, py_val);
+    }
+
+    Ok((result.into_object(), tail))
+  }
+
+
+  /// Given input _after_ the TAG_SMALL_TUPLE_EXT or the TAG_TUPLE_EXT byte,
+  /// tuple elements into a vector and create Python tuple.
+  #[inline]
+  fn parse_tuple<'inp>(&mut self,
+                       in_bytes: &'inp [u8],
+                       arity: usize) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let mut result = Vec::<PyObject>::with_capacity(arity);
+
+    // Read values one by one
+    let mut tail = in_bytes;
+    for _i in 0..arity {
+      let (py_val, tail1) = self.binary_to_term_2(tail)?;
+      tail = tail1;
+      result.push(py_val);
+    }
+
+    let py_result = PyTuple::new(self.py, result.as_ref());
+    Ok((py_result.into_object(), tail))
+  }
+
 }
+// end impl
 
 
 pub fn wrap_decode_result(

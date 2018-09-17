@@ -77,6 +77,26 @@ class TestETFEncode(unittest.TestCase):
         b2 = codec.term_to_binary(ImproperList([1], Atom("ok")))
         self.assertEqual(b2, example2)
 
+    # ----------------
+
+    def test_encode_map_py(self):
+        self._encode_map(py_impl)
+
+    def test_encode_map_native(self):
+        self._encode_map(native_impl)
+
+    def _encode_map(self, codec):
+        """ Try a map #{1 => 2, ok => error} """
+        sample = bytes([131,
+                        py_impl.TAG_MAP_EXT, 0, 0, 0, 2,
+                        py_impl.TAG_SMALL_INT, 1,
+                        py_impl.TAG_SMALL_INT, 2,
+                        py_impl.TAG_ATOM_UTF8_EXT, 0, 2, 111, 107,
+                        py_impl.TAG_ATOM_UTF8_EXT, 0, 5, 101, 114, 114, 111, 114])
+        val = {1: 2, Atom("ok"): Atom("error")}
+        bin1 = codec.term_to_binary(val, None)
+        self.assertEqual(bin1, sample)
+
 
 if __name__ == '__main__':
     unittest.main()

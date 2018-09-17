@@ -54,7 +54,7 @@ impl std::convert::From<CodecError> for PyErr {
     // CodecErrors are formatted using #[fail...] attribute format string
     let err_str = format!("{}", err);
     let py_str = PyString::new(py, &err_str);
-    let noargs = PyTuple::new(py, &vec![py_str.into_object()]);
+    let noargs = PyTuple::new(py, &[py_str.into_object()]);
     let err_val = ty.call(py, noargs, None).unwrap();
 
     let tyo = ty.into_object();
@@ -68,7 +68,7 @@ impl std::convert::From<CodecError> for PyErr {
 
 
 /// Repacks CodecResult<T> into PyResult<T>
-pub fn pyResult_from<T>(r: Result<T, CodecError>) -> Result<T, PyErr> {
+pub fn pyresult_from<T>(r: Result<T, CodecError>) -> Result<T, PyErr> {
   match r {
     Ok(x) => Ok(x),
     Err(e) => Err(PyErr::from(e)),

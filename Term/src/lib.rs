@@ -1,4 +1,5 @@
-#[macro_use] extern crate cpython;
+//#[macro_use]
+extern crate cpython;
 extern crate compress;
 extern crate byte;
 extern crate empty;
@@ -8,7 +9,7 @@ extern crate empty;
 use cpython::*;
 
 use self::decoder::{Decoder, wrap_decode_result};
-use self::errors::{CodecError, pyResult_from};
+use self::errors::{CodecError, pyresult_from};
 
 mod consts;
 mod decoder;
@@ -24,7 +25,7 @@ py_exception!(term_codec, PyCodecError);
 fn binary_to_term(py: Python, b: PyBytes,
                   opts: PyObject) -> PyResult<PyObject> {
   let mut dec_state = Decoder::new(py, opts)?;
-  pyResult_from(dec_state.binary_to_term(b.data(py)))
+  pyresult_from(dec_state.binary_to_term(b.data(py)))
 }
 
 
@@ -32,7 +33,7 @@ fn binary_to_term_2(py: Python, b: PyBytes,
                     opts: PyObject) -> PyResult<PyObject> {
   let mut dec_state = Decoder::new(py, opts)?;
   let result = dec_state.binary_to_term_2(b.data(py));
-  pyResult_from(wrap_decode_result(py, result))
+  pyresult_from(wrap_decode_result(py, result))
 }
 
 

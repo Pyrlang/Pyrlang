@@ -148,6 +148,39 @@ class TestETFDecode(unittest.TestCase):
 
     # ----------------
 
+    def test_decode_tuple_py(self):
+        self._decode_tuple(py_impl)
+
+    def test_decode_tuple_native(self):
+        self._decode_tuple(native_impl)
+
+    def _decode_tuple(self, codec):
+        """ Try decode some tuple values """
+        data1 = bytes([131, py_impl.TAG_SMALL_TUPLE_EXT,
+                       2,
+                       py_impl.TAG_SMALL_INT, 1,
+                       py_impl.TAG_ATOM_EXT, 0, 2, 111, 107])
+        (val1, tail1) = codec.binary_to_term(data1, None)
+        self.assertEqual((1, Atom("ok")), val1)
+        self.assertEqual(tail1, b'')
+
+        data2 = bytes([131, py_impl.TAG_LARGE_TUPLE_EXT,
+                       0, 0, 0, 2,
+                       py_impl.TAG_SMALL_INT, 1,
+                       py_impl.TAG_ATOM_EXT, 0, 2, 111, 107])
+        (val2, tail2) = codec.binary_to_term(data2, None)
+        self.assertEqual((1, Atom("ok")), val2)
+        self.assertEqual(tail2, b'')
+
+        # Empty tuple
+        data3 = bytes([131, py_impl.TAG_SMALL_TUPLE_EXT, 0])
+        (val3, tail3) = codec.binary_to_term(data3, None)
+        self.assertEqual((), val3)
+        self.assertEqual(tail3, b'')
+
+
+# ----------------
+
     def test_decode_list_py(self):
         self._decode_list(py_impl)
 
@@ -183,11 +216,16 @@ class TestETFDecode(unittest.TestCase):
         self._decode_map(native_impl)
 
     def _decode_map(self, codec):
-        """ Try a map #{1 => 2} """
-        data = bytes([131, 116, 0, 0, 0, 1, 97, 1, 97, 2])
+        """ Try a map #{1 => 2, ok => error} """
+        data = bytes([131,
+                      py_impl.TAG_MAP_EXT, 0, 0, 0, 2,
+                      py_impl.TAG_SMALL_INT, 1,
+                      py_impl.TAG_SMALL_INT, 2,
+                      py_impl.TAG_ATOM_EXT, 0, 2, 111, 107,
+                      py_impl.TAG_ATOM_EXT, 0, 5, 101, 114, 114, 111, 114])
         (val, tail) = codec.binary_to_term(data, None)
         self.assertTrue(isinstance(val, dict))
-        self.assertEqual(val, {1: 2})
+        self.assertEqual(val, {1: 2, Atom("ok"): Atom("error")})
         self.assertEqual(tail, b'')
 
     # ----------------

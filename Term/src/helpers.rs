@@ -56,7 +56,7 @@ pub fn get_atom_opt(py: Python, opts1: &PyDict) -> CodecResult<AtomRepresentatio
     other => {
       let txt = format!(
         "'atom' option is '{}' while expected: bytes, str, Atom", other);
-      return Err(CodecError::BadOptions {txt})
+      Err(CodecError::BadOptions {txt})
     }
   }
 }
@@ -72,7 +72,7 @@ pub fn get_byte_str_opt(py: Python, opts1: &PyDict) -> CodecResult<ByteStringRep
     other => {
       let txt = format!(
         "'byte_string' option is '{}' while expected: bytes, str", other);
-      return Err(CodecError::BadOptions {txt})
+      Err(CodecError::BadOptions {txt})
     }
   }
 }

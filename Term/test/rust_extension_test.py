@@ -18,9 +18,9 @@ class TestNativeCodecDriver(unittest.TestCase):
             nativecodec.binary_to_term(b'\x83\x50\x00', None)
 
     def test_b2t_library_equality_atoms(self):
-        a = pycodec.term_to_binary(Atom('hello'))
-        b = nativecodec.binary_to_term(a, None)
-        self.assertEqual(a, b)
+        a = pycodec.term_to_binary(Atom("hello"))
+        (b, _) = nativecodec.binary_to_term(a, None)
+        self.assertEqual(Atom("hello"), b)
 
 
 if __name__ == '__main__':

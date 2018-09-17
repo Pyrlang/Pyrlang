@@ -22,7 +22,7 @@ test: clearterminal compile
 
 .PHONY: clearterminal dtest
 dtest: compile
-	PYTHONPATH=$(ROOT):$(ROOT)/target/debug gdb --args python3 test/rust_extension_test.py
+	PYTHONPATH=$(ROOT):$(ROOT)/target/debug gdb --args python3 test/etf_decode_test.py
 
 .PHONY: docs
 docs:
