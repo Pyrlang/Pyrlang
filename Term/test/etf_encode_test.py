@@ -3,8 +3,8 @@ import unittest
 from Term import py_codec_impl as py_impl
 import native_codec_impl as native_impl
 from Term.atom import Atom
-# from Term.pid import Pid
-# from Term.reference import Reference
+from Term.pid import Pid
+from Term.reference import Reference
 # from Term.fun import Fun
 from Term.list import ImproperList
 
@@ -25,14 +25,16 @@ class TestETFEncode(unittest.TestCase):
         # Create and encode 'hello...hello' 52 times (260 bytes)
         # Expect UTF8 back because encoder only does UTF8 atoms
         repeat1 = 52
-        example1 = bytes([131, py_impl.TAG_ATOM_UTF8_EXT, 1, 4]) \
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_ATOM_UTF8_EXT, 1, 4]) \
                    + (b'hello' * repeat1)
         b1 = codec.term_to_binary(Atom("hello" * repeat1))
         self.assertEqual(b1, example1)
 
         # Create and encode 'hello...hello' 5 times (25 bytes)
         repeat2 = 5
-        example2 = bytes([131, py_impl.TAG_SMALL_ATOM_UTF8_EXT, 25]) \
+        example2 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 25]) \
                    + (b'hello' * repeat2)
         b2 = codec.term_to_binary(Atom("hello" * repeat2))
         self.assertEqual(b2, example2)
@@ -40,14 +42,16 @@ class TestETFEncode(unittest.TestCase):
     def _encode_atom_utf8(self, codec):
         # Create and encode 'hallå...hallå' 50 times (300 bytes)
         repeat1 = 50
-        example1 = bytes([131, py_impl.TAG_ATOM_UTF8_EXT, 1, (300-256)]) \
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_ATOM_UTF8_EXT, 1, (300-256)]) \
                    + (bytes("hallå", "utf8") * repeat1)
         b1 = codec.term_to_binary(Atom("hallå" * repeat1))
         self.assertEqual(b1, example1)
 
         # Create and encode 'hallå...hallå' 5 times (30 bytes)
         repeat2 = 5
-        example2 = bytes([131, py_impl.TAG_SMALL_ATOM_UTF8_EXT, 30]) \
+        example2 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 30]) \
                    + (bytes("hallå", "utf8") * repeat2)
         b2 = codec.term_to_binary(Atom("hallå" * repeat2))
         self.assertEqual(b2, example2)
@@ -64,7 +68,8 @@ class TestETFEncode(unittest.TestCase):
 
     def _encode_str(self, codec):
         # A 8-bit string max 65535 characters, optimized as byte array
-        byte_example = bytes([131, py_impl.TAG_STRING_EXT, 0, 5]) \
+        byte_example = bytes([py_impl.ETF_VERSION_TAG,
+                              py_impl.TAG_STRING_EXT, 0, 5]) \
                        + bytes("hello", "latin-1")
 
         b1 = codec.term_to_binary("hello")
@@ -73,13 +78,15 @@ class TestETFEncode(unittest.TestCase):
     def _encode_str_unicode(self, codec):
         # Unicode value for <A with RING ABOVE> is still within byte range
         # so this will produce a list of small ints
-        unicode_example1 = bytes([131, py_impl.TAG_STRING_EXT, 0, 6]) \
+        unicode_example1 = bytes([py_impl.ETF_VERSION_TAG,
+                                  py_impl.TAG_STRING_EXT, 0, 6]) \
                            + "hallå".encode("utf8")
 
         b1 = codec.term_to_binary("hallå")  # unicode but codepoints <= 255
         self.assertEqual(b1, unicode_example1)
 
-        unicode_example2 = bytes([131, py_impl.TAG_LIST_EXT, 0, 0, 0, 2,
+        unicode_example2 = bytes([py_impl.ETF_VERSION_TAG,
+                                  py_impl.TAG_LIST_EXT, 0, 0, 0, 2,
                                   py_impl.TAG_INT, 0, 0, 3, 148,
                                   py_impl.TAG_INT, 0, 0, 3, 169,
                                   py_impl.TAG_NIL_EXT])
@@ -97,7 +104,8 @@ class TestETFEncode(unittest.TestCase):
 
     def _encode_list(self, codec):
         """ Encode list of something, an improper list and an empty list. """
-        example1 = bytes([131, py_impl.TAG_LIST_EXT,
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_LIST_EXT,
                           0, 0, 0, 2,  # length
                           py_impl.TAG_SMALL_INT, 1,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107,
@@ -105,7 +113,7 @@ class TestETFEncode(unittest.TestCase):
         b1 = codec.term_to_binary([1, Atom("ok")])
         self.assertEqual(b1, example1)
 
-        example2 = bytes([131, py_impl.TAG_LIST_EXT,
+        example2 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_LIST_EXT,
                           0, 0, 0, 1,  # length
                           py_impl.TAG_SMALL_INT, 1,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107])
@@ -122,16 +130,57 @@ class TestETFEncode(unittest.TestCase):
 
     def _encode_map(self, codec):
         """ Try a map #{1 => 2, ok => error} """
-        sample = bytes([131,
+        sample = bytes([py_impl.ETF_VERSION_TAG,
                         py_impl.TAG_MAP_EXT, 0, 0, 0, 2,
                         py_impl.TAG_SMALL_INT, 1,
                         py_impl.TAG_SMALL_INT, 2,
                         py_impl.TAG_ATOM_UTF8_EXT, 0, 2, 111, 107,
                         py_impl.TAG_ATOM_UTF8_EXT, 0, 5, 101, 114, 114, 111, 114])
         val = {1: 2, Atom("ok"): Atom("error")}
-        bin1 = codec.term_to_binary(val, None)
+        bin1 = codec.term_to_binary(val)
         self.assertEqual(bin1, sample)
 
+    # ----------------
+
+    def test_encode_pid_py(self):
+        self._encode_pid(py_impl)
+
+    def test_encode_pid_native(self):
+        self._encode_pid(native_impl)
+
+    def _encode_pid(self, codec):
+        sample1 = bytes([py_impl.ETF_VERSION_TAG,
+                         py_impl.TAG_PID_EXT,
+                         py_impl.TAG_SMALL_ATOM_UTF8_EXT, 13]) \
+                  + bytes("nonode@nohost", "latin-1") \
+                  + bytes([0, 0, 0, 1,
+                           0, 0, 0, 2,
+                           3])
+        val = Pid("nonode@nohost", 1, 2, 3)
+        bin1 = codec.term_to_binary(val)
+        self.assertEqual(bin1, sample1)
+
+    # ----------------
+
+    def test_encode_ref_py(self):
+        self._encode_ref(py_impl)
+
+    def test_encode_ref_native(self):
+        self._encode_ref(native_impl)
+
+    def _encode_ref(self, codec):
+        creation = 1
+        sample1 = bytes([py_impl.ETF_VERSION_TAG,
+                         py_impl.TAG_NEW_REF_EXT,
+                         0, 3,  # length
+                         py_impl.TAG_SMALL_ATOM_UTF8_EXT, 13,
+                         110, 111, 110, 111, 100, 101, 64, 110, 111, 104, 111, 115, 116,
+                         creation]) \
+                  + bytes("fgsfdsfdsfgs", "latin-1")
+
+        val = Reference(Atom("nonode@nohost"), creation, b'fgsfdsfdsfgs')
+        bin1 = codec.term_to_binary(val)
+        self.assertEqual(bin1, sample1)
 
 if __name__ == '__main__':
     unittest.main()

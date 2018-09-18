@@ -51,6 +51,12 @@ impl<'a> Encoder<'a> {
         self.write_list_no_tail(&elements);
         return self.encode(&tail)
       },
+//      "Pid" => {
+//
+//      },
+//      "Reference" => {
+//
+//      },
       other => {
         println!("Don't know how to encode '{}'", type_name);
         return Err(CodecError::NotImplEncodeForType { t: type_name })
