@@ -6,6 +6,7 @@ use std::io::{Write};
 
 use super::consts;
 use super::errors::*;
+use std::borrow::Cow;
 
 
 pub struct Encoder<'a> {
@@ -37,9 +38,7 @@ impl<'a> Encoder<'a> {
         let val: i64 = FromPyObject::extract(self.py, term)?;
         return self.write_int(val)
       },
-      "Atom" => {
-        return self.write_atom(&term)
-      },
+      "Atom" => return self.write_atom(&term),
       "str" => {
         let as_str = PyString::extract(self.py, &term)?;
         return self.write_str(&as_str)
@@ -51,12 +50,8 @@ impl<'a> Encoder<'a> {
         self.write_list_no_tail(&elements);
         return self.encode(&tail)
       },
-//      "Pid" => {
-//
-//      },
-//      "Reference" => {
-//
-//      },
+      "Pid" => return self.write_pid(&term),
+      //"Reference" => return self.write_ref(&term),
       other => {
         println!("Don't know how to encode '{}'", type_name);
         return Err(CodecError::NotImplEncodeForType { t: type_name })
@@ -67,6 +62,7 @@ impl<'a> Encoder<'a> {
 
   /// Writes list tag with elements, but no tail element (NIL or other). Ensure
   /// that the calling code is writing either a NIL or a tail term.
+  #[inline]
   fn write_list_no_tail(&mut self, list: &PyList) -> CodecResult<()> {
     let size = list.len(self.py);
     self.data.push(consts::TAG_LIST_EXT);
@@ -80,6 +76,7 @@ impl<'a> Encoder<'a> {
   }
 
 
+  #[inline]
   fn write_int(&mut self, val: i64) -> CodecResult<()> {
 //    let val: i64 = py_i.value();
     if val >= 0 && val <= u8::MAX as i64 {
@@ -98,10 +95,16 @@ impl<'a> Encoder<'a> {
 
 
   /// Encode a UTF-8 Atom
+  #[inline]
   fn write_atom(&mut self, py_atom: &PyObject) -> CodecResult<()> {
     let py_text0 = py_atom.getattr(self.py, "text_")?;
     let py_text: PyString = PyString::extract(self.py, &py_text0)?;
     let text = py_text.to_string(self.py)?;
+    self.write_atom_from_string(text)
+  }
+
+
+  fn write_atom_from_string(&mut self, text: Cow<str>) -> CodecResult<()> {
     let byte_array: &[u8] = text.as_ref().as_ref();
     let str_byte_length: usize = byte_array.len();
 
@@ -122,6 +125,7 @@ impl<'a> Encoder<'a> {
 
 
   /// Encode a UTF-8 string
+  #[inline]
   fn write_str(&mut self, py_str: &PyString) -> CodecResult<()> {
     let text = py_str.to_string(self.py)?;
     let byte_array: &[u8] = text.as_ref().as_ref();
@@ -143,6 +147,32 @@ impl<'a> Encoder<'a> {
       }
       self.data.push(consts::TAG_NIL_EXT) // list terminator
     }
+
+    Ok(())
+  }
+
+
+  /// Encode a Pid
+  #[inline]
+  fn write_pid(&mut self, py_pid: &PyObject) -> CodecResult<()> {
+    let node_name = PyString::extract(self.py,
+      &py_pid.getattr(self.py, "node_name_")?
+    )?;
+
+    let py_id = py_pid.getattr(self.py, "id_")?;
+    let id: u32 = FromPyObject::extract(self.py, &py_id)?;
+
+    let py_serial = py_pid.getattr(self.py, "serial_")?;
+    let serial: u32 = FromPyObject::extract(self.py, &py_serial)?;
+
+    let py_creation = py_pid.getattr(self.py, "creation_")?;
+    let creation: u8 = FromPyObject::extract(self.py, &py_creation)?;
+
+    self.data.push(consts::TAG_PID_EXT);
+    self.write_atom_from_string(node_name.to_string(self.py)?);
+    self.data.write_u32::<BigEndian>(id);
+    self.data.write_u32::<BigEndian>(serial);
+    self.data.push(creation);
 
     Ok(())
   }

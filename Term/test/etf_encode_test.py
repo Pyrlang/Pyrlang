@@ -182,5 +182,6 @@ class TestETFEncode(unittest.TestCase):
         bin1 = codec.term_to_binary(val)
         self.assertEqual(bin1, sample1)
 
+
 if __name__ == '__main__':
     unittest.main()
