@@ -54,6 +54,41 @@ class TestETFEncode(unittest.TestCase):
 
     # ---------------------
 
+    def test_encode_str_py(self):
+        self._encode_str(py_impl)
+        self._encode_str_unicode(py_impl)
+
+    def test_encode_str_native(self):
+        self._encode_str(native_impl)
+        self._encode_str_unicode(native_impl)
+
+    def _encode_str(self, codec):
+        # A 8-bit string max 65535 characters, optimized as byte array
+        byte_example = bytes([131, py_impl.TAG_STRING_EXT, 0, 5]) \
+                       + bytes("hello", "latin-1")
+
+        b1 = codec.term_to_binary("hello")
+        self.assertEqual(b1, byte_example)
+
+    def _encode_str_unicode(self, codec):
+        # Unicode value for <A with RING ABOVE> is still within byte range
+        # so this will produce a list of small ints
+        unicode_example1 = bytes([131, py_impl.TAG_STRING_EXT, 0, 6]) \
+                           + "hallå".encode("utf8")
+
+        b1 = codec.term_to_binary("hallå")  # unicode but codepoints <= 255
+        self.assertEqual(b1, unicode_example1)
+
+        unicode_example2 = bytes([131, py_impl.TAG_LIST_EXT, 0, 0, 0, 2,
+                                  py_impl.TAG_INT, 0, 0, 3, 148,
+                                  py_impl.TAG_INT, 0, 0, 3, 169,
+                                  py_impl.TAG_NIL_EXT])
+
+        b2 = codec.term_to_binary("ΔΩ")  # unicode with large codepoints
+        self.assertEqual(b2, unicode_example2)
+
+    # ---------------------
+
     def test_encode_list_py(self):
         self._encode_list(py_impl)
 
@@ -65,7 +100,7 @@ class TestETFEncode(unittest.TestCase):
         example1 = bytes([131, py_impl.TAG_LIST_EXT,
                           0, 0, 0, 2,  # length
                           py_impl.TAG_SMALL_INT, 1,
-                          py_impl.TAG_ATOM_EXT, 0, 2, 111, 107,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107,
                           py_impl.TAG_NIL_EXT])
         b1 = codec.term_to_binary([1, Atom("ok")])
         self.assertEqual(b1, example1)
@@ -73,7 +108,7 @@ class TestETFEncode(unittest.TestCase):
         example2 = bytes([131, py_impl.TAG_LIST_EXT,
                           0, 0, 0, 1,  # length
                           py_impl.TAG_SMALL_INT, 1,
-                          py_impl.TAG_ATOM_EXT, 0, 2, 111, 107])
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107])
         b2 = codec.term_to_binary(ImproperList([1], Atom("ok")))
         self.assertEqual(b2, example2)
 

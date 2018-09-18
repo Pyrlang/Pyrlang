@@ -24,6 +24,12 @@ pub enum CodecError {
   BinaryInputTooShort,
   #[fail(display="Input too short while decoding a string")]
   StrInputTooShort,
+  #[fail(display="Encoding for type {} is not implemented", t)]
+  NotImplEncodeForType { t: String },
+  #[fail(display="Integer {} is too large (> 32bit): big integers not impl", i)]
+  IntegerEncodingRange { i: i64 },
+  #[fail(display="Atom text is too long (65535 bytes limit reached)")]
+  AtomTooLong,
 }
 
 pub type CodecResult<T> = Result<T, CodecError>;

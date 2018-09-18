@@ -525,9 +525,19 @@ def _serialize_object(obj, cd: set = None):
 
 
 def _pack_str(val):
-    data = bytes([TAG_STRING_EXT]) + util.to_u16(len(val))
-    data += bytes(val, "utf8")
-    return data
+    str_bytes = bytes(val, "utf8")
+    len_str_bytes = len(str_bytes)
+    len_val = len(val)
+
+    if len_str_bytes == len_val and len_str_bytes <= 65535:
+        # same length as byte length
+        header = bytes([TAG_STRING_EXT]) + util.to_u16(len_val)
+        return header + str_bytes
+    else:
+        # contains unicode characters! must be encoded as a list of ints
+        header = bytes([TAG_LIST_EXT]) + util.to_u32(len_val)
+        elements = [_pack_int(ord(ch)) for ch in val]
+        return header + b''.join(elements) + bytes([TAG_NIL_EXT])
 
 
 def _pack_float(val):

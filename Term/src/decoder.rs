@@ -19,7 +19,7 @@ enum Encoding {
 
 
 pub struct Decoder<'a> {
-  py: Python<'a>,
+  py: Python<'a>, // Python instance will live at least as long as Decoder
   atom_representation: AtomRepresentation,
   bytestring_repr: ByteStringRepresentation,
 
@@ -53,7 +53,7 @@ impl <'a> Decoder<'a> {
 
   /// Strip 131 byte header and uncompress if the data was compressed.
   /// Return: PyTuple(PyObject, Bytes) or CodecError
-  pub fn binary_to_term(&mut self, in_bytes: &[u8]) -> CodecResult<PyObject>
+  pub fn decode_with_131tag(&mut self, in_bytes: &[u8]) -> CodecResult<PyObject>
   {
     let offset = &mut 0;
 
@@ -77,22 +77,21 @@ impl <'a> Decoder<'a> {
         return Err(CodecError::CompressedSizeMismatch)
       }
 
-      let r1 = self.binary_to_term_2(decompressed.as_ref());
+      let r1 = self.decode(decompressed.as_ref());
       return wrap_decode_result(self.py, r1)
     }
 
     // Second byte was not consumed, so restart parsing from the second byte
     let tail2 = &in_bytes[1..];
-    let r2 = self.binary_to_term_2(tail2);
+    let r2 = self.decode(tail2);
     wrap_decode_result(self.py, r2)
   }
 
 
   /// Decodes binary External Term Format (ETF) into a Python structure.
   /// Returns: (Decoded object, remaining bytes) or CodecError
-  pub fn binary_to_term_2<'inp>(&mut self,
-                                in_bytes: &'inp [u8]
-                                ) -> CodecResult<(PyObject, &'inp [u8])>
+  pub fn decode<'inp>(&mut self,
+                      in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
   {
     let tag = in_bytes[0];
     let tail = &in_bytes[1..];
@@ -312,7 +311,7 @@ impl <'a> Decoder<'a> {
     // Read list elements, one by one
     let mut tail = &in_bytes[*offset..];
     for _i in 0..sz {
-      let (val, new_tail) = self.binary_to_term_2(tail)?;
+      let (val, new_tail) = self.decode(tail)?;
       tail = new_tail;
       lst.push(val);
     }
@@ -325,7 +324,7 @@ impl <'a> Decoder<'a> {
       Ok((py_lst.into_object(), &tail[1..]))
     } else {
       // We are looking at an improper list
-      let (tail_val, tail_bytes) = self.binary_to_term_2(tail)?;
+      let (tail_val, tail_bytes) = self.decode(tail)?;
       let py_pair = PyTuple::new(self.py, &[py_lst.into_object(), tail_val]);
       Ok((py_pair.into_object(), tail_bytes))
     }
@@ -345,8 +344,8 @@ impl <'a> Decoder<'a> {
     // Read key/value pairs two at a time
     let mut tail = &in_bytes[*offset..];
     for _i in 0..arity {
-      let (py_key, tail1) = self.binary_to_term_2(tail)?;
-      let (py_val, tail2) = self.binary_to_term_2(tail1)?;
+      let (py_key, tail1) = self.decode(tail)?;
+      let (py_val, tail2) = self.decode(tail1)?;
       tail = tail2;
       result.set_item(self.py, py_key, py_val);
     }
@@ -367,7 +366,7 @@ impl <'a> Decoder<'a> {
     // Read values one by one
     let mut tail = in_bytes;
     for _i in 0..arity {
-      let (py_val, tail1) = self.binary_to_term_2(tail)?;
+      let (py_val, tail1) = self.decode(tail)?;
       tail = tail1;
       result.push(py_val);
     }
@@ -381,7 +380,7 @@ impl <'a> Decoder<'a> {
   #[inline]
   fn parse_pid<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
   {
-    let (node, tail1) = self.binary_to_term_2(in_bytes)?;
+    let (node, tail1) = self.decode(in_bytes)?;
     let offset = &mut 0usize;
     let id: u32 = tail1.read_with::<u32>(offset, byte::BE)?;
     let serial: u32 = tail1.read_with::<u32>(offset, byte::BE)?;
@@ -401,7 +400,7 @@ impl <'a> Decoder<'a> {
     let offset = &mut 0usize;
     let term_len: u16 = in_bytes.read_with::<u16>(offset, byte::BE)?;
 
-    let (node, tail1) = self.binary_to_term_2(&in_bytes[*offset..])?;
+    let (node, tail1) = self.decode(&in_bytes[*offset..])?;
 
     let creation: u8 = tail1[0];
     let last_index = 1 + (term_len as usize) * 4;
@@ -430,16 +429,16 @@ impl <'a> Decoder<'a> {
     let num_free = in_bytes.read_with::<u32>(offset, byte::BE)?;
 
     let tail0 = &in_bytes[*offset..];
-    let (module, tail1) = self.binary_to_term_2(tail0)?;
-    let (old_index, tail2) = self.binary_to_term_2(tail1)?;
-    let (old_uniq, tail3) = self.binary_to_term_2(tail2)?;
-    let (pid, tail4) = self.binary_to_term_2(tail3)?;
+    let (module, tail1) = self.decode(tail0)?;
+    let (old_index, tail2) = self.decode(tail1)?;
+    let (old_uniq, tail3) = self.decode(tail2)?;
+    let (pid, tail4) = self.decode(tail3)?;
 
     // Decode num_free free variables following after pid
     let mut frozen_vars = Vec::<PyObject>::with_capacity(arity);
     let mut tail = tail4;
     for _i in 0..num_free {
-      let (py_val, tail_new) = self.binary_to_term_2(tail)?;
+      let (py_val, tail_new) = self.decode(tail)?;
       tail = tail_new;
       frozen_vars.push(py_val);
     }

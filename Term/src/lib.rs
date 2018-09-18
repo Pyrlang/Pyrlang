@@ -1,15 +1,17 @@
-//#[macro_use]
-extern crate cpython;
-extern crate compress;
-extern crate byte;
-extern crate empty;
-//#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate failure;
+//#[macro_use]
+//#[macro_use] extern crate lazy_static;
+extern crate byte;
+extern crate byteorder;
+extern crate compress;
+extern crate cpython;
+extern crate empty;
 
 use cpython::*;
 
 use self::decoder::{Decoder, wrap_decode_result};
-use self::errors::{CodecError, pyresult_from};
+use self::encoder::{Encoder};
+use self::errors::{pyresult_from};
 
 mod consts;
 mod decoder;
@@ -25,25 +27,35 @@ py_exception!(term_codec, PyCodecError);
 fn binary_to_term(py: Python, b: PyBytes,
                   opts: PyObject) -> PyResult<PyObject> {
   let mut dec_state = Decoder::new(py, opts)?;
-  pyresult_from(dec_state.binary_to_term(b.data(py)))
+  pyresult_from(dec_state.decode_with_131tag(b.data(py)))
 }
 
 
 fn binary_to_term_2(py: Python, b: PyBytes,
                     opts: PyObject) -> PyResult<PyObject> {
   let mut dec_state = Decoder::new(py, opts)?;
-  let result = dec_state.binary_to_term_2(b.data(py));
+  let result = dec_state.decode(b.data(py));
   pyresult_from(wrap_decode_result(py, result))
 }
 
 
-fn term_to_binary(_py: Python, _b: PyBytes) -> PyResult<PyObject> {
-  Err(PyErr::from(CodecError::NotImpl))
+fn term_to_binary(py: Python, py_term: PyObject) -> PyResult<PyBytes> {
+  let mut enc_state = Encoder::new(py);
+
+  // Rest of the function is identical to ``term_to_binary_2`` except that
+  // 131 byte is pushed to the output before the encoder is called
+  enc_state.data.push(consts::ETF_VERSION_TAG);
+
+  enc_state.encode(&py_term);
+  Ok(PyBytes::new(py, enc_state.data.as_ref()))
 }
 
 
-fn term_to_binary_2(_py: Python, _b: PyBytes) -> PyResult<PyObject> {
-  Err(PyErr::from(CodecError::NotImpl))
+fn term_to_binary_2(py: Python, py_term: PyObject) -> PyResult<PyBytes> {
+  let mut enc_state = Encoder::new(py);
+
+  enc_state.encode(&py_term);
+  Ok(PyBytes::new(py, enc_state.data.as_ref()))
 }
 
 
@@ -57,9 +69,9 @@ fn m_init(py: Python, m: &PyModule) -> PyResult<()> {
   m.add(py, "binary_to_term_2",
         py_fn!(py, binary_to_term_2(b: PyBytes, opt: PyObject)))?;
   m.add(py, "term_to_binary",
-        py_fn!(py, term_to_binary(b: PyBytes)))?;
+        py_fn!(py, term_to_binary(py_term: PyObject)))?;
   m.add(py, "term_to_binary_2",
-        py_fn!(py, term_to_binary_2(b: PyBytes)))?;
+        py_fn!(py, term_to_binary_2(py_term: PyObject)))?;
   Ok(())
 }
 py_module_initializer!(
