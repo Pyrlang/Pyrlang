@@ -1,7 +1,7 @@
 //use byte::{BytesExt};
 use byteorder::{WriteBytesExt, BigEndian};
 use cpython::*;
-use std::i32;
+use std::{i32, u8, u16};
 use std::io::{Write};
 
 use super::consts;
@@ -76,7 +76,7 @@ impl<'a> Encoder<'a> {
 
   fn write_int(&mut self, val: i64) -> CodecResult<()> {
 //    let val: i64 = py_i.value();
-    if val >= 0 && val <= 255 {
+    if val >= 0 && val <= u8::MAX as i64 {
       self.data.push(consts::TAG_SMALL_UINT);
       self.data.push(val as u8);
     } else if val >= i32::MIN as i64
@@ -99,11 +99,11 @@ impl<'a> Encoder<'a> {
     let byte_array: &[u8] = text.as_ref().as_ref();
     let str_byte_length: usize = byte_array.len();
 
-    if str_byte_length <= 255 {
+    if str_byte_length <= u8::MAX as usize {
       self.data.push(consts::TAG_SMALL_ATOM_UTF8_EXT);
       self.data.push(str_byte_length as u8); // 8bit length
       self.data.write(byte_array); // write &[u8] string content
-    } else if str_byte_length <= 65535 {
+    } else if str_byte_length <= u16::MAX as usize {
       self.data.push(consts::TAG_ATOM_UTF8_EXT);
       self.data.write_u16::<BigEndian>(str_byte_length as u16); // 16bit length
       self.data.write(byte_array); // write &[u8] string content
@@ -122,7 +122,7 @@ impl<'a> Encoder<'a> {
     let str_byte_length: usize = byte_array.len();
     let can_be_encoded_as_bytes = can_be_encoded_as_byte_string(&text);
 
-    if str_byte_length <= 255 && can_be_encoded_as_bytes {
+    if str_byte_length <= u8::MAX as usize && can_be_encoded_as_bytes {
       // Create an optimised byte-array structure and push bytes
       self.data.push(consts::TAG_STRING_EXT);
       self.data.write_u16::<BigEndian>(str_byte_length as u16); // 16bit length
@@ -144,14 +144,14 @@ impl<'a> Encoder<'a> {
 } // end impl
 
 
-/// Checks first 255 characters whether they are single-byte and are not
+/// Checks first 65535 characters whether they are single-byte and are not
 /// extended code points
 fn can_be_encoded_as_byte_string(s: &str) -> bool {
   for (i, ch) in s.char_indices() {
-    if i > 255 {
+    if i > u16::MAX as usize {
       return false // too long, so result is false
     }
-    if ch as u32 > 255 {
+    if ch as u32 > u8::MAX as u32 {
       return false // is a unicode codepoint with value larger than 255
     }
   }

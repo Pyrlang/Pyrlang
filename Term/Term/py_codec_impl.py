@@ -529,15 +529,23 @@ def _pack_str(val):
     len_str_bytes = len(str_bytes)
     len_val = len(val)
 
-    if len_str_bytes == len_val and len_str_bytes <= 65535:
+    if _can_be_a_bytestring(val) and len_str_bytes <= 65535:
         # same length as byte length
-        header = bytes([TAG_STRING_EXT]) + util.to_u16(len_val)
+        header = bytes([TAG_STRING_EXT]) + util.to_u16(len_str_bytes)
         return header + str_bytes
     else:
         # contains unicode characters! must be encoded as a list of ints
         header = bytes([TAG_LIST_EXT]) + util.to_u32(len_val)
         elements = [_pack_int(ord(ch)) for ch in val]
         return header + b''.join(elements) + bytes([TAG_NIL_EXT])
+
+
+def _can_be_a_bytestring(val: str) -> bool:
+    i = 0
+    for c in val:
+        if i > 255 or ord(c) > 255:
+            return False
+    return True
 
 
 def _pack_float(val):
