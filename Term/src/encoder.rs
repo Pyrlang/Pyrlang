@@ -61,6 +61,11 @@ impl<'a> Encoder<'a> {
       },
       "Pid" => return self.write_pid(&term),
       "Reference" => return self.write_ref(&term),
+      "bytes" => {
+        let py_bytes = PyBytes::extract(self.py, &term)?;
+        return self.write_binary(&py_bytes)
+      },
+      "BitString" => return self.write_bitstring(&term),
       //"Fun" => return self.write_fun(&term),
       other => {
         println!("Don't know how to encode '{}'", type_name);
@@ -213,17 +218,17 @@ impl<'a> Encoder<'a> {
 
   /// Encode a Reference
   #[inline]
-  fn write_ref(&mut self, py_pid: &PyObject) -> CodecResult<()> {
+  fn write_ref(&mut self, py_ref: &PyObject) -> CodecResult<()> {
     let node_name = PyString::extract(
-      self.py, &py_pid.getattr(self.py, "node_name_")?
+      self.py, &py_ref.getattr(self.py, "node_name_")?
     )?;
 
     let py_id: PyBytes = PyBytes::extract(
-      self.py, &py_pid.getattr(self.py, "id_")?
+      self.py, &py_ref.getattr(self.py, "id_")?
     )?;
     let id = py_id.data(self.py);
 
-    let py_creation = py_pid.getattr(self.py, "creation_")?;
+    let py_creation = py_ref.getattr(self.py, "creation_")?;
     let creation: u8 = FromPyObject::extract(self.py, &py_creation)?;
 
     self.data.push(consts::TAG_NEW_REF_EXT);
@@ -231,6 +236,37 @@ impl<'a> Encoder<'a> {
     self.write_atom_from_string(node_name.to_string(self.py)?);
     self.data.push(creation);
     self.data.write(id);
+
+    Ok(())
+  }
+
+
+  /// Encode a binary (byte-string)
+  #[inline]
+  fn write_binary(&mut self, py_bytes: &PyBytes) -> CodecResult<()> {
+    let data: &[u8] = py_bytes.data(self.py);
+    self.data.push(consts::TAG_BINARY_EXT);
+    self.data.write_u32::<BigEndian>(data.len() as u32);
+    self.data.write(data);
+    Ok(())
+  }
+
+
+  /// Encode a Binary bit-string (last byte has less than 8 bits)
+  #[inline]
+  fn write_bitstring(&mut self, py_bits: &PyObject) -> CodecResult<()> {
+    let py_bytes = PyBytes::extract(
+      self.py, &py_bits.getattr(self.py, "value_")?
+    )?;
+    let data: &[u8] = py_bytes.data(self.py);
+
+    let py_lbb = py_bits.getattr(self.py, "last_byte_bits_")?;
+    let last_byte_bits: u8 = FromPyObject::extract(self.py, &py_lbb)?;
+
+    self.data.push(consts::TAG_BIT_BINARY_EXT);
+    self.data.write_u32::<BigEndian>(data.len() as u32);
+    self.data.push(last_byte_bits);
+    self.data.write(data);
 
     Ok(())
   }

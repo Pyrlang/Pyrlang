@@ -27,6 +27,7 @@ pub struct Decoder<'a> {
   cached_pid_pyclass: Option<PyObject>,
   cached_ref_pyclass: Option<PyObject>,
   cached_fun_pyclass: Option<PyObject>,
+//  cached_bitstr_pyclass: Option<PyObject>,
 }
 
 
@@ -47,6 +48,7 @@ impl <'a> Decoder<'a> {
       cached_pid_pyclass: None,
       cached_ref_pyclass: None,
       cached_fun_pyclass: None,
+//      cached_bitstr_pyclass: None,
     })
   }
 
@@ -105,6 +107,7 @@ impl <'a> Decoder<'a> {
       consts::TAG_SMALL_ATOM_UTF8_EXT =>
         self.parse_atom::<u8>(tail, Encoding::UTF8),
       consts::TAG_BINARY_EXT => self.parse_binary(tail),
+      consts::TAG_BIT_BINARY_EXT => self.parse_bitstring(tail),
       consts::TAG_NIL_EXT => {
         let empty_list = PyList::new(self.py, empty::slice());
         Ok((empty_list.into_object(), tail))
@@ -144,6 +147,21 @@ impl <'a> Decoder<'a> {
       },
     }
   }
+
+
+//  /// Return cached value of BitString class used for decoding. Otherwise if not
+//  /// found - import and cache it locally.
+//  fn get_bitstr_pyclass(&mut self) -> PyObject {
+//    match &self.cached_bitstr_pyclass {
+//      Some(ref a) => a.clone_ref(self.py),
+//      None => {
+//        let bitstr_m = self.py.import("Term.bitstring").unwrap();
+//        let bitstr_cls = bitstr_m.get(self.py, "BitString").unwrap();
+//        self.cached_bitstr_pyclass = Some(bitstr_cls.clone_ref(self.py));
+//        bitstr_cls
+//      },
+//    }
+//  }
 
 
   /// Return cached value of Pid class used for decoding. Otherwise if not
@@ -268,6 +286,33 @@ impl <'a> Decoder<'a> {
     *offset += sz;
     let remaining = &in_bytes[*offset..];
     Ok((py_bytes.into_object(), remaining))
+  }
+
+
+  /// Given input _after_ bit-string tag, parse remaining bytes and bit-count
+  #[inline]
+  fn parse_bitstring<'inp>(&mut self, in_bytes: &'inp [u8]) -> CodecResult<(PyObject, &'inp [u8])>
+  {
+    let offset = &mut 0usize;
+    let sz = in_bytes.read_with::<u32>(offset, byte::BE)? as usize;
+    if *offset + sz > in_bytes.len() {
+      return Err(CodecError::BinaryInputTooShort)
+    }
+    let last_byte_bits: u8 = in_bytes.read_with::<u8>(offset, byte::BE)?;
+    let bin = &in_bytes[*offset..(*offset+sz)];
+    let py_bytes = PyBytes::new(self.py, bin);
+
+//    let py_bitstr_cls: PyObject = self.get_bitstr_pyclass();
+//    let py_bitstr = py_bitstr_cls.call(self.py, (py_bytes, last_byte_bits), None)?;
+
+    *offset += sz;
+    let remaining = &in_bytes[*offset..];
+//    Ok((py_bitstr.into_object(), remaining))
+    let py_result = PyTuple::new(self.py,
+                                 &[py_bytes.into_object(),
+                                   last_byte_bits.to_py_object(self.py).into_object()
+                                 ]);
+    Ok((py_result.into_object(), remaining))
   }
 
 

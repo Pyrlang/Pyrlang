@@ -7,6 +7,7 @@ from Term.pid import Pid
 from Term.reference import Reference
 # from Term.fun import Fun
 from Term.list import ImproperList
+from Term.bitstring import BitString
 
 
 class TestETFEncode(unittest.TestCase):
@@ -192,10 +193,31 @@ class TestETFEncode(unittest.TestCase):
 
     def _encode_float(self, codec):
         example1 = bytes([py_impl.ETF_VERSION_TAG,
-                         py_impl.TAG_NEW_FLOAT_EXT,  # a 8-byte IEEE double
-                         64, 9, 33, 251, 84, 68, 45, 17])
+                          py_impl.TAG_NEW_FLOAT_EXT,  # a 8-byte IEEE double
+                          64, 9, 33, 251, 84, 68, 45, 17])
         b1 = codec.term_to_binary(3.14159265358979)
         self.assertEqual(b1, example1)
+
+    # ----------------
+
+    def test_encode_binary_py(self):
+        self._encode_binary(py_impl)
+
+    def test_encode_binary_native(self):
+        self._encode_binary(native_impl)
+
+    def _encode_binary(self, codec):
+        waagh = bytes("Waagh", "latin-1")
+        example1 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_BINARY_EXT,
+                          0, 0, 0, 5]) + waagh
+        b1 = codec.term_to_binary(waagh)
+        self.assertEqual(b1, example1)
+
+        example2 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_BIT_BINARY_EXT,
+                          0, 0, 0, 5,
+                          4]) + waagh
+        b2 = codec.term_to_binary(BitString(val=waagh, last_byte_bits=4))
+        self.assertEqual(b2, example2)
 
 
 if __name__ == '__main__':
