@@ -1,7 +1,7 @@
-Term.atom
-=========
+Term.pid
+========
 
-.. automodule:: Pyrlang.Term.atom
+.. automodule:: Term.pid
     :members:
     :undoc-members:
     :show-inheritance:

@@ -14,9 +14,10 @@
 import logging
 import traceback
 
-from Pyrlang import Term, gen
+from Pyrlang import gen
 from Pyrlang.process import Process
 from Pyrlang.node import Node
+from Term.atom import Atom
 
 LOG = logging.getLogger("Pyrlang.Rex")
 
@@ -35,7 +36,7 @@ class Rex(Process):
 
     def __init__(self, node: Node) -> None:
         Process.__init__(self, node)
-        node.register_name(self, Term.Atom('rex'))
+        node.register_name(self, Atom('rex'))
 
         self.traceback_depth_ = 5
         """ This being non-zero enables formatting exception tracebacks with the

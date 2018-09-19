@@ -1,7 +1,7 @@
-Term.pid
+Term.fun
 ========
 
-.. automodule:: Pyrlang.Term.pid
+.. automodule:: Term.fun
     :members:
     :undoc-members:
     :show-inheritance:

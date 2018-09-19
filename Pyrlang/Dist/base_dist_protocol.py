@@ -20,10 +20,11 @@ import struct
 from hashlib import md5
 from typing import Union
 
-from Pyrlang import Term
-from Pyrlang.Dist import util, etf
+from Term import util
 from Pyrlang.Engine.base_engine import BaseEngine
 from Pyrlang.Engine.base_protocol import BaseProtocol
+from Term import codec
+from Term.atom import Atom
 
 LOG = logging.getLogger("Pyrlang.Dist")
 LOG.setLevel(logging.INFO)
@@ -259,19 +260,19 @@ class BaseDistProtocol(BaseProtocol):
 
     @staticmethod
     def _control_term_send(from_pid, dst):
-        if isinstance(dst, Term.Atom):
-            return CONTROL_TERM_REG_SEND, from_pid, Term.Atom(''), dst
+        if isinstance(dst, Atom):
+            return CONTROL_TERM_REG_SEND, from_pid, Atom(''), dst
         else:
-            return CONTROL_TERM_SEND, Term.Atom(''), dst
+            return CONTROL_TERM_SEND, Atom(''), dst
 
     def _control_message(self, ctrl, msg):
         """ Pack a control message and a regular message (can be None) together
             and send them over the connection
         """
         if msg is None:
-            packet = b'p' + etf.term_to_binary(ctrl)
+            packet = b'p' + codec.term_to_binary(ctrl)
         else:
-            packet = b'p' + etf.term_to_binary(ctrl) + etf.term_to_binary(msg)
+            packet = b'p' + codec.term_to_binary(ctrl) + codec.term_to_binary(msg)
 
         self._send_packet4(packet)
 
@@ -305,10 +306,10 @@ class BaseDistProtocol(BaseProtocol):
         msg_type = chr(data[0])
 
         if msg_type == "p":
-            (control_term, tail) = etf.binary_to_term(data[1:])
+            (control_term, tail) = codec.binary_to_term(data[1:])
 
             if tail != b'':
-                (msg_term, tail) = etf.binary_to_term(tail)
+                (msg_term, tail) = codec.binary_to_term(tail)
             else:
                 msg_term = None
 

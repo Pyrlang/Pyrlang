@@ -1,7 +1,7 @@
-Term.bitstring
+Term.reference
 ==============
 
-.. automodule:: Pyrlang.Term.bitstring
+.. automodule:: Term.reference
     :members:
     :undoc-members:
     :show-inheritance:

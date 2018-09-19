@@ -17,19 +17,10 @@ from Pyrlang.process import Process
 from Pyrlang.gen_server import GenServer
 from Pyrlang.util import start_pyrlang
 
-from Pyrlang import Term
-from Pyrlang.Term.atom import Atom
-from Pyrlang.Term.bitstring import BitString
-from Pyrlang.Term.pid import Pid
-from Pyrlang.Term.list import NIL, ImproperList
-from Pyrlang.Term.reference import Reference
-from Pyrlang.Term.fun import Fun
-
 from Pyrlang.Engine.gevent_engine import GeventEngine
 from Pyrlang.Engine.asyncio_engine import AsyncioEngine
 
 start_pyrlang()
 
 __all__ = ['Node', 'NodeException', 'Process', 'GenServer',
-           'Term', 'Atom', 'Fun', 'BitString', 'ImproperList', 'Pid', 'Reference',
            'GeventEngine', 'AsyncioEngine']

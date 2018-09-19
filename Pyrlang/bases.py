@@ -13,14 +13,7 @@
 # limitations under the License.
 
 from Pyrlang.Engine.base_engine import BaseEngine
-
-
-class BasePid:
-    pass
-
-
-class BaseProcess:
-    pass
+from Term.bases import BasePid, BaseProcess
 
 
 class BaseNode:

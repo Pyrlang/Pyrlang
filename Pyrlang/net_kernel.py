@@ -14,9 +14,9 @@
 
 import logging
 
-from Pyrlang.Term.atom import Atom
 from Pyrlang.gen_server import GenServer
 from Pyrlang.node import Node
+from Term.atom import Atom
 
 LOG = logging.getLogger("Pyrlang")
 

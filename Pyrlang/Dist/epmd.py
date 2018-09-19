@@ -20,7 +20,8 @@ import logging
 import struct
 import sys
 
-from Pyrlang.Dist import util, dist_protocol
+from Term import util
+from Pyrlang.Dist import dist_protocol
 from Pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")

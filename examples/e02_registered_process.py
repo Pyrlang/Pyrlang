@@ -15,7 +15,8 @@
 
 import logging
 
-from Pyrlang import Node, Atom, Process
+from Term import Atom
+from Pyrlang import Node, Process
 # from Pyrlang import GeventEngine as Engine
 from Pyrlang import AsyncioEngine as Engine
 

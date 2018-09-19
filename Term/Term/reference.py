@@ -14,8 +14,8 @@
 
 import struct
 
-from Pyrlang.Dist import util
-from Pyrlang.Term.atom import Atom
+from Term import util
+from Term.atom import Atom
 
 REF_MARKER = "pyrlang.Ref"
 
@@ -25,11 +25,13 @@ class Reference:
         unique data, but it might change.
     """
 
-    def __init__(self, node_name: Atom, creation: int, refid: bytes) -> None:
-        # Node the ref comes from
+    def __init__(self, node_name: str, creation: int, refid: bytes) -> None:
         self.node_name_ = node_name
-        # Identification bytes, guaranteed to be unique on the creating node
+        """ Node the ref comes from. NOTE: native codec assumes this is a string. """
+
         self.id_ = refid
+        """ Identification bytes, guaranteed to be unique on the creating node """
+
         self.creation_ = creation
 
     def __repr__(self) -> str:
@@ -38,7 +40,7 @@ class Reference:
         if len(self.id_) == 12:
             v = struct.unpack(">III", self.id_)
             return "Ref<%d,%d,%d,%d>@%s" % \
-                   (self.creation_, v[0], v[1], v[2], self.node_name_.text_)
+                   (self.creation_, v[0], v[1], v[2], self.node_name_)
         else:
             return "Ref<%d,%s>" % (self.creation_,
                                    util.hex_bytes(self.id_, ","))

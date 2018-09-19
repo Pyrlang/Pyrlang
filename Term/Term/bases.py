@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Package `Term` implements Erlang term wrappers which hide Erlang details.
-"""
-from Pyrlang.Term.atom import Atom
-from Pyrlang.Term.bitstring import BitString
-from Pyrlang.Term.pid import Pid
-from Pyrlang.Term.list import NIL, ImproperList
-from Pyrlang.Term.reference import Reference
-from Pyrlang.Term.fun import Fun
+class BasePid:
+    pass
+
+
+class BaseProcess:
+    pass
