@@ -238,7 +238,9 @@ class TestETFDecode(unittest.TestCase):
 
     def _float(self, codec):
         """ Try decode a prepared double Pi """
-        data = bytes([131, 70, 64, 9, 33, 251, 84, 68, 45, 17])
+        data = bytes([py_impl.ETF_VERSION_TAG,
+                      py_impl.TAG_NEW_FLOAT_EXT,  # a 8-byte IEEE double
+                      64, 9, 33, 251, 84, 68, 45, 17])
         (val, tail) = codec.binary_to_term(data, None)
         self.assertEqual(val, 3.14159265358979)
         self.assertEqual(tail, b'')

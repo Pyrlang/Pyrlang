@@ -134,8 +134,8 @@ class TestETFEncode(unittest.TestCase):
                         py_impl.TAG_MAP_EXT, 0, 0, 0, 2,
                         py_impl.TAG_SMALL_INT, 1,
                         py_impl.TAG_SMALL_INT, 2,
-                        py_impl.TAG_ATOM_UTF8_EXT, 0, 2, 111, 107,
-                        py_impl.TAG_ATOM_UTF8_EXT, 0, 5, 101, 114, 114, 111, 114])
+                        py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107,
+                        py_impl.TAG_SMALL_ATOM_UTF8_EXT, 5, 101, 114, 114, 111, 114])
         val = {1: 2, Atom("ok"): Atom("error")}
         bin1 = codec.term_to_binary(val)
         self.assertEqual(bin1, sample)
@@ -181,6 +181,21 @@ class TestETFEncode(unittest.TestCase):
         val = Reference("nonode@nohost", creation, b'fgsfdsfdsfgs')
         bin1 = codec.term_to_binary(val)
         self.assertEqual(bin1, sample1)
+
+    # ----------------
+
+    def test_encode_float_py(self):
+        self._encode_float(py_impl)
+
+    def test_encode_float_native(self):
+        self._encode_float(native_impl)
+
+    def _encode_float(self, codec):
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                         py_impl.TAG_NEW_FLOAT_EXT,  # a 8-byte IEEE double
+                         64, 9, 33, 251, 84, 68, 45, 17])
+        b1 = codec.term_to_binary(3.14159265358979)
+        self.assertEqual(b1, example1)
 
 
 if __name__ == '__main__':

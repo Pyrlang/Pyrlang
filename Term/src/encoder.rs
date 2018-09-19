@@ -28,15 +28,24 @@ impl<'a> Encoder<'a> {
     let type_name = term.get_type(self.py).name(self.py).into_owned();
     let type_name_ref: &str = type_name.as_ref();
     match type_name_ref {
+      "int" => {
+        let val: i64 = FromPyObject::extract(self.py, term)?;
+        return self.write_int(val)
+      },
+      "float" => {
+        let val: f64 = FromPyObject::extract(self.py, term)?;
+        return self.write_float(val)
+      },
       "list" => {
         let as_list = PyList::extract(self.py, &term)?;
         self.write_list_no_tail(&as_list);
         self.data.push(consts::TAG_NIL_EXT);
         return Ok(())
       },
-      "int" => {
-        let val: i64 = FromPyObject::extract(self.py, term)?;
-        return self.write_int(val)
+      "dict" => {
+        let as_dict = PyDict::extract(self.py, &term)?;
+        self.write_dict(&as_dict);
+        return Ok(())
       },
       "Atom" => return self.write_atom(&term),
       "str" => {
@@ -77,9 +86,23 @@ impl<'a> Encoder<'a> {
   }
 
 
+  /// Writes Erlang map from Python dict.
+  #[inline]
+  fn write_dict(&mut self, py_dict: &PyDict) -> CodecResult<()> {
+    let size = py_dict.len(self.py);
+    self.data.push(consts::TAG_MAP_EXT);
+    self.data.write_u32::<BigEndian>(size as u32);
+
+    for (py_key, py_value) in py_dict.items(self.py) {
+      self.encode(&py_key);
+      self.encode(&py_value);
+    }
+    Ok(())
+  }
+
+
   #[inline]
   fn write_int(&mut self, val: i64) -> CodecResult<()> {
-//    let val: i64 = py_i.value();
     if val >= 0 && val <= u8::MAX as i64 {
       self.data.push(consts::TAG_SMALL_UINT);
       self.data.push(val as u8);
@@ -91,6 +114,14 @@ impl<'a> Encoder<'a> {
       return Err(CodecError::IntegerEncodingRange {i: val})
     }
 
+    Ok(())
+  }
+
+
+  #[inline]
+  fn write_float(&mut self, val: f64) -> CodecResult<()> {
+    self.data.push(consts::TAG_NEW_FLOAT_EXT);
+    self.data.write_f64::<BigEndian>(val);
     Ok(())
   }
 
