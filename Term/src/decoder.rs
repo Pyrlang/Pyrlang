@@ -27,7 +27,6 @@ pub struct Decoder<'a> {
   cached_pid_pyclass: Option<PyObject>,
   cached_ref_pyclass: Option<PyObject>,
   cached_fun_pyclass: Option<PyObject>,
-//  cached_bitstr_pyclass: Option<PyObject>,
 }
 
 

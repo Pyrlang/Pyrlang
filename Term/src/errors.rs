@@ -14,7 +14,7 @@ pub enum CodecError {
   CompressedSizeMismatch,
   #[fail(display="Read failed: {}", txt)]
   ReadError { txt: String },
-  #[fail(display="Python error: {}", txt)]
+  #[fail(display="{}", txt)]
   PythonError { txt: String },
   #[fail(display="Unrecognized term tag byte: {}", b)]
   UnknownTermTagByte { b: u8 },
@@ -24,8 +24,8 @@ pub enum CodecError {
   BinaryInputTooShort,
   #[fail(display="Input too short while decoding a string")]
   StrInputTooShort,
-  #[fail(display="Encoding for type {} is not implemented", t)]
-  NotImplEncodeForType { t: String },
+//  #[fail(display="Encoding for type {} is not implemented", t)]
+//  NotImplEncodeForType { t: String },
   #[fail(display="Integer {} is too large (> 32bit): big integers not impl", i)]
   IntegerEncodingRange { i: i64 },
   #[fail(display="Atom text is too long (65535 bytes limit reached)")]

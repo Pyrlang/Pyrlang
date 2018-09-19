@@ -99,6 +99,24 @@ class TestETFEncode(unittest.TestCase):
 
     # ---------------------
 
+    def test_tuple_py(self):
+        self._tuple(py_impl)
+
+    def test_tuple_native(self):
+        self._tuple(native_impl)
+
+    def _tuple(self, codec):
+        """ Encode a tuple """
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_TUPLE_EXT,
+                          2,  # length
+                          py_impl.TAG_SMALL_INT, 1,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107])
+        b1 = codec.term_to_binary((1, Atom("ok")), None)
+        self.assertEqual(b1, example1)
+
+    # ---------------------
+
     def test_encode_list_py(self):
         self._encode_list(py_impl)
 
@@ -248,24 +266,18 @@ class TestETFEncode(unittest.TestCase):
 
     # ----------------
 
-    def test_encode_hook_py(self):
-        self._encode_hook(py_impl)
+    def test_encode_hook_fn_py(self):
+        self._encode_hook_fn(py_impl)
 
-    def test_encode_hook_native(self):
-        self._encode_hook(native_impl)
+    def test_encode_hook_fn_native(self):
+        self._encode_hook_fn(native_impl)
 
-    def _encode_hook(self, codec):
+    def _encode_hook_fn(self, codec):
         """ Tries to encode a special class CustomClass, and converts it to
-            atom 'custom!' using a hook function, and another test does the
-            same using a class member function.
+            atom 'custom-hook!' using a hook function.
         """
         class Class1:
-            def __etf__(self):
-                """ This function will fire if no "encode_hook" was passed in
-                    options, and the library doesn't know what to do with this
-                    'CustomClass'
-                """
-                return Atom('custom-member!')
+            pass
 
         def encode_hook_fn(obj):
             """ This function will fire if "encode_hook" is passed in encode
@@ -281,6 +293,26 @@ class TestETFEncode(unittest.TestCase):
                                      {"encode_hook": encode_hook_fn})
         self.assertEqual(data1, example1)
 
+    # ----------------
+
+    def test_encode_hook_member_py(self):
+        self._encode_hook_member(py_impl)
+
+    def test_encode_hook_member_native(self):
+        self._encode_hook_member(native_impl)
+
+    def _encode_hook_member(self, codec):
+        """ Tries to encode a special class CustomClass, and converts it to
+            atom 'custom-member!' using a class member hook function.
+        """
+        class Class1:
+            def __etf__(self):
+                """ This function will fire if no "encode_hook" was passed in
+                    options, and the library doesn't know what to do with this
+                    'CustomClass'
+                """
+                return Atom('custom-member!')
+
         # Encode hook is a method of the class, named __etf__
         example2 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 14])\
@@ -288,6 +320,17 @@ class TestETFEncode(unittest.TestCase):
         data2 = codec.term_to_binary(Class1(), None)
         self.assertEqual(data2, example2)
 
+    # ----------------
+
+    def test_encode_hook_missing_py(self):
+        self._encode_hook_missing(py_impl)
+
+    def test_encode_hook_missing_native(self):
+        self._encode_hook_missing(native_impl)
+
+    def _encode_hook_missing(self, codec):
+        """ Tries to encode a special class Class3 without an encode hook
+        """
         # A custom class without a hook, should be encoded as a dictionary
         # with {'ClassName', #{fields}}
         class Class3:

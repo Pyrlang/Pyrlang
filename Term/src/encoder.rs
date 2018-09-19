@@ -1,4 +1,3 @@
-//use byte::{BytesExt};
 use byteorder::{WriteBytesExt, BigEndian};
 use cpython::*;
 use std::{i32, u8, u16};
@@ -12,15 +11,25 @@ use std::borrow::Cow;
 pub struct Encoder<'a> {
   pub py: Python<'a>, // Python instance will live at least as long as Encoder
   pub data: Vec<u8>,
+  pub encode_hook: Option<PyObject>,
+  // A function py_codec_impl.generic_serialize_object used for unknown classes
+  pub cached_generic_serialize_fn: Option<PyObject>,
 }
 
 
 impl<'a> Encoder<'a> {
-  pub fn new(py: Python) -> Encoder {
-    Encoder {
+  pub fn new(py: Python, opt: PyObject) -> CodecResult<Encoder> {
+    let py_opts = if opt == py.None() {
+      PyDict::new(py)
+    } else {
+      PyDict::extract(py, &opt)?
+    };
+    Ok(Encoder {
       py,
       data: Vec::with_capacity(32),
-    }
+      encode_hook: py_opts.get_item(py, "encode_hook"),
+      cached_generic_serialize_fn: None,
+    })
   }
 
 
@@ -40,6 +49,11 @@ impl<'a> Encoder<'a> {
         let as_list = PyList::extract(self.py, &term)?;
         self.write_list_no_tail(&as_list);
         self.data.push(consts::TAG_NIL_EXT);
+        return Ok(())
+      },
+      "tuple" => {
+        let as_tup = PyTuple::extract(self.py, &term)?;
+        self.write_tuple(&as_tup);
         return Ok(())
       },
       "dict" => {
@@ -74,10 +88,46 @@ impl<'a> Encoder<'a> {
       },
       "BitString" => return self.write_bitstring(&term),
       //"Fun" => return self.write_fun(&term),
-      other => {
-        return Err(CodecError::NotImplEncodeForType { t: type_name })
-      }
+      other => return self.write_unknown_object(type_name_ref, &term)
     };
+  }
+
+
+  /// For unknown object, check whether encode_hook is set, encode what it returns.
+  /// If no encode_hook was set, check whether object has ``__etf__(self)`` member.
+  /// Else encode object as Tuple(b'ClassName', Dict(b'field', values)) trying
+  ///   to avoid circular loops.
+  fn write_unknown_object(&mut self, name: &str, py_term: &PyObject) -> CodecResult<()> {
+    match &self.encode_hook {
+      Some(ref h1) => {
+        let repr1 = h1.call(self.py, (py_term, ), None)?;
+        return self.encode(&repr1)
+      },
+      None => match py_term.getattr(self.py, "__etf__") {
+        Ok(h2) => {
+          let repr2 = h2.call(self.py, NoArgs, None)?;
+          return self.encode(&repr2)
+        },
+        Err(_) => return self.write_generic_unknown_object(&py_term),
+      },
+    }
+  }
+
+
+  fn write_generic_unknown_object(&mut self, py_term: &PyObject) -> CodecResult<()> {
+    let py_fn = match &self.cached_generic_serialize_fn {
+      Some(ref a) => a.clone_ref(self.py),
+      None => {
+        let pyimpl_m = self.py.import("Term.py_codec_impl")?;
+        let generic_fn = pyimpl_m.get(self.py, "generic_serialize_object")?;
+        self.cached_generic_serialize_fn = Some(generic_fn.clone_ref(self.py));
+        generic_fn
+      },
+    };
+    let result_pair = py_fn.call(self.py, (py_term, self.py.None()), None)?;
+    let py_pair: PyTuple = PyTuple::extract(self.py, &result_pair)?;
+    let result = py_pair.get_item(self.py, 0);
+    return self.encode(&result)
   }
 
 
@@ -91,6 +141,25 @@ impl<'a> Encoder<'a> {
 
     for i in 0..size {
       let item = list.get_item(self.py, i);
+      self.encode(&item);
+    }
+    Ok(())
+  }
+
+
+  #[inline]
+  fn write_tuple(&mut self, tup: &PyTuple) -> CodecResult<()> {
+    let size = tup.len(self.py);
+    if size < u8::MAX as usize {
+      self.data.push(consts::TAG_SMALL_TUPLE_EXT);
+      self.data.push(size as u8);
+    } else {
+      self.data.push(consts::TAG_LARGE_TUPLE_EXT);
+      self.data.write_u32::<BigEndian>(size as u32);
+    }
+
+    for i in 0..size {
+      let item = tup.get_item(self.py, i);
       self.encode(&item);
     }
     Ok(())

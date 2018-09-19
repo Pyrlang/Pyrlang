@@ -41,7 +41,7 @@ fn binary_to_term_2(py: Python, b: PyBytes,
 
 fn term_to_binary(py: Python, py_term: PyObject,
                   opt: PyObject) -> PyResult<PyBytes> {
-  let mut enc_state = Encoder::new(py);
+  let mut enc_state = Encoder::new(py, opt)?;
 
   // Rest of the function is identical to ``term_to_binary_2`` except that
   // 131 byte is pushed to the output before the encoder is called
@@ -54,8 +54,7 @@ fn term_to_binary(py: Python, py_term: PyObject,
 
 fn term_to_binary_2(py: Python, py_term: PyObject,
                     opt: PyObject) -> PyResult<PyBytes> {
-  let mut enc_state = Encoder::new(py);
-
+  let mut enc_state = Encoder::new(py, opt)?;
   enc_state.encode(&py_term)?;
   Ok(PyBytes::new(py, enc_state.data.as_ref()))
 }

@@ -497,7 +497,7 @@ def _is_a_simple_object(obj):
            or isinstance(obj, Reference)
 
 
-def _serialize_object(obj, cd: set = None):
+def generic_serialize_object(obj, cd: set = None):
     """ Given an arbitraty Python object creates a tuple (ClassName, {Fields}).
         A fair effort is made to avoid infinite recursion on cyclic objects.
         :param obj: Arbitrary object to encode
@@ -522,7 +522,7 @@ def _serialize_object(obj, cd: set = None):
             if _is_a_simple_object(val):
                 fields[bytes(key, "latin1")] = val
             else:
-                (ser, cd) = _serialize_object(val, cd=cd)
+                (ser, cd) = generic_serialize_object(val, cd=cd)
                 fields[bytes(key, "latin1")] = ser
 
     return (bytes(object_name, "latin1"), fields), cd
@@ -624,7 +624,7 @@ def term_to_binary_2(val, encode_hook: Union[Callable, None]) -> bytes:
     if tmp_encode_hook is None:
         tmp_encode_hook = getattr(val, "__etf__", None)
         if tmp_encode_hook is None:
-            ser, _ = _serialize_object(val)
+            ser, _ = generic_serialize_object(val)
             return term_to_binary_2(ser, encode_hook)
         else:
             return term_to_binary_2(tmp_encode_hook(), encode_hook)
@@ -647,4 +647,5 @@ def term_to_binary(val, opt: Union[None, dict] = None) -> bytes:
 
 __all__ = ['binary_to_term', 'binary_to_term_2',
            'term_to_binary', 'term_to_binary_2',
-           'PyCodecError']
+           'PyCodecError',
+           'generic_serialize_object']
