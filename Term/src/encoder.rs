@@ -51,7 +51,8 @@ impl<'a> Encoder<'a> {
         return self.encode(&tail)
       },
       "Pid" => return self.write_pid(&term),
-      //"Reference" => return self.write_ref(&term),
+      "Reference" => return self.write_ref(&term),
+      //"Fun" => return self.write_fun(&term),
       other => {
         println!("Don't know how to encode '{}'", type_name);
         return Err(CodecError::NotImplEncodeForType { t: type_name })
@@ -104,6 +105,7 @@ impl<'a> Encoder<'a> {
   }
 
 
+  /// Helper which writes an atom from a PyString's Copy-on-write string
   fn write_atom_from_string(&mut self, text: Cow<str>) -> CodecResult<()> {
     let byte_array: &[u8] = text.as_ref().as_ref();
     let str_byte_length: usize = byte_array.len();
@@ -155,8 +157,8 @@ impl<'a> Encoder<'a> {
   /// Encode a Pid
   #[inline]
   fn write_pid(&mut self, py_pid: &PyObject) -> CodecResult<()> {
-    let node_name = PyString::extract(self.py,
-      &py_pid.getattr(self.py, "node_name_")?
+    let node_name = PyString::extract(
+      self.py, &py_pid.getattr(self.py, "node_name_")?
     )?;
 
     let py_id = py_pid.getattr(self.py, "id_")?;
@@ -173,6 +175,31 @@ impl<'a> Encoder<'a> {
     self.data.write_u32::<BigEndian>(id);
     self.data.write_u32::<BigEndian>(serial);
     self.data.push(creation);
+
+    Ok(())
+  }
+
+
+  /// Encode a Reference
+  #[inline]
+  fn write_ref(&mut self, py_pid: &PyObject) -> CodecResult<()> {
+    let node_name = PyString::extract(
+      self.py, &py_pid.getattr(self.py, "node_name_")?
+    )?;
+
+    let py_id: PyBytes = PyBytes::extract(
+      self.py, &py_pid.getattr(self.py, "id_")?
+    )?;
+    let id = py_id.data(self.py);
+
+    let py_creation = py_pid.getattr(self.py, "creation_")?;
+    let creation: u8 = FromPyObject::extract(self.py, &py_creation)?;
+
+    self.data.push(consts::TAG_NEW_REF_EXT);
+    self.data.write_u16::<BigEndian>((id.len() / 4) as u16);
+    self.write_atom_from_string(node_name.to_string(self.py)?);
+    self.data.push(creation);
+    self.data.write(id);
 
     Ok(())
   }

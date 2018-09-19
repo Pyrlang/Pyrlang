@@ -310,7 +310,7 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
         id_len = 4 * term_len
         id1 = tail[1:id_len + 1]
 
-        ref = Reference(node_name=node,
+        ref = Reference(node_name=node.text_,
                         creation=creation,
                         refid=id1)
         return ref, tail[id_len + 1:]
@@ -465,7 +465,7 @@ def _pack_atom(text: str) -> bytes:
 # TODO: maybe move this into pid class
 def _pack_pid(val) -> bytes:
     data = bytes([TAG_PID_EXT]) + \
-           term_to_binary_2(Atom(val.node_name_)) + \
+           _pack_atom(val.node_name_) + \
            util.to_u32(val.id_) + \
            util.to_u32(val.serial_) + \
            bytes([val.creation_])
@@ -474,8 +474,11 @@ def _pack_pid(val) -> bytes:
 
 # TODO: maybe move this into ref class
 def _pack_ref(val) -> bytes:
-    data = bytes([TAG_NEW_REF_EXT]) + util.to_u16(len(val.id_) // 4) + \
-           term_to_binary_2(val.node_name_) + bytes([val.creation_]) + val.id_
+    data = bytes([TAG_NEW_REF_EXT]) \
+           + util.to_u16(len(val.id_) // 4) \
+           + _pack_atom(val.node_name_) \
+           + bytes([val.creation_]) \
+           + val.id_
     return data
 
 

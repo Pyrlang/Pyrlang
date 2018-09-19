@@ -25,11 +25,13 @@ class Reference:
         unique data, but it might change.
     """
 
-    def __init__(self, node_name: Atom, creation: int, refid: bytes) -> None:
-        # Node the ref comes from
+    def __init__(self, node_name: str, creation: int, refid: bytes) -> None:
         self.node_name_ = node_name
-        # Identification bytes, guaranteed to be unique on the creating node
+        """ Node the ref comes from. NOTE: native codec assumes this is a string. """
+
         self.id_ = refid
+        """ Identification bytes, guaranteed to be unique on the creating node """
+
         self.creation_ = creation
 
     def __repr__(self) -> str:

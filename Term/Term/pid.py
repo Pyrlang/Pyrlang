@@ -30,6 +30,8 @@ class Pid(BasePid):
     def __init__(self, node_name: str, id: int, serial: int,
                  creation: int) -> None:
         self.node_name_ = node_name
+        """ NOTE: native encoder assumes this is a string. """
+
         self.id_ = id
         self.serial_ = serial
         self.creation_ = creation

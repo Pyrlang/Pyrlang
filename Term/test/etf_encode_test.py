@@ -178,7 +178,7 @@ class TestETFEncode(unittest.TestCase):
                          creation]) \
                   + bytes("fgsfdsfdsfgs", "latin-1")
 
-        val = Reference(Atom("nonode@nohost"), creation, b'fgsfdsfdsfgs')
+        val = Reference("nonode@nohost", creation, b'fgsfdsfdsfgs')
         bin1 = codec.term_to_binary(val)
         self.assertEqual(bin1, sample1)
 
