@@ -219,6 +219,31 @@ class TestETFEncode(unittest.TestCase):
         b2 = codec.term_to_binary(BitString(val=waagh, last_byte_bits=4))
         self.assertEqual(b2, example2)
 
+    # ----------------
+
+    def test_special_py(self):
+        self._special(py_impl)
+
+    def test_special_native(self):
+        self._special(native_impl)
+
+    def _special(self, codec):
+        """ Test encoding true, false, undefined=None """
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 4]) + b'true'
+        data1 = codec.term_to_binary(True)
+        self.assertEqual(data1, example1)
+
+        example2 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 5]) + b'false'
+        data2 = codec.term_to_binary(False)
+        self.assertEqual(data2, example2)
+
+        example3 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 9]) + b'undefined'
+        data3 = codec.term_to_binary(None)
+        self.assertEqual(data3, example3)
+
 
 if __name__ == '__main__':
     unittest.main()

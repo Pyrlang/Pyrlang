@@ -252,6 +252,19 @@ impl <'a> Decoder<'a> {
   // TODO: Make 3 functions and store fun pointer
   #[inline]
   fn create_atom(&mut self, txt: &str) -> CodecResult<PyObject> {
+    match txt {
+      "true" => {
+        let t = PyBool::get(self.py, true);
+        return Ok(t.into_object())
+      },
+      "false" => {
+        let t = PyBool::get(self.py, false);
+        return Ok(t.into_object())
+      },
+      "undefined" => return Ok(self.py.None()),
+      _ => {}
+    }
+
     match self.atom_representation {
       AtomRepresentation::Bytes => {
         let py_bytes = PyBytes::new(self.py, txt.as_ref());

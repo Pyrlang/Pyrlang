@@ -52,6 +52,13 @@ impl<'a> Encoder<'a> {
         let as_str = PyString::extract(self.py, &term)?;
         return self.write_str(&as_str)
       },
+      "bool" => {
+        let val: bool = FromPyObject::extract(self.py, &term)?;
+        return self.write_atom_from_cow(
+          if val { Cow::from("true") } else { Cow::from("false") }
+        )
+      },
+      "NoneType" => return self.write_atom_from_cow(Cow::from("undefined")),
       "ImproperList" => {
         let elements0 = term.getattr(self.py, "elements_")?;
         let elements = PyList::extract(self.py, &elements0)?;
@@ -137,12 +144,12 @@ impl<'a> Encoder<'a> {
     let py_text0 = py_atom.getattr(self.py, "text_")?;
     let py_text: PyString = PyString::extract(self.py, &py_text0)?;
     let text = py_text.to_string(self.py)?;
-    self.write_atom_from_string(text)
+    self.write_atom_from_cow(text)
   }
 
 
   /// Helper which writes an atom from a PyString's Copy-on-write string
-  fn write_atom_from_string(&mut self, text: Cow<str>) -> CodecResult<()> {
+  fn write_atom_from_cow(&mut self, text: Cow<str>) -> CodecResult<()> {
     let byte_array: &[u8] = text.as_ref().as_ref();
     let str_byte_length: usize = byte_array.len();
 
@@ -207,7 +214,7 @@ impl<'a> Encoder<'a> {
     let creation: u8 = FromPyObject::extract(self.py, &py_creation)?;
 
     self.data.push(consts::TAG_PID_EXT);
-    self.write_atom_from_string(node_name.to_string(self.py)?);
+    self.write_atom_from_cow(node_name.to_string(self.py)?);
     self.data.write_u32::<BigEndian>(id);
     self.data.write_u32::<BigEndian>(serial);
     self.data.push(creation);
@@ -233,7 +240,7 @@ impl<'a> Encoder<'a> {
 
     self.data.push(consts::TAG_NEW_REF_EXT);
     self.data.write_u16::<BigEndian>((id.len() / 4) as u16);
-    self.write_atom_from_string(node_name.to_string(self.py)?);
+    self.write_atom_from_cow(node_name.to_string(self.py)?);
     self.data.push(creation);
     self.data.write(id);
 

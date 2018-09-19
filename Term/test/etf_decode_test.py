@@ -281,6 +281,34 @@ class TestETFDecode(unittest.TestCase):
         self.assertTrue(isinstance(val, Fun))
         self.assertEqual(tail, b'')
 
+    # ----------------
+
+    def test_special_py(self):
+        self._special(py_impl)
+
+    def test_special_native(self):
+        self._special(native_impl)
+
+    def _special(self, codec):
+        """ Test decoding true, false, undefined=None """
+        data1 = bytes([py_impl.ETF_VERSION_TAG,
+                       py_impl.TAG_SMALL_ATOM_UTF8_EXT, 4]) + b'true'
+        (val1, tail1) = codec.binary_to_term(data1, None)
+        self.assertEqual(val1, True)
+        self.assertEqual(tail1, b'')
+
+        data2 = bytes([py_impl.ETF_VERSION_TAG,
+                       py_impl.TAG_SMALL_ATOM_UTF8_EXT, 5]) + b'false'
+        (val2, tail2) = codec.binary_to_term(data2, None)
+        self.assertEqual(val2, False)
+        self.assertEqual(tail2, b'')
+
+        data3 = bytes([py_impl.ETF_VERSION_TAG,
+                       py_impl.TAG_SMALL_ATOM_UTF8_EXT, 9]) + b'undefined'
+        (val3, tail3) = codec.binary_to_term(data3, None)
+        self.assertEqual(val3, None)
+        self.assertEqual(tail3, b'')
+
 
 if __name__ == '__main__':
     unittest.main()

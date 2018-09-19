@@ -571,14 +571,20 @@ def term_to_binary_2(val):
         :param val: Almost any Python value
         :return: bytes object with encoded data, but without a 131 header byte.
     """
-    if type(val) == str:
+    if type(val) == int:
+        return _pack_int(val)
+
+    elif type(val) == float:
+        return _pack_float(val)
+
+    elif type(val) == str:
         return _pack_str(val)
+
+    elif type(val) == bool:
+        return _pack_atom("true") if val else _pack_atom("false")
 
     elif type(val) == list:
         return _pack_list(val, [])
-
-    elif isinstance(val, ImproperList):
-        return _pack_list(val.elements_, val.tail_)
 
     elif type(val) == tuple:
         return _pack_tuple(val)
@@ -586,17 +592,14 @@ def term_to_binary_2(val):
     elif type(val) == dict:
         return _pack_dict(val)
 
-    elif type(val) == int:
-        return _pack_int(val)
-
-    elif type(val) == float:
-        return _pack_float(val)
-
     elif val is None:
         return _pack_atom('undefined')
 
     elif isinstance(val, Atom):
         return _pack_atom(val.text_)
+
+    elif isinstance(val, ImproperList):
+        return _pack_list(val.elements_, val.tail_)
 
     elif isinstance(val, Pid):
         return _pack_pid(val)
@@ -612,10 +615,6 @@ def term_to_binary_2(val):
 
     ser, _ = _serialize_object(val)
     return term_to_binary_2(ser)
-    # obj_data = term_to_binary_2(_serialize_object(val))
-    # print(util.hex_bytes(obj_data))
-    # return obj_data
-    # raise ETFEncodeException("Can't encode %s %s" % (type(val), str(val)))
 
 
 def term_to_binary(val):
