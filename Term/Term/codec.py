@@ -26,8 +26,8 @@ except ImportError:
 binary_to_term = decorate(co_impl.binary_to_term)
 binary_to_term_2 = decorate(co_impl.binary_to_term_2)
 
-term_to_binary = co_impl.term_to_binary
-term_to_binary_2 = co_impl.term_to_binary_2
+term_to_binary = decorate(co_impl.term_to_binary)
+term_to_binary_2 = decorate(co_impl.term_to_binary_2)
 
 PyCodecError = co_impl.PyCodecError
 

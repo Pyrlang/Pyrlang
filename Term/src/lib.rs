@@ -39,22 +39,24 @@ fn binary_to_term_2(py: Python, b: PyBytes,
 }
 
 
-fn term_to_binary(py: Python, py_term: PyObject) -> PyResult<PyBytes> {
+fn term_to_binary(py: Python, py_term: PyObject,
+                  opt: PyObject) -> PyResult<PyBytes> {
   let mut enc_state = Encoder::new(py);
 
   // Rest of the function is identical to ``term_to_binary_2`` except that
   // 131 byte is pushed to the output before the encoder is called
   enc_state.data.push(consts::ETF_VERSION_TAG);
 
-  enc_state.encode(&py_term);
+  enc_state.encode(&py_term)?;
   Ok(PyBytes::new(py, enc_state.data.as_ref()))
 }
 
 
-fn term_to_binary_2(py: Python, py_term: PyObject) -> PyResult<PyBytes> {
+fn term_to_binary_2(py: Python, py_term: PyObject,
+                    opt: PyObject) -> PyResult<PyBytes> {
   let mut enc_state = Encoder::new(py);
 
-  enc_state.encode(&py_term);
+  enc_state.encode(&py_term)?;
   Ok(PyBytes::new(py, enc_state.data.as_ref()))
 }
 
@@ -69,9 +71,9 @@ fn m_init(py: Python, m: &PyModule) -> PyResult<()> {
   m.add(py, "binary_to_term_2",
         py_fn!(py, binary_to_term_2(b: PyBytes, opt: PyObject)))?;
   m.add(py, "term_to_binary",
-        py_fn!(py, term_to_binary(py_term: PyObject)))?;
+        py_fn!(py, term_to_binary(py_term: PyObject, opt: PyObject)))?;
   m.add(py, "term_to_binary_2",
-        py_fn!(py, term_to_binary_2(py_term: PyObject)))?;
+        py_fn!(py, term_to_binary_2(py_term: PyObject, opt: PyObject)))?;
   Ok(())
 }
 py_module_initializer!(

@@ -29,7 +29,7 @@ class TestETFEncode(unittest.TestCase):
         example1 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_ATOM_UTF8_EXT, 1, 4]) \
                    + (b'hello' * repeat1)
-        b1 = codec.term_to_binary(Atom("hello" * repeat1))
+        b1 = codec.term_to_binary(Atom("hello" * repeat1), None)
         self.assertEqual(b1, example1)
 
         # Create and encode 'hello...hello' 5 times (25 bytes)
@@ -37,7 +37,7 @@ class TestETFEncode(unittest.TestCase):
         example2 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 25]) \
                    + (b'hello' * repeat2)
-        b2 = codec.term_to_binary(Atom("hello" * repeat2))
+        b2 = codec.term_to_binary(Atom("hello" * repeat2), None)
         self.assertEqual(b2, example2)
 
     def _encode_atom_utf8(self, codec):
@@ -46,7 +46,7 @@ class TestETFEncode(unittest.TestCase):
         example1 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_ATOM_UTF8_EXT, 1, (300-256)]) \
                    + (bytes("hallå", "utf8") * repeat1)
-        b1 = codec.term_to_binary(Atom("hallå" * repeat1))
+        b1 = codec.term_to_binary(Atom("hallå" * repeat1), None)
         self.assertEqual(b1, example1)
 
         # Create and encode 'hallå...hallå' 5 times (30 bytes)
@@ -54,7 +54,7 @@ class TestETFEncode(unittest.TestCase):
         example2 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 30]) \
                    + (bytes("hallå", "utf8") * repeat2)
-        b2 = codec.term_to_binary(Atom("hallå" * repeat2))
+        b2 = codec.term_to_binary(Atom("hallå" * repeat2), None)
         self.assertEqual(b2, example2)
 
     # ---------------------
@@ -73,7 +73,7 @@ class TestETFEncode(unittest.TestCase):
                               py_impl.TAG_STRING_EXT, 0, 5]) \
                        + bytes("hello", "latin-1")
 
-        b1 = codec.term_to_binary("hello")
+        b1 = codec.term_to_binary("hello", None)
         self.assertEqual(b1, byte_example)
 
     def _encode_str_unicode(self, codec):
@@ -83,7 +83,8 @@ class TestETFEncode(unittest.TestCase):
                                   py_impl.TAG_STRING_EXT, 0, 6]) \
                            + "hallå".encode("utf8")
 
-        b1 = codec.term_to_binary("hallå")  # unicode but codepoints <= 255
+        # unicode but codepoints <= 255
+        b1 = codec.term_to_binary("hallå", None)
         self.assertEqual(b1, unicode_example1)
 
         unicode_example2 = bytes([py_impl.ETF_VERSION_TAG,
@@ -92,7 +93,8 @@ class TestETFEncode(unittest.TestCase):
                                   py_impl.TAG_INT, 0, 0, 3, 169,
                                   py_impl.TAG_NIL_EXT])
 
-        b2 = codec.term_to_binary("ΔΩ")  # unicode with large codepoints
+        # unicode with large codepoints
+        b2 = codec.term_to_binary("ΔΩ", None)
         self.assertEqual(b2, unicode_example2)
 
     # ---------------------
@@ -111,14 +113,14 @@ class TestETFEncode(unittest.TestCase):
                           py_impl.TAG_SMALL_INT, 1,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107,
                           py_impl.TAG_NIL_EXT])
-        b1 = codec.term_to_binary([1, Atom("ok")])
+        b1 = codec.term_to_binary([1, Atom("ok")], None)
         self.assertEqual(b1, example1)
 
         example2 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_LIST_EXT,
                           0, 0, 0, 1,  # length
                           py_impl.TAG_SMALL_INT, 1,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107])
-        b2 = codec.term_to_binary(ImproperList([1], Atom("ok")))
+        b2 = codec.term_to_binary(ImproperList([1], Atom("ok")), None)
         self.assertEqual(b2, example2)
 
     # ----------------
@@ -138,7 +140,7 @@ class TestETFEncode(unittest.TestCase):
                         py_impl.TAG_SMALL_ATOM_UTF8_EXT, 2, 111, 107,
                         py_impl.TAG_SMALL_ATOM_UTF8_EXT, 5, 101, 114, 114, 111, 114])
         val = {1: 2, Atom("ok"): Atom("error")}
-        bin1 = codec.term_to_binary(val)
+        bin1 = codec.term_to_binary(val, None)
         self.assertEqual(bin1, sample)
 
     # ----------------
@@ -158,7 +160,7 @@ class TestETFEncode(unittest.TestCase):
                            0, 0, 0, 2,
                            3])
         val = Pid("nonode@nohost", 1, 2, 3)
-        bin1 = codec.term_to_binary(val)
+        bin1 = codec.term_to_binary(val, None)
         self.assertEqual(bin1, sample1)
 
     # ----------------
@@ -180,7 +182,7 @@ class TestETFEncode(unittest.TestCase):
                   + bytes("fgsfdsfdsfgs", "latin-1")
 
         val = Reference("nonode@nohost", creation, b'fgsfdsfdsfgs')
-        bin1 = codec.term_to_binary(val)
+        bin1 = codec.term_to_binary(val, None)
         self.assertEqual(bin1, sample1)
 
     # ----------------
@@ -195,7 +197,7 @@ class TestETFEncode(unittest.TestCase):
         example1 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_NEW_FLOAT_EXT,  # a 8-byte IEEE double
                           64, 9, 33, 251, 84, 68, 45, 17])
-        b1 = codec.term_to_binary(3.14159265358979)
+        b1 = codec.term_to_binary(3.14159265358979, None)
         self.assertEqual(b1, example1)
 
     # ----------------
@@ -210,13 +212,13 @@ class TestETFEncode(unittest.TestCase):
         waagh = bytes("Waagh", "latin-1")
         example1 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_BINARY_EXT,
                           0, 0, 0, 5]) + waagh
-        b1 = codec.term_to_binary(waagh)
+        b1 = codec.term_to_binary(waagh, None)
         self.assertEqual(b1, example1)
 
         example2 = bytes([py_impl.ETF_VERSION_TAG, py_impl.TAG_BIT_BINARY_EXT,
                           0, 0, 0, 5,
                           4]) + waagh
-        b2 = codec.term_to_binary(BitString(val=waagh, last_byte_bits=4))
+        b2 = codec.term_to_binary(BitString(val=waagh, last_byte_bits=4), None)
         self.assertEqual(b2, example2)
 
     # ----------------
@@ -231,17 +233,71 @@ class TestETFEncode(unittest.TestCase):
         """ Test encoding true, false, undefined=None """
         example1 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 4]) + b'true'
-        data1 = codec.term_to_binary(True)
+        data1 = codec.term_to_binary(True, None)
         self.assertEqual(data1, example1)
 
         example2 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 5]) + b'false'
-        data2 = codec.term_to_binary(False)
+        data2 = codec.term_to_binary(False, None)
         self.assertEqual(data2, example2)
 
         example3 = bytes([py_impl.ETF_VERSION_TAG,
                           py_impl.TAG_SMALL_ATOM_UTF8_EXT, 9]) + b'undefined'
-        data3 = codec.term_to_binary(None)
+        data3 = codec.term_to_binary(None, None)
+        self.assertEqual(data3, example3)
+
+    # ----------------
+
+    def test_encode_hook_py(self):
+        self._encode_hook(py_impl)
+
+    def test_encode_hook_native(self):
+        self._encode_hook(native_impl)
+
+    def _encode_hook(self, codec):
+        """ Tries to encode a special class CustomClass, and converts it to
+            atom 'custom!' using a hook function, and another test does the
+            same using a class member function.
+        """
+        class Class1:
+            def __etf__(self):
+                """ This function will fire if no "encode_hook" was passed in
+                    options, and the library doesn't know what to do with this
+                    'CustomClass'
+                """
+                return Atom('custom-member!')
+
+        def encode_hook_fn(obj):
+            """ This function will fire if "encode_hook" is passed in encode
+                options dict.
+            """
+            if isinstance(obj, Class1):
+                return Atom('custom-hook!')
+
+        example1 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 12]) \
+                   + b'custom-hook!'
+        data1 = codec.term_to_binary(Class1(),
+                                     {"encode_hook": encode_hook_fn})
+        self.assertEqual(data1, example1)
+
+        # Encode hook is a method of the class, named __etf__
+        example2 = bytes([py_impl.ETF_VERSION_TAG,
+                          py_impl.TAG_SMALL_ATOM_UTF8_EXT, 14])\
+                   + b'custom-member!'
+        data2 = codec.term_to_binary(Class1(), None)
+        self.assertEqual(data2, example2)
+
+        # A custom class without a hook, should be encoded as a dictionary
+        # with {'ClassName', #{fields}}
+        class Class3:
+            def __init__(self):
+                self.field1 = 1
+
+        val3 = Class3()
+        repr3 = (b'Class3', {b'field1': 1})
+        example3 = codec.term_to_binary(repr3, None)
+        data3 = codec.term_to_binary(val3, None)
         self.assertEqual(data3, example3)
 
 

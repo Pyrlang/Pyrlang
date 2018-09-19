@@ -17,7 +17,7 @@
 """
 
 import struct
-from typing import Callable
+from typing import Callable, Union
 
 from zlib import decompressobj
 
@@ -405,45 +405,45 @@ def binary_to_term_2(data: bytes, options: dict = None) -> (any, bytes):
     raise PyCodecError("Unknown tag %d" % data[0])
 
 
-def _pack_list(lst, tail):
+def _pack_list(lst, tail, encode_hook):
     if len(lst) == 0:
         return bytes([TAG_NIL_EXT])
 
     data = b''
     for item in lst:
-        data += term_to_binary_2(item)
+        data += term_to_binary_2(item, encode_hook)
 
-    tail = term_to_binary_2(tail)
+    tail = term_to_binary_2(tail, encode_hook)
     return bytes([TAG_LIST_EXT]) + util.to_u32(len(lst)) + data + tail
 
 
 def _pack_string(val):
     if len(val) == 0:
-        return _pack_list([], [])
+        return _pack_list([], [], encode_hook=None)
 
     # Save time here and don't check list elements to fit into a byte
     # Otherwise TODO: if all elements were bytes - we could use TAG_STRING_EXT
 
-    return _pack_list(list(val), [])
+    return _pack_list(list(val), [], encode_hook=None)
 
 
-def _pack_tuple(val):
+def _pack_tuple(val, encode_hook):
     if len(val) < 256:
         data = bytes([TAG_SMALL_TUPLE_EXT, len(val)])
     else:
         data = bytes([TAG_LARGE_TUPLE_EXT]) + util.to_u32(len(val))
 
     for item in val:
-        data += term_to_binary_2(item)
+        data += term_to_binary_2(item, encode_hook)
 
     return data
 
 
-def _pack_dict(val: dict) -> bytes:
+def _pack_dict(val: dict, encode_hook) -> bytes:
     data = bytes([TAG_MAP_EXT]) + util.to_u32(len(val))
     for k in val.keys():
-        data += term_to_binary_2(k)
-        data += term_to_binary_2(val[k])
+        data += term_to_binary_2(k, encode_hook)
+        data += term_to_binary_2(val[k], encode_hook)
     return data
 
 
@@ -502,7 +502,8 @@ def _serialize_object(obj, cd: set = None):
         A fair effort is made to avoid infinite recursion on cyclic objects.
         :param obj: Arbitrary object to encode
         :param cd: A set with ids of object, for cycle detection
-        :return: A 2-tuple ((ClassName, {Fields}) or None, CycleDetect value)
+        :return: A pair of result: (ClassName :: bytes(), Fields :: {bytes(), _})
+            or None, and a CycleDetect value
     """
     if cd is None:
         cd = set()
@@ -515,16 +516,16 @@ def _serialize_object(obj, cd: set = None):
 
     object_name = type(obj).__name__
     fields = {}
-    for key in dir(obj):
+    for key in obj.__dict__:
         val = getattr(obj, key)
         if not callable(val) and not key.startswith("_"):
             if _is_a_simple_object(val):
-                fields[Atom(key)] = val
+                fields[bytes(key, "latin1")] = val
             else:
                 (ser, cd) = _serialize_object(val, cd=cd)
-                fields[Atom(key)] = ser
+                fields[bytes(key, "latin1")] = ser
 
-    return (Atom(object_name), fields), cd
+    return (bytes(object_name, "latin1"), fields), cd
 
 
 def _pack_str(val):
@@ -563,11 +564,14 @@ def _pack_binary(data, last_byte_bits):
            bytes([last_byte_bits]) + data
 
 
-def term_to_binary_2(val):
+def term_to_binary_2(val, encode_hook: Union[Callable, None]) -> bytes:
     """ Erlang lists are decoded into term.List object, whose ``elements_``
         field contains the data, ``tail_`` field has the optional tail and a
         helper function exists to assist with extracting an unicode string.
 
+        :param encode_hook: None or a callable which will represent an unknown
+            object as an Erlang term before encoding. Returning None will be
+            encoded as such and becomes Atom('undefined').
         :param val: Almost any Python value
         :return: bytes object with encoded data, but without a 131 header byte.
     """
@@ -584,13 +588,13 @@ def term_to_binary_2(val):
         return _pack_atom("true") if val else _pack_atom("false")
 
     elif type(val) == list:
-        return _pack_list(val, [])
+        return _pack_list(val, [], encode_hook)
 
     elif type(val) == tuple:
-        return _pack_tuple(val)
+        return _pack_tuple(val, encode_hook)
 
     elif type(val) == dict:
-        return _pack_dict(val)
+        return _pack_dict(val, encode_hook)
 
     elif val is None:
         return _pack_atom('undefined')
@@ -599,7 +603,7 @@ def term_to_binary_2(val):
         return _pack_atom(val.text_)
 
     elif isinstance(val, ImproperList):
-        return _pack_list(val.elements_, val.tail_)
+        return _pack_list(val.elements_, val.tail_, encode_hook)
 
     elif isinstance(val, Pid):
         return _pack_pid(val)
@@ -613,14 +617,32 @@ def term_to_binary_2(val):
     elif isinstance(val, BitString):
         return _pack_binary(val.value_, val.last_byte_bits_)
 
-    ser, _ = _serialize_object(val)
-    return term_to_binary_2(ser)
+    # Check if options had encode_hook which is not None.
+    # Otherwise check if value class has a __etf__ member which is used instead.
+    # Otherwise encode as a tuple (Atom('ClassName), dir(value))
+    tmp_encode_hook = encode_hook
+    if tmp_encode_hook is None:
+        tmp_encode_hook = getattr(val, "__etf__", None)
+        if tmp_encode_hook is None:
+            ser, _ = _serialize_object(val)
+            return term_to_binary_2(ser, encode_hook)
+        else:
+            return term_to_binary_2(tmp_encode_hook(), encode_hook)
+    else:
+        return term_to_binary_2(tmp_encode_hook(val), encode_hook)
 
 
-def term_to_binary(val):
+def term_to_binary(val, opt: Union[None, dict] = None) -> bytes:
     """ Prepend the 131 header byte to encoded data.
+        :param opt: None or dict of options: "encode_hook" is a callable which
+            will return representation for unknown object types. Returning
+            None will be encoded as such and becomes Atom('undefined').
     """
-    return bytes([ETF_VERSION_TAG]) + term_to_binary_2(val)
+    if opt is None:
+        opt = {}
+    encode_hook = opt.get("encode_hook", None)
+
+    return bytes([ETF_VERSION_TAG]) + term_to_binary_2(val, encode_hook)
 
 
 __all__ = ['binary_to_term', 'binary_to_term_2',

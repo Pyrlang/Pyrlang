@@ -75,7 +75,6 @@ impl<'a> Encoder<'a> {
       "BitString" => return self.write_bitstring(&term),
       //"Fun" => return self.write_fun(&term),
       other => {
-        println!("Don't know how to encode '{}'", type_name);
         return Err(CodecError::NotImplEncodeForType { t: type_name })
       }
     };
