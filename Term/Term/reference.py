@@ -40,7 +40,7 @@ class Reference:
         if len(self.id_) == 12:
             v = struct.unpack(">III", self.id_)
             return "Ref<%d,%d,%d,%d>@%s" % \
-                   (self.creation_, v[0], v[1], v[2], self.node_name_.text_)
+                   (self.creation_, v[0], v[1], v[2], self.node_name_)
         else:
             return "Ref<%d,%s>" % (self.creation_,
                                    util.hex_bytes(self.id_, ","))

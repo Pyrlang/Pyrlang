@@ -32,10 +32,10 @@ $(ERLLIBDIR)/%.beam: $(ERLLIBDIR)/%.erl
 # Run `make example10b` to run Elixir client
 .PHONY: example10a example10b
 example10a:
-	$(PY) examples/elixir/e10_test.py
+	$(PY) examples/elixir/e10.py
 example10b:
 	elixir --name elixir@127.0.0.1 --cookie COOKIE \
-		examples/elixir/test10.exs
+		examples/elixir/e10.exs
 
 .PHONY: erlshell
 erlshell:
