@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ from typing import Type
 import asyncio
 from asyncio import Queue, QueueEmpty
 
-from Pyrlang.Engine.base_engine import BaseEngine, BaseQueue
-from Pyrlang.Engine.base_protocol import BaseProtocol
+from pyrlang.Engine.base_engine import BaseEngine, BaseQueue
+from pyrlang.Engine.base_protocol import BaseProtocol
 
 LOG = logging.getLogger("Pyrlang")
 

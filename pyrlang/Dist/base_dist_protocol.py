@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import struct
 from hashlib import md5
 from typing import Union
 
-from Term import util
-from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Engine.base_protocol import BaseProtocol
-from Term import codec
-from Term.atom import Atom
+from term import util
+from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.Engine.base_protocol import BaseProtocol
+from term import codec
+from term.atom import Atom
 
 LOG = logging.getLogger("Pyrlang.Dist")
 LOG.setLevel(logging.INFO)
@@ -154,7 +154,7 @@ class BaseDistProtocol(BaseProtocol):
         pass
 
     def _get_node(self):
-        from Pyrlang.node import Node
+        from pyrlang.node import Node
         return Node.all_nodes[self.node_name_]
 
     def on_connection_lost(self):
@@ -206,7 +206,7 @@ class BaseDistProtocol(BaseProtocol):
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            from Pyrlang.node import ProcessNotFoundError
+            from pyrlang.node import ProcessNotFoundError
             try:
                 return n.monitor_process(origin=sender,
                                          target=target)
@@ -215,7 +215,7 @@ class BaseDistProtocol(BaseProtocol):
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            from Pyrlang.node import ProcessNotFoundError
+            from pyrlang.node import ProcessNotFoundError
             try:
                 return n.demonitor_process(origin=sender,
                                            target=target)

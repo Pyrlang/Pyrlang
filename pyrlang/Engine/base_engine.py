@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # import logging
 from typing import Type
 
-from Pyrlang.Engine.base_protocol import BaseProtocol
+from pyrlang.Engine.base_protocol import BaseProtocol
 
 
 class BaseQueue:

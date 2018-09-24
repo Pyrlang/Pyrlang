@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ import logging
 import traceback
 from typing import Union
 
-from Pyrlang.process import Process
-from Pyrlang import gen
-from Pyrlang.bases import BaseNode
-from Pyrlang.gen import GenIncomingMessage
-from Pyrlang.util import as_str
+from pyrlang.process import Process
+from pyrlang import gen
+from pyrlang.bases import BaseNode
+from pyrlang.gen import GenIncomingMessage
+from pyrlang.util import as_str
 
 LOG = logging.getLogger("Pyrlang.OTP")
 

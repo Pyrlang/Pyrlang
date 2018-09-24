@@ -9,7 +9,7 @@ Start the Node
 
 .. code-block:: python
 
-    from Pyrlang import Node, Atom, GeventEngine # or AsyncioEngine
+    from pyrlang import Node, Atom, GeventEngine # or AsyncioEngine
 
     def main():
         eng = GeventEngine()  # or AsyncioEngine

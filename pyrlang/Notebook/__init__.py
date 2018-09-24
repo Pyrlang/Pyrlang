@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.node import Node, NodeException
-from Pyrlang.process import Process
-from Pyrlang.gen_server import GenServer
-from Pyrlang.util import start_pyrlang
+from pyrlang.Notebook.notebook import new_context, Notebook
 
-from Pyrlang.Engine.gevent_engine import GeventEngine
-from Pyrlang.Engine.asyncio_engine import AsyncioEngine
-
-start_pyrlang()
-
-__all__ = ['Node', 'NodeException', 'Process', 'GenServer',
-           'GeventEngine', 'AsyncioEngine']
+__all__ = ['new_context', 'Notebook']

@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@
 import random
 import logging
 
-from Term import util
-from Pyrlang.Dist import dist_protocol
-from Pyrlang.Dist.base_dist_protocol import *
-from Pyrlang.Engine.base_engine import BaseEngine
+from term import util
+from pyrlang.Dist import dist_protocol
+from pyrlang.Dist.base_dist_protocol import *
+from pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang.Dist")
 LOG.setLevel(logging.INFO)
@@ -66,7 +66,7 @@ class OutDistProtocol(BaseDistProtocol):
     def _get_node(self):
         """ :return: Pyrlang.node.Node
         """
-        from Pyrlang.node import Node  # todo: slow?
+        from pyrlang.node import Node  # todo: slow?
         return Node.all_nodes.get(self.node_name_, None)
 
     def _send_name(self):

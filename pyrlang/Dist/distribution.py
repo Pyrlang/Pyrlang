@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 
 import logging
 
-from Pyrlang.Dist.epmd import EPMDClient
-from Pyrlang.Dist.out_dist_protocol import OutDistProtocol
-from Pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.Dist.epmd import EPMDClient
+from pyrlang.Dist.out_dist_protocol import OutDistProtocol
+from pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang.Dist")
 
@@ -49,7 +49,7 @@ class ErlangDistribution:
         proto_kwargs = {"node_name": node_name,
                         "engine": engine}
 
-        from Pyrlang.Dist.in_dist_protocol import InDistProtocol
+        from pyrlang.Dist.in_dist_protocol import InDistProtocol
         (self.in_srv_, self.in_port_) = self.engine_.listen_with(
             protocol_class=InDistProtocol,
             protocol_args=[],

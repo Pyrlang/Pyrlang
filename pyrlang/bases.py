@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from Pyrlang.Engine.base_engine import BaseEngine
-from Term.bases import BasePid, BaseProcess
+from pyrlang.Engine.base_engine import BaseEngine
+from term.bases import BasePid, BaseProcess
 
 
 class BaseNode:

@@ -2,10 +2,10 @@ import unittest
 
 from time import sleep
 
-from Pyrlang import Node, Atom
-from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Engine.asyncio_engine import AsyncioEngine
-# from Pyrlang.Engine.gevent_engine import GeventEngine
+from pyrlang import Node, Atom
+from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.Engine.asyncio_engine import AsyncioEngine
+# from pyrlang.Engine.gevent_engine import GeventEngine
 
 
 def start_stop_with(ev_engine: BaseEngine, py_node_name: str):
@@ -51,7 +51,7 @@ class TestNodeFunctions(unittest.TestCase):
     #     self.start_stop_with(GeventEngine(), "py_gevent")
 
     def test_notebook_call(self):
-        from Pyrlang.Notebook import Notebook
+        from pyrlang.Notebook import Notebook
         nb = Notebook(options={}, node_name=self.node_name_)
 
         # Try calling with different styles of path

@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 import logging
 import traceback
 
-from Pyrlang import gen
-from Pyrlang.process import Process
-from Pyrlang.node import Node
-from Term.atom import Atom
+from pyrlang import gen
+from pyrlang.process import Process
+from pyrlang.node import Node
+from term.atom import Atom
 
 LOG = logging.getLogger("Pyrlang.Rex")
 

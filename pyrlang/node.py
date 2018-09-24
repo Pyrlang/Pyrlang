@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@ import logging
 
 from typing import Dict, Union
 
-from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.Dist.distribution import ErlangDistribution
-from Pyrlang.Dist.base_dist_protocol import BaseDistProtocol
-from Pyrlang.Dist.node_opts import NodeOpts
-from Pyrlang.bases import BaseNode
-from Pyrlang.process import Process
-from Term.atom import Atom
-from Term.pid import Pid
+from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.Dist.distribution import ErlangDistribution
+from pyrlang.Dist.base_dist_protocol import BaseDistProtocol
+from pyrlang.Dist.node_opts import NodeOpts
+from pyrlang.bases import BaseNode
+from pyrlang.process import Process
+from term.atom import Atom
+from term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -106,12 +106,12 @@ class Node(BaseNode):
 
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
-        from Pyrlang.rex import Rex
+        from pyrlang.rex import Rex
         self.rex_ = Rex(self)
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
-        from Pyrlang.net_kernel import NetKernel
+        from pyrlang.net_kernel import NetKernel
         self.net_kernel_ = NetKernel(self)
 
         self.engine_.spawn(self._loop)

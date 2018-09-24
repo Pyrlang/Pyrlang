@@ -1,3 +1,6 @@
+# Pyrlang Term library
+git+git://github.com/Pyrlang/Term@master#egg=term
+
 # Gevent-only requirements, can remove if not using Gevent
 gevent==1.2.1
 greenlet==0.4.12

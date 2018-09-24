@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 import logging
 from typing import Callable, List, Tuple, Dict
 
-from Pyrlang.gen_server import GenServer
-from Pyrlang.util import as_str
-from Term.atom import Atom
-from Term.pid import Pid
+from pyrlang.gen_server import GenServer
+from pyrlang.util import as_str
+from term.atom import Atom
+from term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang.Notebook")
 

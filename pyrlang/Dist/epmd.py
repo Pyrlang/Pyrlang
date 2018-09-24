@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import logging
 import struct
 import sys
 
-from Term import util
-from Pyrlang.Dist import dist_protocol
-from Pyrlang.Engine.base_engine import BaseEngine
+from term import util
+from pyrlang.Dist import dist_protocol
+from pyrlang.Engine.base_engine import BaseEngine
 
 LOG = logging.getLogger("Pyrlang")
 

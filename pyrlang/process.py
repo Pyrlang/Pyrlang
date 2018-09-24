@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ import logging
 
 from typing import Set, Union
 
-from Pyrlang.Engine.base_engine import BaseEngine
-from Pyrlang.bases import BaseNode, BaseProcess
-from Term.pid import Pid
+from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.bases import BaseNode, BaseProcess
+from term.pid import Pid
 
 LOG = logging.getLogger("Pyrlang")
 
@@ -50,7 +50,7 @@ class Process(BaseProcess):
             polling inbox.
         """
 
-        from Pyrlang import Node
+        from pyrlang import Node
         node = node if isinstance(node, BaseNode) else Node.all_nodes[node]
         self.engine_ = node.engine_  # type: BaseEngine
         """ Pluggable async event engine """
@@ -128,6 +128,6 @@ class Process(BaseProcess):
         """
         # TODO: Inform links and monitors
 
-        from Pyrlang import Node
+        from pyrlang import Node
         n = Node.all_nodes[self.node_name_]
         n.on_exit_process(self.pid_, reason)

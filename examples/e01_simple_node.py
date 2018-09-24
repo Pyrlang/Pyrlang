@@ -11,10 +11,10 @@
 # Shell process will receive 'hello' (type `flush().` to see)
 #
 
-from Pyrlang import Node
-from Term import Atom
-# from Pyrlang import GeventEngine as Engine
-from Pyrlang import AsyncioEngine as Engine
+from pyrlang import Node
+from term import Atom
+# from pyrlang import GeventEngine as Engine
+from pyrlang import AsyncioEngine as Engine
 
 
 def main():

@@ -9,11 +9,11 @@
 
 import logging
 
-from Term import Atom
-from Pyrlang.gen_server import GenServer
-from Pyrlang import Node
-from Pyrlang import GeventEngine as Engine
-# from Pyrlang import AsyncioEngine as Engine
+from term import Atom
+from pyrlang.gen_server import GenServer
+from pyrlang import Node
+from pyrlang import GeventEngine as Engine
+# from pyrlang import AsyncioEngine as Engine
 
 LOG = logging.getLogger("+++EXAMPLE10+++")
 logging.getLogger("").setLevel(logging.DEBUG)

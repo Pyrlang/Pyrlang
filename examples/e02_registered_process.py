@@ -15,10 +15,10 @@
 
 import logging
 
-from Term import Atom
-from Pyrlang import Node, Process
-# from Pyrlang import GeventEngine as Engine
-from Pyrlang import AsyncioEngine as Engine
+from term import Atom
+from pyrlang import Node, Process
+# from pyrlang import GeventEngine as Engine
+from pyrlang import AsyncioEngine as Engine
 
 LOG = logging.getLogger("+++EXAMPLE2+++")
 logging.getLogger("").setLevel(logging.DEBUG)

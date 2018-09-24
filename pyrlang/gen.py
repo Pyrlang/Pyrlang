@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd.
+# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@
         :py:class:`~Pyrlang.gen_server.GenServer` and following the docs.
 """
 
-from Pyrlang.util import as_str
-from Term.atom import Atom
-from Term.pid import Pid
-from Term.reference import Reference
+from pyrlang.util import as_str
+from term.atom import Atom
+from term.pid import Pid
+from term.reference import Reference
 
 
 class GenBase:
@@ -45,7 +45,7 @@ class GenBase:
     def reply(self, local_pid: Pid, result):
         """ Reply with a gen:call result
         """
-        from Pyrlang.node import Node
+        from pyrlang.node import Node
         n = Node.all_nodes[self.node_name_]
         n.send(sender=local_pid,
                receiver=self.sender_,
@@ -57,7 +57,7 @@ class GenBase:
             NOTE: The gen:call caller attempts to monitor the target first. If
                 the monitor attempt fails, the exit here won't work
         """
-        from Pyrlang.node import Node
+        from pyrlang.node import Node
 
         reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
         n = Node.all_nodes[self.node_name_]
