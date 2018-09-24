@@ -1,7 +1,7 @@
 ROOT=$(shell pwd)
 PYPATH_SET=PYTHONPATH=$(ROOT):$(ROOT)/Term
 PY=$(PYPATH_SET) PYRLANG_ENABLE_LOG_FORMAT=1 PYRLANG_LOG_LEVEL=DEBUG python3
-ERLLIBDIR=$(ROOT)/ErlangLib
+ERLLIBDIR=$(ROOT)/py.erl
 ERL=erl -pa $(ERLLIBDIR) $(ROOT)/examples -name erl@127.0.0.1 -setcookie COOKIE
 
 .PHONY: example1

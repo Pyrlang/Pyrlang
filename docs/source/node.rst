@@ -1,7 +1,7 @@
 node module (begin code exploration from here!)
 ===============================================
 
-.. automodule:: Pyrlang.node
+.. automodule:: pyrlang.node
     :members:
     :undoc-members:
     :show-inheritance:

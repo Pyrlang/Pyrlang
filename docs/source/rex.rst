@@ -1,7 +1,7 @@
 rex module - Remote Execution
 =============================
 
-.. automodule:: Pyrlang.rex
+.. automodule:: pyrlang.rex
     :members:
     :undoc-members:
     :show-inheritance:

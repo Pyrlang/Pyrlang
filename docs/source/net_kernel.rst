@@ -1,7 +1,7 @@
 net_kernel module
 =================
 
-.. automodule:: Pyrlang.net_kernel
+.. automodule:: pyrlang.net_kernel
     :members:
     :undoc-members:
     :show-inheritance:

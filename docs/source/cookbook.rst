@@ -30,8 +30,8 @@ Start the Node
         main()
 
 Here ``event_engine`` is a pluggable adapter which allows Pyrlang to run both
-with gevent (:py:class:`~Pyrlang.Engine.gevent_engine.GeventEngine`)
-and asyncio-driven (:py:class:`~Pyrlang.Engine.asyncio_engine.AsyncioEngine`)
+with gevent (:py:class:`~pyrlang.Engine.gevent_engine.GeventEngine`)
+and asyncio-driven (:py:class:`~pyrlang.Engine.asyncio_engine.AsyncioEngine`)
 event loops. Pyrlang in this case performs mostly
 protocols handling, while event engine will open connections, start tasks
 and sleep asynchronously.
@@ -148,7 +148,7 @@ established automatically):
 Send to a Python object
 -----------------------
 
-A python object inherited from :py:class:`~Pyrlang.process.Process` will be
+A python object inherited from :py:class:`~pyrlang.process.Process` will be
 a Greenlet (i.e. running in parallel with the rest of the system).
 A process is able to register itself (optional) with a name and handle
 incoming messages.
@@ -182,7 +182,7 @@ Remote Calculations on Python Node
 ----------------------------------
 
 **Problem:**
-While it is possible to subclass the :py:class:`~Pyrlang.process.Process`
+While it is possible to subclass the :py:class:`~pyrlang.process.Process`
 class and implement a Erlang-like process, often existing Python code
 exposes just a functional API or a class which has to be created for the
 calculation to be performed.
@@ -217,8 +217,8 @@ or index.
 Gen_server-like Processes
 -------------------------
 
-To have a :py:class:`~Pyrlang.process.Process` descendant which responds to
-``gen_server:call``, inherit your class from :py:class:`~Pyrlang.gen_server.GenServer`.
+To have a :py:class:`~pyrlang.process.Process` descendant which responds to
+``gen_server:call``, inherit your class from :py:class:`~pyrlang.gen_server.GenServer`.
 When calling ``GenServer`` constructor in your ``__init__`` specify an
 additional parameter ``accepted_calls`` which is a list of strings.
 

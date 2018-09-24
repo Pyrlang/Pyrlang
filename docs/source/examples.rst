@@ -56,7 +56,7 @@ This example will demonstrate how to accept ``gen_server:call`` in your Python
 Running (in two terminal tabs):
 
 *   ``make example10a`` - will start Python part of Example 10 and start a
-    :py:class:`~Pyrlang.gen_server.GenServer` example;
+    :py:class:`~pyrlang.gen_server.GenServer` example;
 *   ``make example10b`` - will start Elixir part of Example 10 and perform 2
     ``gen_server:call``'s
 *   In Elixir terminal tab observe results for 1st and 2nd calls.

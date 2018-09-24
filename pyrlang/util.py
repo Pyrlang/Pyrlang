@@ -24,7 +24,7 @@ def start_pyrlang():
     level = os.getenv("PYRLANG_LOG_LEVEL", "")
     if level and level in ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
                            'NOTSET']:
-        the_logger = logging.getLogger("Pyrlang")
+        the_logger = logging.getLogger("pyrlang")
         the_logger.setLevel(getattr(logging, level))
 
     if os.getenv("PYRLANG_ENABLE_LOG_FORMAT", "no").upper() \

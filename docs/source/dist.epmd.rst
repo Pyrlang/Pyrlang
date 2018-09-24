@@ -1,7 +1,7 @@
 Dist.epmd module
 ================
 
-.. automodule:: Pyrlang.Dist.epmd
+.. automodule:: pyrlang.dist.epmd
     :members:
     :undoc-members:
     :show-inheritance:

@@ -15,11 +15,11 @@ import logging
 
 from typing import Set, Union
 
-from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.async.base_engine import BaseEngine
 from pyrlang.bases import BaseNode, BaseProcess
 from term.pid import Pid
 
-LOG = logging.getLogger("Pyrlang")
+LOG = logging.getLogger("pyrlang")
 
 
 class Process(BaseProcess):

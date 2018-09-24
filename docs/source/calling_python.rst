@@ -2,7 +2,7 @@ Remote Calling Python from Erlang
 =================================
 
 There is the regular ordinary way to call remote functions from Erlang, using
-``rpc:call`` which is handled by :py:class:`~Pyrlang.rex.Rex` process in Pyrlang
+``rpc:call`` which is handled by :py:class:`~pyrlang.rex.Rex` process in Pyrlang
 or by ``rex`` (named process) in Erlang.
 
 These calls return the result immediately and do not allow multiple
@@ -12,7 +12,7 @@ calls without transferring unnecessary amounts of data forth and back.
 Notebook-style Calls
 --------------------
 
-Pyrlang implements notebook-style calls in :py:mod:`~Pyrlang.Notebook.notebook`
+Pyrlang implements notebook-style calls in :py:mod:`~pyrlang.Notebook.notebook`
 where results of your calls from Erlang to Python are stored on Python side
 until they are needed. You can substitute stored values into following calls.
 
@@ -64,7 +64,7 @@ Erlang module ``py`` contains the following functions which might be useful:
     Context = py:new_context(Node, Options).
 
 This will perform a remote call to your Python node, and create
-:py:class:`~Pyrlang.Notebook.notebook.Notebook` object with default history
+:py:class:`~pyrlang.Notebook.notebook.Notebook` object with default history
 limit of 50 values. ``Options`` map can contain key ``history`` with an integer
 value if you want to override this default.
 
@@ -111,7 +111,7 @@ Batching Remote Calls
 
 Another extension to Notebook-style calls is **batches**, supported by the same
 ``py`` module on Erlang side and by the same
-:py:class:`~Pyrlang.Notebook.notebook.Notebook` class on Python side.
+:py:class:`~pyrlang.Notebook.notebook.Notebook` class on Python side.
 
 A batch is a sequence of calls, similar to notebook-style calls, where result
 of a previous call can be connected to input of any following call. A batch

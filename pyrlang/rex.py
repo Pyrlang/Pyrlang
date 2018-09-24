@@ -19,7 +19,7 @@ from pyrlang.process import Process
 from pyrlang.node import Node
 from term.atom import Atom
 
-LOG = logging.getLogger("Pyrlang.Rex")
+LOG = logging.getLogger("pyrlang.rex")
 
 
 class Rex(Process):
@@ -64,8 +64,8 @@ class Rex(Process):
             pmod = __import__(gencall.mod_, fromlist=[''])
             pfun = getattr(pmod, gencall.fun_)
             args = gencall.args_
-            # For calls to Pyrlang.Notebook.notebook module, always prepend node_name
-            if gencall.mod_ == "Pyrlang.Notebook.notebook" and gencall.fun_ == "new_context":
+            # For calls to Pyrlang.notebook.notebook module, always prepend node_name
+            if gencall.mod_ == "pyrlang.notebook.notebook" and gencall.fun_ == "new_context":
                 args.insert(0, self.node_name_)
 
             # Call the thing

@@ -41,29 +41,12 @@ Pyrlang Modules
     gen
     net_kernel
     gen_server
-    Notebook.notebook
-    Engine.base_engine
-    Engine.base_protocol
-    Engine.asyncio_engine
-    Engine.gevent_engine
-
-
-.. comment::
-
-    Erlang Data Types in Pyrlang
-    ----------------------------
-
-    .. toctree::
-        :maxdepth: 1
-
-        Term.atom
-        Term.bitstring
-        Term.erl_typing
-        Term.fun
-        Term.list
-        Term.pid
-        Term.reference
-        Dist.etf
+    pyrlang.notebook
+    pyrlang.util
+    async.base_engine
+    async.base_protocol
+    async.asyncio_engine
+    async.gevent_engine
 
 
 Distribution Protocol Implementation
@@ -72,12 +55,12 @@ Distribution Protocol Implementation
 .. toctree::
     :maxdepth: 1
 
-    Dist.distribution
-    Dist.epmd
-    Dist.node_opts
-    Dist.in_dist_protocol
-    Dist.out_dist_protocol
-    Dist.base_dist_protocol
+    dist.distribution
+    dist.epmd
+    dist.node_opts
+    dist.in_dist_protocol
+    dist.out_dist_protocol
+    dist.base_dist_protocol
 
 
 Indices and tables

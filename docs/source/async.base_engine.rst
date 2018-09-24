@@ -1,7 +1,7 @@
-Dist.distribution module
+async.base_engine module
 ========================
 
-.. automodule:: Pyrlang.Dist.distribution
+.. automodule:: pyrlang.async.base_engine
     :members:
     :undoc-members:
     :show-inheritance:

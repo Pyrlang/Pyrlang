@@ -19,7 +19,7 @@ from pyrlang.util import as_str
 from term.atom import Atom
 from term.pid import Pid
 
-LOG = logging.getLogger("Pyrlang.Notebook")
+LOG = logging.getLogger("pyrlang.notebook")
 
 
 class Notebook(GenServer):

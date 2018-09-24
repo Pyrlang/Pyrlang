@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pyrlang.Engine.base_engine import BaseEngine
+from pyrlang.async.base_engine import BaseEngine
 from term.bases import BasePid, BaseProcess
 
 

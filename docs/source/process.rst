@@ -1,7 +1,7 @@
 process module
 ==============
 
-.. automodule:: Pyrlang.process
+.. automodule:: pyrlang.process
     :members:
     :undoc-members:
     :show-inheritance:

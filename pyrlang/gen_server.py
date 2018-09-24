@@ -34,7 +34,7 @@ from pyrlang.bases import BaseNode
 from pyrlang.gen import GenIncomingMessage
 from pyrlang.util import as_str
 
-LOG = logging.getLogger("Pyrlang.OTP")
+LOG = logging.getLogger("pyrlang.OTP")
 
 
 class GenException(Exception):

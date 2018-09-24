@@ -1,7 +1,7 @@
-Pyrlang.util
-============
+util module
+===========
 
-.. automodule:: Pyrlang.util
+.. automodule:: pyrlang.util
     :members:
     :undoc-members:
     :show-inheritance:

@@ -16,16 +16,16 @@ import logging
 
 from typing import Dict, Union
 
-from pyrlang.Engine.base_engine import BaseEngine
-from pyrlang.Dist.distribution import ErlangDistribution
-from pyrlang.Dist.base_dist_protocol import BaseDistProtocol
-from pyrlang.Dist.node_opts import NodeOpts
+from pyrlang.async.base_engine import BaseEngine
+from pyrlang.dist.distribution import ErlangDistribution
+from pyrlang.dist.base_dist_protocol import BaseDistProtocol
+from pyrlang.dist.node_opts import NodeOpts
 from pyrlang.bases import BaseNode
 from pyrlang.process import Process
 from term.atom import Atom
 from term.pid import Pid
 
-LOG = logging.getLogger("Pyrlang")
+LOG = logging.getLogger("pyrlang")
 
 
 class NodeException(Exception):

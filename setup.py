@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='Pyrlang',
+setup(name='pyrlang',
       version='0.8',
       description='Erlang Node implemented in Python 3.5/Gevent/Asyncio',
       author='Erlang Solutions Ltd and S2HC Sweden AB',

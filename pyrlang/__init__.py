@@ -17,8 +17,8 @@ from pyrlang.process import Process
 from pyrlang.gen_server import GenServer
 from pyrlang.util import start_pyrlang
 
-from pyrlang.Engine.gevent_engine import GeventEngine
-from pyrlang.Engine.asyncio_engine import AsyncioEngine
+from pyrlang.async.gevent_engine import GeventEngine
+from pyrlang.async.asyncio_engine import AsyncioEngine
 
 start_pyrlang()
 

@@ -1,7 +1,7 @@
-Notebook.notebook module
+Dist.distribution module
 ========================
 
-.. automodule:: Pyrlang.Notebook.notebook
+.. automodule:: pyrlang.dist.distribution
     :members:
     :undoc-members:
     :show-inheritance:

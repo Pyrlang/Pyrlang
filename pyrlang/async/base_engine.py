@@ -15,7 +15,7 @@
 # import logging
 from typing import Type
 
-from pyrlang.Engine.base_protocol import BaseProtocol
+from pyrlang.async.base_protocol import BaseProtocol
 
 
 class BaseQueue:

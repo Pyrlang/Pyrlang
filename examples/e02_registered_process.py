@@ -17,7 +17,7 @@ import logging
 
 from term import Atom
 from pyrlang import Node, Process
-# from pyrlang import GeventEngine as Engine
+# from pyrlang import GeventEngine as async
 from pyrlang import AsyncioEngine as Engine
 
 LOG = logging.getLogger("+++EXAMPLE2+++")

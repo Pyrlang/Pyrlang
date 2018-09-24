@@ -12,4 +12,4 @@ Set OS env variable ``PYRLANG_LOG_LEVEL`` to one of
 to override the default log level of ``INFO``.
 
 For all purposes the code which checks these settings is located in
-:py:func:`~Pyrlang.util.start_pyrlang`.
+:py:func:`~pyrlang.util.start_pyrlang`.

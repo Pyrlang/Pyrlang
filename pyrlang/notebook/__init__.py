@@ -12,4 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pyrlang.Dist.distribution import ErlangDistribution
+from pyrlang.notebook.notebook import new_context, Notebook
+
+__all__ = ['new_context', 'Notebook']

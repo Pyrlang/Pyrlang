@@ -18,7 +18,7 @@ from pyrlang.gen_server import GenServer
 from pyrlang.node import Node
 from term.atom import Atom
 
-LOG = logging.getLogger("Pyrlang")
+LOG = logging.getLogger("pyrlang")
 
 
 class NetKernel(GenServer):

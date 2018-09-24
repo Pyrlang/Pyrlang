@@ -1,7 +1,7 @@
 gen module - Generic OTP-style calls
 ====================================
 
-.. automodule:: Pyrlang.gen
+.. automodule:: pyrlang.gen
     :members:
     :undoc-members:
     :show-inheritance:
