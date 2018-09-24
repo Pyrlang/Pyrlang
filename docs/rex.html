@@ -1,0 +1,154 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rex module - Remote Execution &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="gen module - Generic OTP-style calls" href="gen.html" />
+    <link rel="prev" title="process module" href="process.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.rex">
+<span id="rex-module-remote-execution"></span><h1>rex module - Remote Execution<a class="headerlink" href="#module-pyrlang.rex" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyrlang.rex.Rex">
+<em class="property">class </em><code class="descclassname">pyrlang.rex.</code><code class="descname">Rex</code><span class="sig-paren">(</span><em>node: pyrlang.node.Node</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.rex.Rex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.process.Process</span></code></a></p>
+<p>Remote executor for RPC calls. Registers itself under the name <code class="docutils literal"><span class="pre">rex</span></code>
+and accepts RPC call messages.
+Erlang <code class="docutils literal"><span class="pre">rpc:call</span></code> sends a <code class="docutils literal"><span class="pre">$gen_call</span></code> styled message to the
+registered name <code class="docutils literal"><span class="pre">rex</span></code> on the remote node which we parse and attempt
+to execute.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-mod docutils literal"><span class="pre">gen</span></code> module documentation and
+<code class="xref py py-func docutils literal"><span class="pre">parse_gen_call()</span></code> function</p>
+</div>
+<dl class="method">
+<dt id="pyrlang.rex.Rex.handle_one_inbox_message">
+<code class="descname">handle_one_inbox_message</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.rex.Rex.handle_one_inbox_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function overrides
+<code class="xref py py-meth docutils literal"><span class="pre">handle_one_inbox_message()</span></code>
+and expects a <code class="docutils literal"><span class="pre">$gen_call</span></code> styled message.
+The result or exception are delivered back to the sender via
+message passing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> -- A tuple with Atom <code class="docutils literal"><span class="pre">$gen_call</span></code> as the first element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.rex.Rex.traceback_depth_">
+<code class="descname">traceback_depth_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.rex.Rex.traceback_depth_" title="Permalink to this definition">¶</a></dt>
+<dd><p>This being non-zero enables formatting exception tracebacks with the
+given depth. Traceback is attached as a 'traceback' field in the
+exception, that is sent to the caller. Default: 5</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="process.html" title="previous chapter">process module</a></li>
+      <li>Next: <a href="gen.html" title="next chapter">gen module - Generic OTP-style calls</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rex.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/rex.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

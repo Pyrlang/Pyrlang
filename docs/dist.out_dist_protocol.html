@@ -1,0 +1,158 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dist.out_dist_protocol module &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dist.base_dist_protocol module" href="dist.base_dist_protocol.html" />
+    <link rel="prev" title="Dist.in_dist_protocol module" href="dist.in_dist_protocol.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist.out_dist_protocol">
+<span id="dist-out-dist-protocol-module"></span><h1>Dist.out_dist_protocol module<a class="headerlink" href="#module-pyrlang.dist.out_dist_protocol" title="Permalink to this headline">¶</a></h1>
+<p>The module implements outgoing TCP distribution connection (i.e. initiated
+by our node to another node with the help of EPMD).</p>
+<dl class="class">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol">
+<em class="property">class </em><code class="descclassname">pyrlang.dist.out_dist_protocol.</code><code class="descname">OutDistProtocol</code><span class="sig-paren">(</span><em>node_name: str</em>, <em>engine: pyrlang.async.base_engine.BaseEngine</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dist.base_dist_protocol.html#pyrlang.dist.base_dist_protocol.BaseDistProtocol" title="pyrlang.dist.base_dist_protocol.BaseDistProtocol"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.dist.base_dist_protocol.BaseDistProtocol</span></code></a></p>
+<p>Handles outgoing connections from our to other nodes.</p>
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_connected">
+<code class="descname">on_connected</code><span class="sig-paren">(</span><em>host_port</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet">
+<code class="descname">on_packet</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle incoming distribution packet</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> -- The packet after the header had been removed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_alive">
+<code class="descname">on_packet_alive</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_alive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvchallenge">
+<code class="descname">on_packet_recvchallenge</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvchallenge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvchallenge_ack">
+<code class="descname">on_packet_recvchallenge_ack</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvchallenge_ack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvstatus">
+<code class="descname">on_packet_recvstatus</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.out_dist_protocol.OutDistProtocol.on_packet_recvstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="dist.in_dist_protocol.html" title="previous chapter">Dist.in_dist_protocol module</a></li>
+      <li>Next: <a href="dist.base_dist_protocol.html" title="next chapter">Dist.base_dist_protocol module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dist.out_dist_protocol.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/dist.out_dist_protocol.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

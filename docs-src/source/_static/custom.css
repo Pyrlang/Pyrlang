@@ -1,0 +1,13 @@
+code.xref, a code {
+    text-decoration: underline;
+}
+
+div.sphinxsidebar h3 a {
+    text-decoration: underline !important;
+}
+
+a.toc-return {
+    background: #aae;
+    padding: 4px;
+    margin: 4px;
+}

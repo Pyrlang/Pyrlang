@@ -19,11 +19,7 @@
 
 import os
 import sys
-
-here = os.path.dirname(__file__)
-sys.path.insert(0, os.path.abspath(here))
-sys.path.insert(0, os.path.abspath(here + '/../'))
-sys.path.insert(0, os.path.abspath(here + '/../../'))
+sys.path.insert(0, os.path.abspath("../../"))
 
 
 # -- General configuration ------------------------------------------------

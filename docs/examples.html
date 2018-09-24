@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Examples! &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuring Pyrlang in Runtime" href="configuration.html" />
+    <link rel="prev" title="Pyrlang Library" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="examples">
+<h1>Examples!<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<p>Talk is cheap! Show me some code!</p>
+<p>Have a look in <a class="reference internal" href="cookbook.html"><span class="doc">Cookbook - How to Get Started</span></a> too!</p>
+<p>Some examples are located in <code class="docutils literal"><span class="pre">examples/</span></code> directory. And there are convenient
+<code class="docutils literal"><span class="pre">Makefile</span></code> targets to call them, just use your Bash autocomplete when typing
+<code class="docutils literal"><span class="pre">make</span> <span class="pre">example&lt;TAB&gt;</span></code>:</p>
+<div class="section" id="example-1-python-to-erlang">
+<h2>Example 1: Python to Erlang<a class="headerlink" href="#example-1-python-to-erlang" title="Permalink to this headline">¶</a></h2>
+<p>Demonstrates how Python node can actively find a running Erlang node and connect
+to it by attempting to send a message.</p>
+<p>Running (in two terminal tabs):</p>
+<ul class="simple">
+<li>Start Erlang node with <code class="docutils literal"><span class="pre">erl</span> <span class="pre">-name</span> <span class="pre">erl&#64;127.0.0.1</span> <span class="pre">-setcookie</span> <span class="pre">COOKIE</span></code>.</li>
+<li>(optional) Register your shell process as <code class="docutils literal"><span class="pre">shell</span></code> by executing in the
+Erlang shell: <code class="docutils literal"><span class="pre">erlang:register(shell,</span> <span class="pre">self()).</span></code></li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example1</span></code> - will start a node at <code class="docutils literal"><span class="pre">py&#64;127.0.0.1</span></code> and using cookie
+<code class="docutils literal"><span class="pre">COOKIE</span></code> will try to connect to Erlang running at <code class="docutils literal"><span class="pre">erl&#64;127.0.0.1</span></code>;</li>
+<li>(optional) Check whether Erlang shell received <code class="docutils literal"><span class="pre">hello</span></code> by typing <code class="docutils literal"><span class="pre">flush().</span></code></li>
+</ul>
+</div>
+<div class="section" id="example-2-erlang-to-python">
+<h2>Example 2: Erlang to Python<a class="headerlink" href="#example-2-erlang-to-python" title="Permalink to this headline">¶</a></h2>
+<p>Demonstrates how to run a named process on Python node. Erlang node will try and
+send message to it by name.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example2</span></code> - will register a process as <code class="docutils literal"><span class="pre">my_process</span></code> and you can
+send messages to it by name from Erlang;</li>
+<li>Start Erlang node with <code class="docutils literal"><span class="pre">erl</span> <span class="pre">-name</span> <span class="pre">erl&#64;127.0.0.1</span> <span class="pre">-setcookie</span> <span class="pre">COOKIE</span></code>.</li>
+<li>In Erlang shell try send something to <code class="docutils literal"><span class="pre">my_process</span></code> like this:
+<code class="docutils literal"><span class="pre">{my_process,</span> <span class="pre">'py&#64;127.0.0.1'}</span> <span class="pre">!</span> <span class="pre">{hello,</span> <span class="pre">123,</span> <span class="pre">[&lt;&lt;&quot;test&quot;&gt;&gt;,</span> <span class="pre">self()]}.</span></code></li>
+<li>In Python terminal tab observe log message about incoming data.</li>
+</ul>
+</div>
+<div class="section" id="examples-3-and-4-calling-batch-python">
+<h2>Examples 3 and 4: Calling/Batch Python<a class="headerlink" href="#examples-3-and-4-calling-batch-python" title="Permalink to this headline">¶</a></h2>
+<p>Examples are <code class="docutils literal"><span class="pre">.erl</span></code> files which demonstrate how remote notebook-style calls
+and batch calls will work with Erlang and Python.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">pynode</span></code> (same as <code class="docutils literal"><span class="pre">make</span> <span class="pre">example2</span></code>) to get a running Python node.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example3</span></code> or <code class="docutils literal"><span class="pre">make</span> <span class="pre">example4</span></code> and observe what it prints.</li>
+</ul>
+</div>
+<div class="section" id="example-10-elixir-and-genserver">
+<h2>Example 10: Elixir and GenServer<a class="headerlink" href="#example-10-elixir-and-genserver" title="Permalink to this headline">¶</a></h2>
+<p>This example will demonstrate how to accept <code class="docutils literal"><span class="pre">gen_server:call</span></code> in your Python
+<code class="docutils literal"><span class="pre">Process</span></code>.</p>
+<p>Running (in two terminal tabs):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example10a</span></code> - will start Python part of Example 10 and start a
+<a class="reference internal" href="gen_server.html#pyrlang.gen_server.GenServer" title="pyrlang.gen_server.GenServer"><code class="xref py py-class docutils literal"><span class="pre">GenServer</span></code></a> example;</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example10b</span></code> - will start Elixir part of Example 10 and perform 2
+<code class="docutils literal"><span class="pre">gen_server:call</span></code>'s</li>
+<li>In Elixir terminal tab observe results for 1st and 2nd calls.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some examples require a client and a server, these have two parts: example A
+and example B.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Examples!</a><ul>
+<li><a class="reference internal" href="#example-1-python-to-erlang">Example 1: Python to Erlang</a></li>
+<li><a class="reference internal" href="#example-2-erlang-to-python">Example 2: Erlang to Python</a></li>
+<li><a class="reference internal" href="#examples-3-and-4-calling-batch-python">Examples 3 and 4: Calling/Batch Python</a></li>
+<li><a class="reference internal" href="#example-10-elixir-and-genserver">Example 10: Elixir and GenServer</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Pyrlang Library</a></li>
+      <li>Next: <a href="configuration.html" title="next chapter">Configuring Pyrlang in Runtime</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/examples.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

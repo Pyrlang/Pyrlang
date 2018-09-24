@@ -1,0 +1,183 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dist.distribution module &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dist.epmd module" href="dist.epmd.html" />
+    <link rel="prev" title="async.gevent_engine module" href="async.gevent_engine.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist.distribution">
+<span id="dist-distribution-module"></span><h1>Dist.distribution module<a class="headerlink" href="#module-pyrlang.dist.distribution" title="Permalink to this headline">¶</a></h1>
+<p>Distribution class is not a separate running Greenlet, but rather a helper,
+which is called upon.</p>
+<dl class="class">
+<dt id="pyrlang.dist.distribution.ErlangDistribution">
+<em class="property">class </em><code class="descclassname">pyrlang.dist.distribution.</code><code class="descname">ErlangDistribution</code><span class="sig-paren">(</span><em>node_name: str</em>, <em>engine: pyrlang.async.base_engine.BaseEngine</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Implements network part of the EPMD registration and Erlang distribution
+protocol. Extends functionality of Node, so all functions take
+Node as a parameter but don't store it to avoid creating a ref cycle.</p>
+<dl class="method">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Looks up EPMD daemon and connects to it trying to discover other 
+Erlang nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.connect_to_node">
+<code class="descname">connect_to_node</code><span class="sig-paren">(</span><em>local_node: str</em>, <em>remote_node: str</em>, <em>engine: pyrlang.async.base_engine.BaseEngine</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.connect_to_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query EPMD where is the node, and initiate dist connection. Blocks
+the Greenlet until the connection is made or have failed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>engine</strong> -- Async engine adapter (GeventEngine or AsyncioEngine)</li>
+<li><strong>local_node</strong> -- Reference to Erlang Node object</li>
+<li><strong>remote_node</strong> -- String with node <a class="reference external" href="mailto:'name&#37;&#52;&#48;ip">'name<span>&#64;</span>ip</a>'</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Handler or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.creation_">
+<code class="descname">creation_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.creation_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creation id used in pid generation. EPMD gives creation id to
+newly connected nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.destroy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finish EPMD connection, this will remove the node from the list of
+available nodes on EPMD</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.engine_">
+<code class="descname">engine_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.engine_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Async adapter engine for network and timer operations implemented
+either as Gevent or asyncio</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist.distribution.ErlangDistribution.node_name_">
+<code class="descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist.distribution.ErlangDistribution.node_name_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node name, a string.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="async.gevent_engine.html" title="previous chapter">async.gevent_engine module</a></li>
+      <li>Next: <a href="dist.epmd.html" title="next chapter">Dist.epmd module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dist.distribution.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/dist.distribution.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

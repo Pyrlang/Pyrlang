@@ -1,0 +1,284 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Remote Calling Python from Erlang &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="node module (begin code exploration from here!)" href="node.html" />
+    <link rel="prev" title="Data Types in Pyrlang" href="data_types.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="remote-calling-python-from-erlang">
+<h1>Remote Calling Python from Erlang<a class="headerlink" href="#remote-calling-python-from-erlang" title="Permalink to this headline">¶</a></h1>
+<p>There is the regular ordinary way to call remote functions from Erlang, using
+<code class="docutils literal"><span class="pre">rpc:call</span></code> which is handled by <a class="reference internal" href="rex.html#pyrlang.rex.Rex" title="pyrlang.rex.Rex"><code class="xref py py-class docutils literal"><span class="pre">Rex</span></code></a> process in Pyrlang
+or by <code class="docutils literal"><span class="pre">rex</span></code> (named process) in Erlang.</p>
+<p>These calls return the result immediately and do not allow multiple
+calls without transferring unnecessary amounts of data forth and back.</p>
+<div class="section" id="notebook-style-calls">
+<h2>Notebook-style Calls<a class="headerlink" href="#notebook-style-calls" title="Permalink to this headline">¶</a></h2>
+<p>Pyrlang implements notebook-style calls in <code class="xref py py-mod docutils literal"><span class="pre">notebook</span></code>
+where results of your calls from Erlang to Python are stored on Python side
+until they are needed. You can substitute stored values into following calls.</p>
+<p>Enter the <code class="docutils literal"><span class="pre">py.erl</span></code> helper module, which you can drop into your Erlang project
+and use as a library.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># Your Unix shell: Start Erlang node with name and cookie</span>
+$ erl -name erl@127.0.0.1 -setcookie COOKIE
+</pre></div>
+</div>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="c">%% Create a remote notebook object (context) on Python side</span>
+<span class="nv">Ctx</span>  <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">),</span>
+
+<span class="c">%% Import datetime and call datetime.now(), kwargs are empty by default.</span>
+<span class="c">%% Note that binaries, ASCII strings and atoms all work.</span>
+<span class="c">%% First element in the list is module name to be imported</span>
+<span class="nv">DT1</span>  <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="p">[</span><span class="o">&lt;&lt;</span><span class="s">&quot;datetime&quot;</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="s">&quot;datetime&quot;</span><span class="p">,</span> <span class="n">now</span><span class="p">],</span> <span class="p">[]),</span>
+<span class="nn">timer</span><span class="p">:</span><span class="nf">sleep</span><span class="p">(</span><span class="mi">2000</span><span class="p">),</span>
+
+<span class="c">%% Import datetime and call datetime.now() again but now with kwargs #{}</span>
+<span class="nv">DT2</span>  <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="o">&lt;&lt;</span><span class="s">&quot;now&quot;</span><span class="o">&gt;&gt;</span><span class="p">],</span> <span class="p">[],</span> <span class="p">#{}),</span>
+
+<span class="c">%% Subtract two datetimes</span>
+<span class="nv">Diff</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="p">[</span><span class="nv">DT2</span><span class="p">,</span> <span class="n">&#39;__sub__&#39;</span><span class="p">],</span> <span class="p">[</span><span class="nv">DT1</span><span class="p">],</span> <span class="p">#{}),</span>
+
+<span class="c">%% Call Diff.total_seconds() and retrieve the value without storing it</span>
+<span class="c">%% in remote history.</span>
+<span class="nv">Result1</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="p">[</span><span class="nv">Diff</span><span class="p">,</span> <span class="o">&lt;&lt;</span><span class="s">&quot;total_seconds&quot;</span><span class="o">&gt;&gt;</span><span class="p">],</span> <span class="p">[],</span> <span class="p">#{},</span> <span class="p">#{</span><span class="n">immediate</span> <span class="o">=&gt;</span> <span class="n">true</span><span class="p">}),</span>
+
+<span class="c">%% Or retrieve the diff and store it remotely then retrieve</span>
+<span class="nv">Result2Ref</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="p">[</span><span class="nv">Diff</span><span class="p">,</span> <span class="o">&lt;&lt;</span><span class="s">&quot;total_seconds&quot;</span><span class="o">&gt;&gt;</span><span class="p">],</span> <span class="p">[]),</span>
+<span class="nv">Result2</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">retrieve</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="nv">Result2Ref</span><span class="p">),</span>
+
+<span class="c">%% Done with the remote context. Remote notebook object will be dropped.</span>
+<span class="nn">py</span><span class="p">:</span><span class="nf">destroy</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">).</span>
+</pre></div>
+</div>
+<div class="section" id="api-quick-description">
+<h3>API Quick Description<a class="headerlink" href="#api-quick-description" title="Permalink to this headline">¶</a></h3>
+<p>Erlang module <code class="docutils literal"><span class="pre">py</span></code> contains the following functions which might be useful:</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nv">Context</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="nv">Node</span><span class="p">).</span>
+<span class="nv">Context</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="nv">Node</span><span class="p">,</span> <span class="nv">Options</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>This will perform a remote call to your Python node, and create
+<code class="xref py py-class docutils literal"><span class="pre">Notebook</span></code> object with default history
+limit of 50 values. <code class="docutils literal"><span class="pre">Options</span></code> map can contain key <code class="docutils literal"><span class="pre">history</span></code> with an integer
+value if you want to override this default.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Context</span><span class="p">,</span> <span class="nv">Path</span><span class="p">,</span> <span class="nv">Args</span><span class="p">).</span>
+<span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Context</span><span class="p">,</span> <span class="nv">Path</span><span class="p">,</span> <span class="nv">Args</span><span class="p">,</span> <span class="nv">KwArgs</span><span class="p">).</span>
+<span class="nn">py</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="nv">Context</span><span class="p">,</span> <span class="nv">Path</span><span class="p">,</span> <span class="nv">Args</span><span class="p">,</span> <span class="nv">KwArgs</span><span class="p">,</span> <span class="nv">Options</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>Performs a remote call to the <code class="docutils literal"><span class="pre">Notebook</span></code> on Python side, which resolves
+whether first element of a <code class="docutils literal"><span class="pre">Path</span></code> is a value from previous calculation or
+a module name, and then find the function by following remaining items in
+the <code class="docutils literal"><span class="pre">Path</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">Options</span></code> is a dict which can contain keys:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">timeout</span></code>: <code class="docutils literal"><span class="pre">int</span></code> (default 5000)</li>
+<li><code class="docutils literal"><span class="pre">immediate</span></code>: <code class="docutils literal"><span class="pre">bool</span></code> (default false) - setting this to <code class="docutils literal"><span class="pre">true</span></code> will not
+update the remote history and instead will return you the actual value.</li>
+</ul>
+<p>On exception you receive Erlang exception with tuple
+<code class="docutils literal"><span class="pre">{'ExceptionClassName',</span> <span class="pre">#{args,</span> <span class="pre">traceback}}</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Default <code class="docutils literal"><span class="pre">immediate=False</span></code> flag here differs from default
+<code class="docutils literal"><span class="pre">immediate=True</span></code> for batched calls (scripts).</p>
+</div>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">py</span><span class="p">:</span><span class="nf">destroy</span><span class="p">(</span><span class="nv">Context</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>Ends life of the remote <code class="docutils literal"><span class="pre">Notebook</span></code>.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">py</span><span class="p">:</span><span class="nf">get_type</span><span class="p">(</span><span class="nv">ValueReference</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>For remote value reference its type is known on Erlang side.
+Retrieve this type name as a string.</p>
+</div>
+</div>
+<div class="section" id="batching-remote-calls">
+<h2>Batching Remote Calls<a class="headerlink" href="#batching-remote-calls" title="Permalink to this headline">¶</a></h2>
+<p>Another extension to Notebook-style calls is <strong>batches</strong>, supported by the same
+<code class="docutils literal"><span class="pre">py</span></code> module on Erlang side and by the same
+<code class="xref py py-class docutils literal"><span class="pre">Notebook</span></code> class on Python side.</p>
+<p>A batch is a sequence of calls, similar to notebook-style calls, where result
+of a previous call can be connected to input of any following call. A batch
+is prepared on Erlang side and then can be executed on any or multiple
+Python nodes.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># Your Unix shell: Start Erlang node with name and cookie</span>
+$ erl -name erl@127.0.0.1 -setcookie COOKIE
+</pre></div>
+</div>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="c">%% Create an empty batch and begin adding calls to it</span>
+<span class="nv">S0</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_new</span><span class="p">(),</span>
+<span class="p">{</span><span class="nv">S1</span><span class="p">,</span> <span class="nv">R1</span><span class="p">}</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">S0</span><span class="p">,</span> <span class="p">[</span><span class="o">&lt;&lt;</span><span class="s">&quot;datetime&quot;</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="s">&quot;datetime&quot;</span><span class="p">,</span> <span class="n">now</span><span class="p">],</span> <span class="p">[]),</span>
+<span class="p">{</span><span class="nv">S2</span><span class="p">,</span> <span class="nv">R2</span><span class="p">}</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">S1</span><span class="p">,</span> <span class="p">[</span><span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="o">&lt;&lt;</span><span class="s">&quot;now&quot;</span><span class="o">&gt;&gt;</span><span class="p">],</span> <span class="p">[],</span> <span class="p">#{}),</span>
+<span class="c">%% Subtract two datetimes</span>
+<span class="p">{</span><span class="nv">S3</span><span class="p">,</span> <span class="nv">Diff</span><span class="p">}</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">S2</span><span class="p">,</span> <span class="p">[</span><span class="nv">R2</span><span class="p">,</span> <span class="n">&#39;__sub__&#39;</span><span class="p">],</span> <span class="p">[</span><span class="nv">R1</span><span class="p">],</span> <span class="p">#{}),</span>
+
+<span class="c">%% Call Diff.total_seconds() and retrieve the value without storing it</span>
+<span class="c">%% in remote history.</span>
+<span class="p">{</span><span class="nv">S4</span><span class="p">,</span> <span class="p">_</span><span class="nv">R4</span><span class="p">}</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">S3</span><span class="p">,</span> <span class="p">[</span><span class="nv">Diff</span><span class="p">,</span> <span class="o">&lt;&lt;</span><span class="s">&quot;total_seconds&quot;</span><span class="o">&gt;&gt;</span><span class="p">],</span> <span class="p">[]),</span>
+
+<span class="c">%% Create a remote notebook object (context) on Python side</span>
+<span class="nv">Ctx</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">),</span>
+
+<span class="c">%% will retrieve because immediate=true by default</span>
+<span class="nv">Result</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_run</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">,</span> <span class="nv">S4</span><span class="p">),</span>
+
+<span class="c">%% Done with the remote context. Remote notebook object will be dropped.</span>
+<span class="nn">py</span><span class="p">:</span><span class="nf">destroy</span><span class="p">(</span><span class="nv">Ctx</span><span class="p">).</span>
+</pre></div>
+</div>
+<div class="section" id="id1">
+<h3>API Quick Description<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nv">Batch</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">batch_new</span><span class="p">().</span>
+</pre></div>
+</div>
+<p>Will create an empty batch with no calls in it.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">Batch</span><span class="p">,</span> <span class="nv">Path</span><span class="p">,</span> <span class="nv">Args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">{</span><span class="nv">Batch1</span><span class="p">,</span> <span class="nv">ResultRef</span><span class="p">}.</span>
+<span class="nn">py</span><span class="p">:</span><span class="nf">batch_call</span><span class="p">(</span><span class="nv">Batch</span><span class="p">,</span> <span class="nv">Path</span><span class="p">,</span> <span class="nv">Args</span><span class="p">,</span> <span class="nv">KwArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">{</span><span class="nv">Batch1</span><span class="p">,</span> <span class="nv">ResultRef</span><span class="p">}.</span>
+</pre></div>
+</div>
+<p>Will append another call to the sequence in <code class="docutils literal"><span class="pre">Batch</span></code>. Returns a pair of
+updated batch and id for referring to its result.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nv">Context</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="nv">Node</span><span class="p">).</span>
+<span class="nv">Context</span> <span class="o">=</span> <span class="nn">py</span><span class="p">:</span><span class="nf">new_context</span><span class="p">(</span><span class="nv">Node</span><span class="p">,</span> <span class="nv">Options</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>This is same as in notebook-style single remote calls above. We need to create
+a context to spawn remote process which will do the job and store the call
+result history.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">py</span><span class="p">:</span><span class="nf">batch_run</span><span class="p">(</span><span class="nv">Context</span><span class="p">,</span> <span class="nv">Batch</span><span class="p">,</span> <span class="nv">Options</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>Performs remote execution of call sequence on a given node. You can perform
+calls to multiple contexts at different nodes with the same <code class="docutils literal"><span class="pre">Batch</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">Options</span></code> is a dict which can contain keys:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">timeout</span></code>: <code class="docutils literal"><span class="pre">int</span></code> (default 5000)</li>
+<li><code class="docutils literal"><span class="pre">immediate</span></code>: <code class="docutils literal"><span class="pre">bool</span></code> (default true) - setting this to <code class="docutils literal"><span class="pre">false</span></code> will
+instead update the remote history and return you a value reference. Default
+setting returns you the actual value.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Default <code class="docutils literal"><span class="pre">immediate=True</span></code> flag here differs from default
+<code class="docutils literal"><span class="pre">immediate=False</span></code> for single calls.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Remote Calling Python from Erlang</a><ul>
+<li><a class="reference internal" href="#notebook-style-calls">Notebook-style Calls</a><ul>
+<li><a class="reference internal" href="#api-quick-description">API Quick Description</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#batching-remote-calls">Batching Remote Calls</a><ul>
+<li><a class="reference internal" href="#id1">API Quick Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="data_types.html" title="previous chapter">Data Types in Pyrlang</a></li>
+      <li>Next: <a href="node.html" title="next chapter">node module (begin code exploration from here!)</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/calling_python.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/calling_python.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

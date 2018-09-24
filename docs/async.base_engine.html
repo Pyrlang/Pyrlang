@@ -1,0 +1,199 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>async.base_engine module &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="async.base_protocol module" href="async.base_protocol.html" />
+    <link rel="prev" title="util module" href="pyrlang.util.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.async.base_engine">
+<span id="async-base-engine-module"></span><h1>async.base_engine module<a class="headerlink" href="#module-pyrlang.async.base_engine" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyrlang.async.base_engine.BaseEngine">
+<em class="property">class </em><code class="descclassname">pyrlang.async.base_engine.</code><code class="descname">BaseEngine</code><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This is base class for Pluggable Async Engines.
+This class abstracts away aspects handled by asyncio, gevent and similar
+event engines allowing different library to be selected.</p>
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.call_later">
+<code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.call_later" title="Permalink to this definition">¶</a></dt>
+<dd><p>Schedules fn to be called after sleep(t).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.connect_with">
+<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.connect_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to host_port with a given BaseProtocol handler.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.destroy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.listen_with">
+<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.listen_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawns a task which would listen on a random port with a given
+BaseProtocol handler</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.queue_new">
+<code class="descname">queue_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pyrlang.async.base_engine.BaseQueue<a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.queue_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Queue object compatible with the current async engine.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.run_forever">
+<code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.run_forever" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continues running event loop forever.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.sleep">
+<code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.sleep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sleeps given amount of seconds in a nice compatible way.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.socket_module">
+<code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.socket_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current socket module (modified to be compatible with the
+current async library). Used functions are:
+*   socket.create_connection
+*   socket.error (Exception class)
+*   socket.gethostbyname</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseEngine.spawn">
+<code class="descname">spawn</code><span class="sig-paren">(</span><em>a_callable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.spawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawns a task which will call loop_fn repeatedly while it
+returns False, else will stop.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyrlang.async.base_engine.BaseQueue">
+<em class="property">class </em><code class="descclassname">pyrlang.async.base_engine.</code><code class="descname">BaseQueue</code><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseQueue.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseQueue.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.async.base_engine.BaseQueue.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.put" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pyrlang.util.html" title="previous chapter">util module</a></li>
+      <li>Next: <a href="async.base_protocol.html" title="next chapter">async.base_protocol module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/async.base_engine.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/async.base_engine.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

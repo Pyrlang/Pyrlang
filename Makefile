@@ -47,7 +47,7 @@ deps:
 
 .PHONY: docs
 docs:
-	cd docs && $(PYPATH_SET) $(MAKE) html
+	rm -rf html; cd docs-src && $(MAKE) html && mv build/html ../docs && touch docs/.nojekyll
 
 .PHONY: test
 test:

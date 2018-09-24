@@ -1,0 +1,344 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cookbook - How to Get Started &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data Types in Pyrlang" href="data_types.html" />
+    <link rel="prev" title="Configuring Pyrlang in Runtime" href="configuration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="cookbook-how-to-get-started">
+<h1>Cookbook - How to Get Started<a class="headerlink" href="#cookbook-how-to-get-started" title="Permalink to this headline">¶</a></h1>
+<p>You might have come here to see some examples. Very well...
+But have a quick look at <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a> page too!</p>
+<div class="section" id="start-the-node">
+<h2>Start the Node<a class="headerlink" href="#start-the-node" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyrlang</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">GeventEngine</span> <span class="c1"># or AsyncioEngine</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">eng</span> <span class="o">=</span> <span class="n">GeventEngine</span><span class="p">()</span>  <span class="c1"># or AsyncioEngine</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">node_name</span><span class="o">=</span><span class="s2">&quot;py@127.0.0.1&quot;</span><span class="p">,</span> <span class="n">cookie</span><span class="o">=</span><span class="s2">&quot;COOKIE&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">eng</span><span class="p">)</span>
+
+    <span class="n">fake_pid</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">register_new_process</span><span class="p">()</span>
+
+    <span class="c1"># To be able to send to Erlang shell by name first give it a</span>
+    <span class="c1"># registered name: `erlang:register(shell, self()).`</span>
+    <span class="c1"># To see an incoming message in shell: `flush().`</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">fake_pid</span><span class="p">,</span>
+              <span class="n">receiver</span><span class="o">=</span><span class="p">(</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;erl@127.0.0.1&#39;</span><span class="p">),</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;shell&#39;</span><span class="p">)),</span>
+              <span class="n">message</span><span class="o">=</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">))</span>
+
+    <span class="n">eng</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal"><span class="pre">event_engine</span></code> is a pluggable adapter which allows Pyrlang to run both
+with gevent (<code class="xref py py-class docutils literal"><span class="pre">GeventEngine</span></code>)
+and asyncio-driven (<code class="xref py py-class docutils literal"><span class="pre">AsyncioEngine</span></code>)
+event loops. Pyrlang in this case performs mostly
+protocols handling, while event engine will open connections, start tasks
+and sleep asynchronously.</p>
+</div>
+<div class="section" id="connect-nodes">
+<h2>Connect nodes<a class="headerlink" href="#connect-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can initiate the connection from either Erlang or Python side
+automatically by sending to a remote name using tuple format
+<code class="docutils literal"><span class="pre">{Name,</span> <span class="pre">Node}</span></code> or sending to a remote pid (if you have it).</p>
+</div>
+<p>You can initiate the connection between nodes from Erlang side in a different
+way. To do this on Erlang side you can use <code class="docutils literal"><span class="pre">net_adm:ping</span></code>.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">net_adm</span><span class="p">:</span><span class="nf">ping</span><span class="p">(</span><span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>Also you could send a message to <code class="docutils literal"><span class="pre">{Name,</span> <span class="pre">Node}</span></code>, where <code class="docutils literal"><span class="pre">Node</span></code> is an
+atom like <code class="docutils literal"><span class="pre">'py&#64;127.0.0.1'</span></code>, and <code class="docutils literal"><span class="pre">Name</span></code> is a pid or some registered name,
+which exists on the Python side.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nv">Name</span><span class="p">,</span> <span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">}</span> <span class="o">!</span> <span class="n">hello</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>If the process exists on Python side, its <code class="docutils literal"><span class="pre">inbox_</span></code> field (which will be a
+Gevent or Asyncio Queue) will receive your message.</p>
+</div>
+<div class="section" id="rpc-call-from-erlang">
+<h2>RPC call from Erlang<a class="headerlink" href="#rpc-call-from-erlang" title="Permalink to this headline">¶</a></h2>
+<p>Python node has the special named process running, called <code class="docutils literal"><span class="pre">'rex'</span></code>, which is
+necessary for Erlang RPC to work. You can send an RPC call to Python from
+Erlang. In the following example <code class="docutils literal"><span class="pre">Pyrlang.logger</span></code> module has a <code class="docutils literal"><span class="pre">tty</span></code>
+function which will transparently pass all args to the <code class="docutils literal"><span class="pre">print</span></code> operator.</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">rpc</span><span class="p">:</span><span class="nf">call</span><span class="p">(</span><span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">,</span> <span class="n">&#39;Pyrlang.logger&#39;</span><span class="p">,</span> <span class="n">&#39;tty&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;Hello World&quot;</span><span class="p">]).</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You do not need to import module to perform the call, this will be done by Rex.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Module and function name can be atoms, strings (non-unicode) or binaries.</p>
+</div>
+<p>Function call result or error will be sent back to the caller.
+In case of error, Erlang exit exception will be created with the exception
+value from Python.</p>
+<p><code class="docutils literal"><span class="pre">Rex</span></code> also supports gen_server style calls from Erlang:</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="nn">gen_server</span><span class="p">:</span><span class="nf">call</span><span class="p">({</span><span class="n">rex</span><span class="p">,</span> <span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">},</span>
+                <span class="p">{</span><span class="n">call</span><span class="p">,</span> <span class="n">&#39;Pyrlang.logger&#39;</span><span class="p">,</span> <span class="n">tty</span><span class="p">,</span> <span class="p">[</span><span class="s">&quot;Hello&quot;</span><span class="p">],</span> <span class="n">self</span><span class="p">()}).</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="send-from-python-locally">
+<h2>Send from Python locally<a class="headerlink" href="#send-from-python-locally" title="Permalink to this headline">¶</a></h2>
+<p>You can send messages using the method
+<code class="docutils literal"><span class="pre">Node.send(_sender,</span> <span class="pre">receiver,</span> <span class="pre">message)</span></code>, which can deliver messages
+locally or remotely.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">node</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>  <span class="c1"># argument unused</span>
+          <span class="n">receiver</span><span class="o">=</span><span class="n">term</span><span class="o">.</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;my_erlang_process&#39;</span><span class="p">),</span>
+          <span class="n">message</span><span class="o">=</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="mf">4.5678</span><span class="p">,</span> <span class="p">[</span><span class="n">term</span><span class="o">.</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">)]))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="send-from-python-to-a-remote">
+<h2>Send from Python to a remote<a class="headerlink" href="#send-from-python-to-a-remote" title="Permalink to this headline">¶</a></h2>
+<p>You can send messages to a remote pid. Sender pid is unused and can be None.
+The node connection will be established automatically.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">node</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+          <span class="n">receiver</span><span class="o">=</span><span class="n">receiver_pid</span><span class="p">,</span>
+          <span class="n">message</span><span class="o">=</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>You can send messages to a remote named process, for this use tuple send format
+like <code class="docutils literal"><span class="pre">{Name,</span> <span class="pre">Node}</span></code>. For remote sends sender pid is REQUIRED,
+even if it is a fake pid (see example below how to create a fake pid).</p>
+<p>To try this, open an Erlang shell and register shell with the name <code class="docutils literal"><span class="pre">'shell'</span></code>:</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="nn">erlang</span><span class="p">:</span><span class="nb">register</span><span class="p">(</span><span class="n">shell</span><span class="p">,</span> <span class="n">self</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Now we can try and send the message from Python (node connection will be
+established automatically):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">fake_pid</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">register_new_process</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>  <span class="c1"># create a fake pid</span>
+<span class="n">node</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">fake_pid</span><span class="p">,</span>
+          <span class="n">receiver</span><span class="o">=</span><span class="p">(</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;erl@127.0.0.1&#39;</span><span class="p">),</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;shell&#39;</span><span class="p">)),</span>
+          <span class="n">message</span><span class="o">=</span><span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">flush</span><span class="p">().</span>
+<span class="nv">Shell</span> <span class="n">got</span> <span class="n">hello</span>
+<span class="nf">ok</span>
+<span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">3</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="send-to-a-python-object">
+<h2>Send to a Python object<a class="headerlink" href="#send-to-a-python-object" title="Permalink to this headline">¶</a></h2>
+<p>A python object inherited from <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a> will be
+a Greenlet (i.e. running in parallel with the rest of the system).
+A process is able to register itself (optional) with a name and handle
+incoming messages.</p>
+<p>Messages sent to a pid or name will be automatically routed to such a
+process and arrive into its <code class="docutils literal"><span class="pre">self.inbox_</span></code>. The Process base class will
+constantly call <code class="docutils literal"><span class="pre">self.handle_inbox()</span></code> so you can check the messages yourself.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Because registering a process in the process dictionary introduces
+an extra reference to your object, be sure to tell it explicitly
+to unregister: call <code class="docutils literal"><span class="pre">self.exit(reason=None)</span></code> (defined in Process class).</p>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyProcess</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">Process</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">register_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;my_process&#39;</span><span class="p">))</span>  <span class="c1"># optional</span>
+
+    <span class="k">def</span> <span class="nf">handle_one_inbox_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Incoming&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now sending from Erlang is easy:</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">my_process</span><span class="p">,</span> <span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">}</span> <span class="o">!</span> <span class="n">hello</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="remote-calculations-on-python-node">
+<h2>Remote Calculations on Python Node<a class="headerlink" href="#remote-calculations-on-python-node" title="Permalink to this headline">¶</a></h2>
+<p><strong>Problem:</strong>
+While it is possible to subclass the <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a>
+class and implement a Erlang-like process, often existing Python code
+exposes just a functional API or a class which has to be created for the
+calculation to be performed.
+Often you would like to use some functional API without sending the results
+over the wire until they are ready.</p>
+<p><strong>Solution:</strong>
+A notebook-like remote execution API, where intermediate call results are stored
+in history log and can be referred by name or index.</p>
+<p>There is helper Erlang module called <code class="docutils literal"><span class="pre">py.erl</span></code>, please use it and see
+<a class="reference internal" href="calling_python.html"><span class="doc">Remote Calling Python from Erlang</span></a> for an example.</p>
+</div>
+<div class="section" id="todo-lazy-remote-calculations-on-python-node">
+<h2>TODO Lazy Remote Calculations on Python Node<a class="headerlink" href="#todo-lazy-remote-calculations-on-python-node" title="Permalink to this headline">¶</a></h2>
+<p><strong>Problem:</strong>
+Same as with direct remote calculations: Often you would like to use some
+functional API without sending the results over the wire until they are ready.
+Lazy remote calculations API allows you to prebuild your calculation as a data
+structure on Erlang side and then execute it remotely on one or more
+Pyrlang nodes, sending you the final result.
+Intermediate call results are stored in history log and can be referred by name
+or index.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Describe how to calculate chain of calls on a remote node <strong>lazily</strong>
+using the new API.</p>
+</div>
+</div>
+<div class="section" id="gen-server-like-processes">
+<h2>Gen_server-like Processes<a class="headerlink" href="#gen-server-like-processes" title="Permalink to this headline">¶</a></h2>
+<p>To have a <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a> descendant which responds to
+<code class="docutils literal"><span class="pre">gen_server:call</span></code>, inherit your class from <a class="reference internal" href="gen_server.html#pyrlang.gen_server.GenServer" title="pyrlang.gen_server.GenServer"><code class="xref py py-class docutils literal"><span class="pre">GenServer</span></code></a>.
+When calling <code class="docutils literal"><span class="pre">GenServer</span></code> constructor in your <code class="docutils literal"><span class="pre">__init__</span></code> specify an
+additional parameter <code class="docutils literal"><span class="pre">accepted_calls</span></code> which is a list of strings.</p>
+<p>Functions with these names will be mapped to incoming <code class="docutils literal"><span class="pre">gen_server:call</span></code>
+and their result will be transparently 'replied' back to the caller.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyProcess</span><span class="p">(</span><span class="n">GenServer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">GenServer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">accepted_calls</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid_</span>
+</pre></div>
+</div>
+<p>When you perform a <code class="docutils literal"><span class="pre">gen_server:call</span></code> with an atom, the atom becomes Python
+method name:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># 1&gt; gen_server:call(Pid, my_method)</span>
+<span class="c1"># becomes a call to</span>
+<span class="k">class</span> <span class="nc">MyClass</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c1"># return None -&gt; atom &#39;undefined&#39; in Erlang</span>
+</pre></div>
+</div>
+<p>When you perform a <code class="docutils literal"><span class="pre">gen_server:call</span></code> with a tuple where first element is an
+atom, the atom becomes Python method name, and following tuple elements become
+python <strong>*args</strong>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># 1&gt; gen_server:call(Pid, {my_method, 1000, &quot;hello&quot;})</span>
+<span class="c1"># becomes a call to</span>
+<span class="k">class</span> <span class="nc">MyClass</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">pass</span> <span class="c1"># return None -&gt; atom &#39;undefined&#39; in Erlang</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Cookbook - How to Get Started</a><ul>
+<li><a class="reference internal" href="#start-the-node">Start the Node</a></li>
+<li><a class="reference internal" href="#connect-nodes">Connect nodes</a></li>
+<li><a class="reference internal" href="#rpc-call-from-erlang">RPC call from Erlang</a></li>
+<li><a class="reference internal" href="#send-from-python-locally">Send from Python locally</a></li>
+<li><a class="reference internal" href="#send-from-python-to-a-remote">Send from Python to a remote</a></li>
+<li><a class="reference internal" href="#send-to-a-python-object">Send to a Python object</a></li>
+<li><a class="reference internal" href="#remote-calculations-on-python-node">Remote Calculations on Python Node</a></li>
+<li><a class="reference internal" href="#todo-lazy-remote-calculations-on-python-node">TODO Lazy Remote Calculations on Python Node</a></li>
+<li><a class="reference internal" href="#gen-server-like-processes">Gen_server-like Processes</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuring Pyrlang in Runtime</a></li>
+      <li>Next: <a href="data_types.html" title="next chapter">Data Types in Pyrlang</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/cookbook.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/cookbook.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

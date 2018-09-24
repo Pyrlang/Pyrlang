@@ -1,0 +1,222 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>process module &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rex module - Remote Execution" href="rex.html" />
+    <link rel="prev" title="node module (begin code exploration from here!)" href="node.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.process">
+<span id="process-module"></span><h1>process module<a class="headerlink" href="#module-pyrlang.process" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyrlang.process.Process">
+<em class="property">class </em><code class="descclassname">pyrlang.process.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>node: typing.Union[str, pyrlang.bases.BaseNode], passive: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.process.Process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">term.bases.BaseProcess</span></code></p>
+<p>Implements Erlang process semantic and lifetime.
+Registers itself in the process registry, can receive and send messages.
+To optionally register self with a name, call
+<code class="docutils literal"><span class="pre">node.register_name(self,</span> <span class="pre">term.Atom('fgsfds'))</span></code></p>
+<p>Subclass the Process to run your logic in its <code class="docutils literal"><span class="pre">_loop()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code>
+function or to handle incoming messages via
+<code class="docutils literal"><span class="pre">handle_one_inbox_message(self,</span> <span class="pre">msg)</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only a <code class="docutils literal"><span class="pre">Process</span></code> can serve as a target for sending messages, for
+linking and monitoring. You do not need to create a Process for simple
+one-way interactions with remote Erlang nodes.</p>
+</div>
+<dl class="method">
+<dt id="pyrlang.process.Process.deliver_message">
+<code class="descname">deliver_message</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.deliver_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Places message into the inbox, or delivers it immediately to a
+handler (if process is <code class="docutils literal"><span class="pre">passive</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.engine_">
+<code class="descname">engine_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.engine_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pluggable async event engine</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.exit">
+<code class="descname">exit</code><span class="sig-paren">(</span><em>reason=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marks the object as exiting with the reason, informs links and
+monitors and unregisters the object from the node process
+dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.handle_inbox">
+<code class="descname">handle_inbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.handle_inbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do not override <cite>handle_inbox</cite>, instead go for
+<cite>handle_one_inbox_message</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.handle_one_inbox_message">
+<code class="descname">handle_one_inbox_message</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.handle_one_inbox_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to handle new incoming messages.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.inbox_">
+<code class="descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.inbox_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Message queue (gevent.Queue). Messages are detected by the <code class="docutils literal"><span class="pre">_run</span></code>
+loop and handled one by one in <code class="docutils literal"><span class="pre">handle_one_inbox_message()</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.monitor_targets_">
+<code class="descname">monitor_targets_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.monitor_targets_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Who we monitor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.monitors_">
+<code class="descname">monitors_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.monitors_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Who monitors us. Either local or remote processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.node_name_">
+<code class="descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.node_name_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience field to see the Node (from Node.all_nodes[name]).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.passive_">
+<code class="descname">passive_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.passive_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Having <code class="docutils literal"><span class="pre">passive=True</span></code> will only wake up this
+<code class="docutils literal"><span class="pre">Process</span></code> when a message arrives, to handle it, otherwise it will
+not get any CPU time for any empty polling loops. Having
+<code class="docutils literal"><span class="pre">passive=False</span></code> will run
+<code class="xref py py-func docutils literal"><span class="pre">process_loop`()</span></code>
+polling inbox.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.process.Process.pid_">
+<code class="descname">pid_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.pid_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process identifier for this object. Remember that when creating a
+process, it registers itself in the node, and this creates a
+reference.
+References prevent an object from being garbage collected.
+To destroy a process, get rid of this extra reference by calling
+<code class="docutils literal"><span class="pre">exit()</span></code> and telling it the cause of its death.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.process_loop">
+<code class="descname">process_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.process.Process.process_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Polls inbox in an endless loop. Returns <code class="docutils literal"><span class="pre">True</span></code> to continue running.
+Return <code class="docutils literal"><span class="pre">False</span></code> to stop.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This will not be executed if the process was constructed with
+<code class="docutils literal"><span class="pre">passive=True</span></code> (the default).</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="node.html" title="previous chapter">node module (begin code exploration from here!)</a></li>
+      <li>Next: <a href="rex.html" title="next chapter">rex module - Remote Execution</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/process.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/process.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

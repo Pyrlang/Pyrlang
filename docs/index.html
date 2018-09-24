@@ -1,0 +1,204 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pyrlang Library &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples!" href="examples.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pyrlang-library">
+<h1>Pyrlang Library<a class="headerlink" href="#pyrlang-library" title="Permalink to this headline">¶</a></h1>
+<p>Pyrlang is a Python library which implements Erlang distribution protocol and
+creates an Erlang-compatible node in your Erlang cluster.</p>
+<p>You can send and receive messages, spawn &quot;processes&quot; on Python side, which
+will be addressable from Erlang using familiar Erlang concepts like message
+sending to process identifiers or registered names.
+Also same works from Python: you can address Erlang processes, send messages
+to them, monitor and link with them.</p>
+<p>The library is designed to be dropped into existing code base with very few
+changes required.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples!</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-1-python-to-erlang">Example 1: Python to Erlang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-2-erlang-to-python">Example 2: Erlang to Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-3-and-4-calling-batch-python">Examples 3 and 4: Calling/Batch Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#example-10-elixir-and-genserver">Example 10: Elixir and GenServer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookbook.html">Cookbook - How to Get Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#start-the-node">Start the Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#connect-nodes">Connect nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#rpc-call-from-erlang">RPC call from Erlang</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#send-from-python-locally">Send from Python locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#send-from-python-to-a-remote">Send from Python to a remote</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#send-to-a-python-object">Send to a Python object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#remote-calculations-on-python-node">Remote Calculations on Python Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#todo-lazy-remote-calculations-on-python-node">TODO Lazy Remote Calculations on Python Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html#gen-server-like-processes">Gen_server-like Processes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_types.html">Data Types in Pyrlang</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_types.html#decoding">Decoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_types.html#encoding">Encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_types.html#lists">Lists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_types.html#binaries">Binaries</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calling_python.html">Remote Calling Python from Erlang</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calling_python.html#notebook-style-calls">Notebook-style Calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calling_python.html#batching-remote-calls">Batching Remote Calls</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="pyrlang-modules">
+<h2>Pyrlang Modules<a class="headerlink" href="#pyrlang-modules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">process module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen_server.html">gen_server module - Handling gen:calls nicely</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.util.html">util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_engine.html">async.base_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_protocol.html">async.base_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.asyncio_engine.html">async.asyncio_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.gevent_engine.html">async.gevent_engine module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="distribution-protocol-implementation">
+<h2>Distribution Protocol Implementation<a class="headerlink" href="#distribution-protocol-implementation" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dist.distribution.html">Dist.distribution module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.epmd.html">Dist.epmd module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.node_opts.html">Dist.node_opts module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.in_dist_protocol.html">Dist.in_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.out_dist_protocol.html">Dist.out_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.base_dist_protocol.html">Dist.base_dist_protocol module</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Pyrlang Library</a><ul>
+<li><a class="reference internal" href="#pyrlang-modules">Pyrlang Modules</a></li>
+<li><a class="reference internal" href="#distribution-protocol-implementation">Distribution Protocol Implementation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="examples.html" title="next chapter">Examples!</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

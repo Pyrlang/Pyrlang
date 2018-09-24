@@ -1,0 +1,302 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Data Types in Pyrlang &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Remote Calling Python from Erlang" href="calling_python.html" />
+    <link rel="prev" title="Cookbook - How to Get Started" href="cookbook.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="data-types-in-pyrlang">
+<h1>Data Types in Pyrlang<a class="headerlink" href="#data-types-in-pyrlang" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="decoding">
+<h2>Decoding<a class="headerlink" href="#decoding" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="18%" />
+<col width="64%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Erlang</td>
+<td>Python</td>
+<td>Notes</td>
+</tr>
+<tr class="row-even"><td>atom()</td>
+<td>Pyrlang.Atom</td>
+<td>Can use <code class="docutils literal"><span class="pre">str()</span></code> or access <code class="xref py py-attr docutils literal"><span class="pre">text_</span></code> directly</td>
+</tr>
+<tr class="row-odd"><td>float()</td>
+<td>float</td>
+<td>64-bit double precision floating point</td>
+</tr>
+<tr class="row-even"><td>integer()</td>
+<td>int</td>
+<td>Any size integers</td>
+</tr>
+<tr class="row-odd"><td>list()</td>
+<td>list</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>improper_list()</td>
+<td>(list, _Tail)</td>
+<td>A tuple with list and the tail element</td>
+</tr>
+<tr class="row-odd"><td>unicode string()</td>
+<td>list(int)</td>
+<td>Use helper functions in <code class="xref py py-mod docutils literal"><span class="pre">list</span></code> to convert to string</td>
+</tr>
+<tr class="row-even"><td>byte string()</td>
+<td>bytes</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>tuple()</td>
+<td>tuple</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>map()</td>
+<td>dict</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>binary()</td>
+<td>bytes</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>bitstring()</td>
+<td>(bytes, int)</td>
+<td>A tuple of bytes and last_byte_bits:int defining incomplete last byte</td>
+</tr>
+<tr class="row-odd"><td>pid()</td>
+<td>Pyrlang.Pid</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>reference()</td>
+<td>Pyrlang.Reference</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>fun()</td>
+<td>Pyrlang.Fun</td>
+<td>Not useful in Python</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="encoding">
+<h2>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="26%" />
+<col width="45%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Python</td>
+<td>Erlang</td>
+<td>Notes</td>
+</tr>
+<tr class="row-even"><td>Pyrlang.Atom</td>
+<td>atom()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>float</td>
+<td>float()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>int</td>
+<td>integer()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>list</td>
+<td>list()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Pyrlang.ImproperList</td>
+<td>improper_list()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>list(int)</td>
+<td>string()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>bytes</td>
+<td>binary()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>tuple</td>
+<td>tuple()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>dict</td>
+<td>map()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>Pyrlang.Bitstring</td>
+<td>bitstring()</td>
+<td>A binary with last byte incomplete</td>
+</tr>
+<tr class="row-even"><td>Pyrlang.Pid</td>
+<td>pid()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>Pyrlang.Reference</td>
+<td>reference()</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Pyrlang.Fun</td>
+<td>fun()</td>
+<td>Not useful in Python</td>
+</tr>
+<tr class="row-odd"><td>other objects</td>
+<td>#{'ClassName', #{}}</td>
+<td>Encoding may fail on some types</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lists">
+<h2>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h2>
+<p>Erlang lists can be of 2 kinds:</p>
+<ul class="simple">
+<li>Regular lists of anything:<ul>
+<li>Unicode strings, which are regular lists of integers in unicode range.</li>
+<li>8-bit strings, sometimes called latin-1 or ASCII, which are regular lists
+of bytes.</li>
+</ul>
+</li>
+<li>Improper lists (those with last cell's tail being not <code class="docutils literal"><span class="pre">[]</span> <span class="pre">NIL</span></code>).</li>
+</ul>
+<p>Pyrlang always decodes incoming regular lists as Python lists,
+use helper functions in <code class="xref py py-mod docutils literal"><span class="pre">list</span></code> to extract strings.
+If incoming string contained only bytes (integers between 0 and 255) then
+Erlang node will optimize the encoding and send a byte array. In this case you
+will receive Python <code class="docutils literal"><span class="pre">bytes</span></code> string, and not a list, which is
+<strong>the same as if you have sent a binary</strong>, so to reduce confusion always send
+strings as UTF8 binaries.</p>
+<p>A regular Erlang list always has an invisible <code class="docutils literal"><span class="pre">[]</span></code> (<code class="docutils literal"><span class="pre">NIL</span></code>) set as tail of
+its last cons cell. Regular lists map directly to Python lists and
+<strong>there is no easy way to tell a list of integers from a string</strong> other than
+check elements ranges and assume that is a printable string. Unless you received
+Python <code class="docutils literal"><span class="pre">bytes</span></code> then it's easy.</p>
+<p>An improper Erlang list has some other value than <code class="docutils literal"><span class="pre">[]</span> <span class="pre">NIL</span></code> as the tail of
+its last cell.
+Pyrlang returns these as Python tuple <code class="docutils literal"><span class="pre">(list,</span> <span class="pre">tail)</span></code>.
+To tell Pyrlang encoder to send an improper list back to Erlang, use the
+<code class="xref py py-class docutils literal"><span class="pre">ImproperList</span></code> class.</p>
+</div>
+<div class="section" id="binaries">
+<h2>Binaries<a class="headerlink" href="#binaries" title="Permalink to this headline">¶</a></h2>
+<p>Pyrlang always decodes incoming Erlang binaries into Python <code class="docutils literal"><span class="pre">bytes</span></code> objects.</p>
+<p>Bitstrings are decoded as Python pairs of <code class="docutils literal"><span class="pre">(bytes,</span> <span class="pre">last_byte_bits:int)</span></code>
+To be able to send a bitstring back to Erlang, use class
+<code class="xref py py-class docutils literal"><span class="pre">BitString</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Data Types in Pyrlang</a><ul>
+<li><a class="reference internal" href="#decoding">Decoding</a></li>
+<li><a class="reference internal" href="#encoding">Encoding</a></li>
+<li><a class="reference internal" href="#lists">Lists</a></li>
+<li><a class="reference internal" href="#binaries">Binaries</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="cookbook.html" title="previous chapter">Cookbook - How to Get Started</a></li>
+      <li>Next: <a href="calling_python.html" title="next chapter">Remote Calling Python from Erlang</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/data_types.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/data_types.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

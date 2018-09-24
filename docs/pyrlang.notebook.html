@@ -1,0 +1,188 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyrlang.notebook module &#8212; Pyrlang 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="util module" href="pyrlang.util.html" />
+    <link rel="prev" title="gen_server module - Handling gen:calls nicely" href="gen_server.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.notebook.notebook">
+<span id="pyrlang-notebook-module"></span><h1>pyrlang.notebook module<a class="headerlink" href="#module-pyrlang.notebook.notebook" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyrlang.notebook.notebook.Notebook">
+<em class="property">class </em><code class="descclassname">pyrlang.notebook.notebook.</code><code class="descname">Notebook</code><span class="sig-paren">(</span><em>options: dict</em>, <em>node_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="gen_server.html#pyrlang.gen_server.GenServer" title="pyrlang.gen_server.GenServer"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.gen_server.GenServer</span></code></a></p>
+<p>Implements a flow for performing remote calculations from Erlang on
+Python node, while storing the results on Python side until they are
+ready. Each call result is stored in notebook history and a value index
+is returned to the caller. This index can be used as an argument
+in subsequent calls.</p>
+<dl class="attribute">
+<dt id="pyrlang.notebook.notebook.Notebook.history_">
+<code class="descname">history_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.history_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recent calculation results indexed by integers or names.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.notebook.notebook.Notebook.history_ids_">
+<code class="descname">history_ids_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.history_ids_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log of recent value ids in their creation order. Values, which were
+deleted because of history size limit, are also deleted here.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.notebook.notebook.Notebook.history_limit_">
+<code class="descname">history_limit_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.history_limit_" title="Permalink to this definition">¶</a></dt>
+<dd><p>History dict will be trimmed when its length is greater than this
+limit to save memory. Attempt to refer to a trimmed value will
+create value_not_found exception, also propagated to Erlang side.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.notebook.notebook.Notebook.nb_batch">
+<code class="descname">nb_batch</code><span class="sig-paren">(</span><em>batch: typing.List[tuple], param: typing.Dict[term.atom.Atom, &lt;built-in function any&gt;]</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.nb_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a remote call from Erlang to execute batch of Python calls.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.notebook.notebook.Notebook.nb_call">
+<code class="descname">nb_call</code><span class="sig-paren">(</span><em>param: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.nb_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remote call from <code class="docutils literal"><span class="pre">py.erl</span></code>: Calls function defined in <code class="docutils literal"><span class="pre">args</span></code>,
+stores the result in history.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>param</strong> -- contains <code class="docutils literal"><span class="pre">path</span></code>: list of strings where first one is
+to be imported and remaining are used to find the function;
+<code class="docutils literal"><span class="pre">args</span></code>: list of arguments for the callable; <code class="docutils literal"><span class="pre">kwargs</span></code>;
+<code class="docutils literal"><span class="pre">immediate</span></code>: will return the value instead of the value ref
+if this is <code class="docutils literal"><span class="pre">True</span></code>, also will not update the history.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Index for stored history value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.notebook.notebook.Notebook.nb_retrieve">
+<code class="descname">nb_retrieve</code><span class="sig-paren">(</span><em>value_id</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.nb_retrieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remote call from <code class="docutils literal"><span class="pre">py.erl</span></code>: Retrieves a historical value by index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.notebook.notebook.Notebook.value_id_">
+<code class="descname">value_id_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.notebook.notebook.Notebook.value_id_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Next id to be used as result index.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrlang.notebook.notebook.new_context">
+<code class="descclassname">pyrlang.notebook.notebook.</code><code class="descname">new_context</code><span class="sig-paren">(</span><em>node_name: str</em>, <em>options: dict</em><span class="sig-paren">)</span> &#x2192; term.pid.Pid<a class="headerlink" href="#pyrlang.notebook.notebook.new_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new remote-call notebook context. Node_name argument will be
+automatically prepended to args by Rex.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gen_server.html" title="previous chapter">gen_server module - Handling gen:calls nicely</a></li>
+      <li>Next: <a href="pyrlang.util.html" title="next chapter">util module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pyrlang.notebook.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Erlang Solutions Ltd..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/pyrlang.notebook.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
