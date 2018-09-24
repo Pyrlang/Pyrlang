@@ -7,5 +7,7 @@ setup(name='Pyrlang',
       author_email='dmytro.lytovchenko@gmail.com,pyrlang@s2hc.com',
       url='http://pyrlang.readthedocs.io/',
       packages=find_packages(),
+    # The library requires either asyncio or Gevent, you can relax this
+    # dependency if Gevent is not desired
       install_requires=['gevent == 1.2.1']
       )
