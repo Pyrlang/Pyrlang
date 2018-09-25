@@ -22,11 +22,13 @@ example3: $(ERLLIBDIR)/py.beam $(ROOT)/examples/e03_call_python.beam
 example4: $(ERLLIBDIR)/py.beam $(ROOT)/examples/e04_batch_call_python.beam
 	$(ERL) -s e04_batch_call_python -noshell
 
-$(ROOT)/examples/%.beam: $(ROOT)/examples/%.erl
-	cd $(ROOT)/examples && erlc $<
-
-$(ERLLIBDIR)/%.beam: $(ERLLIBDIR)/%.erl
-	cd $(ERLLIBDIR) && erlc $<
+# Run `make example5a` to run Erlang node
+# Run `make example5b` to run Python node and wait for them to interact
+.PHONY: example5a example5b
+example5a: $(ROOT)/examples/e05_links_monitors.beam
+	$(ERL) -s e05_links_monitors -noshell
+example5b:
+	$(PY) examples/e05_links_monitors.py
 
 # Run `make example10a` to run Python node
 # Run `make example10b` to run Elixir client
@@ -36,6 +38,12 @@ example10a:
 example10b:
 	elixir --name elixir@127.0.0.1 --cookie COOKIE \
 		examples/elixir/e10.exs
+
+$(ROOT)/examples/%.beam: $(ROOT)/examples/%.erl
+	cd $(ROOT)/examples && erlc $<
+
+$(ERLLIBDIR)/%.beam: $(ERLLIBDIR)/%.erl
+	cd $(ERLLIBDIR) && erlc $<
 
 .PHONY: erlshell
 erlshell:
@@ -59,3 +67,8 @@ test:
 		echo "RUNNING $$f"; \
 		$(PY) $$f || exit 1; \
 	done
+
+# Run Pyre type check (requires: pip install pyre-check):
+.PHONY: pyre
+pyre:
+	PYTHONPATH=$(ROOT):$(ROOT)/../term/ pyre check

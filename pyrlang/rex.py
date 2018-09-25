@@ -34,8 +34,10 @@ class Rex(Process):
             :py:func:`~Pyrlang.gen.parse_gen_call` function
     """
 
-    def __init__(self, node: Node) -> None:
-        Process.__init__(self, node)
+    def __init__(self, node) -> None:
+        """ :param node: pyrlang.node.Node
+        """
+        Process.__init__(self, node_name=node.node_name_)
         node.register_name(self, Atom('rex'))
 
         self.traceback_depth_ = 5

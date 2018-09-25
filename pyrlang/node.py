@@ -19,11 +19,12 @@ from typing import Dict, Union
 from pyrlang.async.base_engine import BaseEngine
 from pyrlang.dist.distribution import ErlangDistribution
 from pyrlang.dist.base_dist_protocol import BaseDistProtocol
-from pyrlang.dist.node_opts import NodeOpts
+from pyrlang.dist.distflags import NodeOpts
 from pyrlang.bases import BaseNode
 from pyrlang.process import Process
 from term.atom import Atom
 from term.pid import Pid
+from term.reference import Reference
 
 LOG = logging.getLogger("pyrlang")
 
@@ -107,12 +108,12 @@ class Node(BaseNode):
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
         from pyrlang.rex import Rex
-        self.rex_ = Rex(self)
+        self.rex_ = Rex(node=self)
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
         from pyrlang.net_kernel import NetKernel
-        self.net_kernel_ = NetKernel(self)
+        self.net_kernel_ = NetKernel(node=self)
 
         self.engine_.spawn(self._loop)
 
@@ -311,22 +312,39 @@ class Node(BaseNode):
         conn = self.dist_nodes_[receiver_node]
         conn.inbox_.put(message)
 
+    def link(self, pid1, pid2):
+        """ Check each of processes pid1 and pid2 if they are local, mutually
+            link them. Assume remote process handles its own linking.
+            :type pid1: term.pid.Pid
+            :type pid2: term.pid.Pid
+        """
+        if pid1.is_local_to(self):
+            self.processes_[pid1].link(pid2)
+
+        if pid2.is_local_to(self):
+            self.processes_[pid2].link(pid1)
+
     def monitor_process(self, origin, target):
         """ Locate the process referenced by the target and place the origin
             pid into its ``monitors_`` collection. When something happens to the
             ``target``, a special message will be sent to the ``origin``.
 
-            :type origin: Pid
+            :type origin: term.pid.Pid
             :param origin: The (possibly remote) process who will be monitoring
                 the target from now
-            :type target: Pid or Atom
+            :type target: term.pid.Pid or term.atom.Atom
             :param target: Name or pid of a monitor target process
+            :return: term.reference.Reference
             :raises ProcessNotFound: if target does not exist
        """
         target_proc = self.where_is(target)
+        m_ref = Reference.create(node_name=self.node_name_,
+                                 creation=self.dist_.creation_)
+
         LOG.info("MonitorP: orig=%s targ=%s -> %s", origin, target, target_proc)
+
         if target_proc is not None:
-            target_proc.monitors_.add(origin)
+            target_proc.monitors_[origin] = m_ref
         else:
             msg = "Monitor target %s does not exist" % target
             LOG.error(msg)
@@ -364,7 +382,9 @@ class Node(BaseNode):
 
     def destroy(self):
         """ Closes incoming and outgoing connections and destroys the local
-            node. """
+            node. This is Python, so some refs from running async handlers
+            may remain.
+        """
         self.is_exiting_ = True
 
         import copy
@@ -382,6 +402,19 @@ class Node(BaseNode):
         del Node.all_nodes[self.node_name_]
 
         self.engine_.destroy()
+
+    def send_exit_signal(self, sender, receiver, reason):
+        """ Deliver local or remote exit signal to a process. """
+        if receiver.is_local_to(self):
+            recvp = self.processes_.get(receiver, None)
+            if recvp is None:
+                return  # can't kill that which doesn't exist
+            recvp.exit(reason=reason)
+        else:
+            # This is a remote Pid, so send something remotely
+            distm = ('exit', sender, receiver, reason)
+            self.dist_command(receiver_node=receiver.node_name_,
+                              message=distm)
 
 
 __all__ = ['Node', 'NodeException', 'ProcessNotFoundError']

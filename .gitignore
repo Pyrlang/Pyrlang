@@ -100,9 +100,13 @@ ENV/
 # mkdocs documentation
 /site
 
-# mypy
+# mypy Typecheck
 .mypy_cache/
 
 # intelliJ
 /.idea/*
 *.iml
+
+# Pyre Typecheck
+/.pyre_configuration
+/.pyre

@@ -13,7 +13,7 @@
 
 from pyrlang import Node
 from term import Atom
-# from pyrlang import GeventEngine as async
+# from pyrlang import GeventEngine as Engine
 from pyrlang import AsyncioEngine as Engine
 
 
