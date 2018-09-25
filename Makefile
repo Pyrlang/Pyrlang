@@ -47,7 +47,11 @@ deps:
 
 .PHONY: docs
 docs:
-	rm -rf html; cd docs-src && $(MAKE) html && mv build/html ../docs && touch docs/.nojekyll
+	rm -rf $(ROOT)/docs; \
+	cd docs-src && \
+	$(MAKE) html && \
+	mv -f $(ROOT)/docs-src/build/html $(ROOT)/docs && \
+	touch $(ROOT)/docs/.nojekyll
 
 .PHONY: test
 test:
