@@ -186,6 +186,7 @@ async def _read_loop(proto: BaseProtocol,
                 if not data:
                     return _disconnect(proto, sock, "Socket closed")
 
+                LOG.info("Recv: data=%s", data)
                 collected += data
 
                 # Try and consume repeatedly if multiple messages arrived

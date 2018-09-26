@@ -52,8 +52,8 @@
 <p>Some examples are located in <code class="docutils literal"><span class="pre">examples/</span></code> directory. And there are convenient
 <code class="docutils literal"><span class="pre">Makefile</span></code> targets to call them, just use your Bash autocomplete when typing
 <code class="docutils literal"><span class="pre">make</span> <span class="pre">example&lt;TAB&gt;</span></code>:</p>
-<div class="section" id="example-1-python-to-erlang">
-<h2>Example 1: Python to Erlang<a class="headerlink" href="#example-1-python-to-erlang" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="python-to-erlang">
+<h2>1: Python to Erlang<a class="headerlink" href="#python-to-erlang" title="Permalink to this headline">¶</a></h2>
 <p>Demonstrates how Python node can actively find a running Erlang node and connect
 to it by attempting to send a message.</p>
 <p>Running (in two terminal tabs):</p>
@@ -66,8 +66,8 @@ Erlang shell: <code class="docutils literal"><span class="pre">erlang:register(s
 <li>(optional) Check whether Erlang shell received <code class="docutils literal"><span class="pre">hello</span></code> by typing <code class="docutils literal"><span class="pre">flush().</span></code></li>
 </ul>
 </div>
-<div class="section" id="example-2-erlang-to-python">
-<h2>Example 2: Erlang to Python<a class="headerlink" href="#example-2-erlang-to-python" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="erlang-to-python">
+<h2>2: Erlang to Python<a class="headerlink" href="#erlang-to-python" title="Permalink to this headline">¶</a></h2>
 <p>Demonstrates how to run a named process on Python node. Erlang node will try and
 send message to it by name.</p>
 <ul class="simple">
@@ -79,8 +79,8 @@ send messages to it by name from Erlang;</li>
 <li>In Python terminal tab observe log message about incoming data.</li>
 </ul>
 </div>
-<div class="section" id="examples-3-and-4-calling-batch-python">
-<h2>Examples 3 and 4: Calling/Batch Python<a class="headerlink" href="#examples-3-and-4-calling-batch-python" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="calling-batch-python">
+<h2>3 &amp; 4: Calling/Batch Python<a class="headerlink" href="#calling-batch-python" title="Permalink to this headline">¶</a></h2>
 <p>Examples are <code class="docutils literal"><span class="pre">.erl</span></code> files which demonstrate how remote notebook-style calls
 and batch calls will work with Erlang and Python.</p>
 <ul class="simple">
@@ -88,8 +88,25 @@ and batch calls will work with Erlang and Python.</p>
 <li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example3</span></code> or <code class="docutils literal"><span class="pre">make</span> <span class="pre">example4</span></code> and observe what it prints.</li>
 </ul>
 </div>
-<div class="section" id="example-10-elixir-and-genserver">
-<h2>Example 10: Elixir and GenServer<a class="headerlink" href="#example-10-elixir-and-genserver" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="links-and-monitors-of-pyrlang-processes">
+<h2>5: Links and Monitors of Pyrlang Processes<a class="headerlink" href="#links-and-monitors-of-pyrlang-processes" title="Permalink to this headline">¶</a></h2>
+<p>Demonstrates Erlang remotely monitoring and linking to Pyrlang processes.
+A Python <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a> will trigger monitor and link
+messages when exiting.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5a</span></code> will start Erlang node in one terminal and wait</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5b</span></code> will start Python part in another terminal, spawn some
+test processes and send a message to Erlang side.</li>
+<li>Erlang node will link and monitor test processes, try make them exit and
+print the results.</li>
+</ul>
+</div>
+<div class="section" id="links-and-monitors-of-erlang-processes">
+<h2>6: Links and Monitors of Erlang Processes<a class="headerlink" href="#links-and-monitors-of-erlang-processes" title="Permalink to this headline">¶</a></h2>
+<p>Demonstrates Pyrlang remotely monitoring and linking to Erlang process or node.</p>
+</div>
+<div class="section" id="elixir-and-genserver">
+<h2>10: Elixir and GenServer<a class="headerlink" href="#elixir-and-genserver" title="Permalink to this headline">¶</a></h2>
 <p>This example will demonstrate how to accept <code class="docutils literal"><span class="pre">gen_server:call</span></code> in your Python
 <code class="docutils literal"><span class="pre">Process</span></code>.</p>
 <p>Running (in two terminal tabs):</p>
@@ -124,10 +141,12 @@ and example B.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Examples!</a><ul>
-<li><a class="reference internal" href="#example-1-python-to-erlang">Example 1: Python to Erlang</a></li>
-<li><a class="reference internal" href="#example-2-erlang-to-python">Example 2: Erlang to Python</a></li>
-<li><a class="reference internal" href="#examples-3-and-4-calling-batch-python">Examples 3 and 4: Calling/Batch Python</a></li>
-<li><a class="reference internal" href="#example-10-elixir-and-genserver">Example 10: Elixir and GenServer</a></li>
+<li><a class="reference internal" href="#python-to-erlang">1: Python to Erlang</a></li>
+<li><a class="reference internal" href="#erlang-to-python">2: Erlang to Python</a></li>
+<li><a class="reference internal" href="#calling-batch-python">3 &amp; 4: Calling/Batch Python</a></li>
+<li><a class="reference internal" href="#links-and-monitors-of-pyrlang-processes">5: Links and Monitors of Pyrlang Processes</a></li>
+<li><a class="reference internal" href="#links-and-monitors-of-erlang-processes">6: Links and Monitors of Erlang Processes</a></li>
+<li><a class="reference internal" href="#elixir-and-genserver">10: Elixir and GenServer</a></li>
 </ul>
 </li>
 </ul>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Dist.node_opts module &#8212; Pyrlang 1.0 documentation</title>
+    <title>dist.distflags module &#8212; Pyrlang 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,8 +26,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Dist.in_dist_protocol module" href="dist.in_dist_protocol.html" />
-    <link rel="prev" title="Dist.epmd module" href="dist.epmd.html" />
+    <link rel="next" title="dist.in_dist_protocol module" href="dist.in_dist_protocol.html" />
+    <link rel="prev" title="dist.epmd module" href="dist.epmd.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -45,60 +45,60 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.dist.node_opts">
-<span id="dist-node-opts-module"></span><h1>Dist.node_opts module<a class="headerlink" href="#module-pyrlang.dist.node_opts" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrlang.dist.distflags">
+<span id="dist-distflags-module"></span><h1>dist.distflags module<a class="headerlink" href="#module-pyrlang.dist.distflags" title="Permalink to this headline">¶</a></h1>
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DEFAULT_DFLAGS">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DEFAULT_DFLAGS</code><em class="property"> = 217020</em><a class="headerlink" href="#pyrlang.dist.node_opts.DEFAULT_DFLAGS" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DEFAULT_DFLAGS">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DEFAULT_DFLAGS</code><em class="property"> = 217020</em><a class="headerlink" href="#pyrlang.dist.distflags.DEFAULT_DFLAGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default flags value represents current Pyrlang library features
 as a combination of feature bits.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_BIT_BINARIES">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_BIT_BINARIES</code><em class="property"> = 1024</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_BIT_BINARIES" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_BIT_BINARIES">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_BIT_BINARIES</code><em class="property"> = 1024</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_BIT_BINARIES" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports incomplete trailing byte in binaries.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_DIST_MONITOR">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_DIST_MONITOR</code><em class="property"> = 8</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_DIST_MONITOR" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_DIST_MONITOR">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_DIST_MONITOR</code><em class="property"> = 8</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_DIST_MONITOR" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports remote monitoring for processes.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_DIST_MONITOR_NAME">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_DIST_MONITOR_NAME</code><em class="property"> = 32</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_DIST_MONITOR_NAME" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_DIST_MONITOR_NAME">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_DIST_MONITOR_NAME</code><em class="property"> = 32</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_DIST_MONITOR_NAME" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports remote monitoring for named processes.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_EXT_PIDS_PORTS">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_EXT_PIDS_PORTS</code><em class="property"> = 256</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_EXT_PIDS_PORTS" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_EXT_PIDS_PORTS">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_EXT_PIDS_PORTS</code><em class="property"> = 256</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_EXT_PIDS_PORTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports encoding/decoding of external pids and ports.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_EXT_REFS">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_EXT_REFS</code><em class="property"> = 4</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_EXT_REFS" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_EXT_REFS">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_EXT_REFS</code><em class="property"> = 4</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_EXT_REFS" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports encoding/decoding of external references.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_MAP_TAG">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_MAP_TAG</code><em class="property"> = 131072</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_MAP_TAG" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_MAP_TAG">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_MAP_TAG</code><em class="property"> = 131072</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_MAP_TAG" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node can handle map encoding.</p>
 </dd></dl>
 
 <dl class="data">
-<dt id="pyrlang.dist.node_opts.DFLAG_NEW_FLOATS">
-<code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">DFLAG_NEW_FLOATS</code><em class="property"> = 2048</em><a class="headerlink" href="#pyrlang.dist.node_opts.DFLAG_NEW_FLOATS" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.DFLAG_NEW_FLOATS">
+<code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">DFLAG_NEW_FLOATS</code><em class="property"> = 2048</em><a class="headerlink" href="#pyrlang.dist.distflags.DFLAG_NEW_FLOATS" title="Permalink to this definition">¶</a></dt>
 <dd><p>The node supports 8-byte double encoding as IEEE-double.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="pyrlang.dist.node_opts.NodeOpts">
-<em class="property">class </em><code class="descclassname">pyrlang.dist.node_opts.</code><code class="descname">NodeOpts</code><span class="sig-paren">(</span><em>cookie: str</em>, <em>dflags: int = 217020</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist.node_opts.NodeOpts" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.dist.distflags.NodeOpts">
+<em class="property">class </em><code class="descclassname">pyrlang.dist.distflags.</code><code class="descname">NodeOpts</code><span class="sig-paren">(</span><em>cookie: str</em>, <em>dflags: int = 217020</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist.distflags.NodeOpts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>A class holding an integer with features that are supported
 by this node, and the network cookie.</p>
@@ -122,15 +122,15 @@ by this node, and the network cookie.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="dist.epmd.html" title="previous chapter">Dist.epmd module</a></li>
-      <li>Next: <a href="dist.in_dist_protocol.html" title="next chapter">Dist.in_dist_protocol module</a></li>
+      <li>Previous: <a href="dist.epmd.html" title="previous chapter">dist.epmd module</a></li>
+      <li>Next: <a href="dist.in_dist_protocol.html" title="next chapter">dist.in_dist_protocol module</a></li>
   </ul></li>
 </ul>
 </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/dist.node_opts.rst.txt"
+      <li><a href="_sources/dist.distflags.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -156,7 +156,7 @@ by this node, and the network cookie.</p>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
       |
-      <a href="_sources/dist.node_opts.rst.txt"
+      <a href="_sources/dist.distflags.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

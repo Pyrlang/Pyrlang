@@ -58,7 +58,9 @@ class Process(BaseProcess):
         node_obj = Node.all_nodes[node_name]
 
         self.engine_ = node_obj.engine_  # type: BaseEngine
-        """ Pluggable async event engine """
+        """ Pluggable async event engine. Use this to get access to async 
+            tasks, sleeps and socket services.
+        """
 
         self.node_name_ = node_name  # type: str
         """ Convenience field to see the Node (from Node.all_nodes[name]). """
@@ -129,17 +131,28 @@ class Process(BaseProcess):
         else:
             self.inbox_.put(msg)
 
-    def link(self, pid):
-        """ Links local process to other local or remote process. Other process
-            must be mutually linked to us by a separate link call.
+    def add_link(self, pid):
+        """ Links pid to this process.
+            Please use Node method :py:meth:`~pyrlang.node.Node.link` for proper
+            linking.
         """
         self.links_.add(pid)
+
+    def remove_link(self, pid):
+        """ Unlinks pid from this process.
+            Please use Node method :py:meth:`~pyrlang.node.Node.unlink` for proper
+            unlinking.
+        """
+        self.links_.remove(pid)
 
     def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and
             monitors and unregisters the object from the node process
             dictionary.
         """
+        if reason is None:
+            reason = Atom('normal')
+
         self.is_exiting_ = True
         self._trigger_monitors(reason)
         self._trigger_links(reason)
@@ -148,15 +161,18 @@ class Process(BaseProcess):
         n = Node.all_nodes[self.node_name_]
         n.on_exit_process(self.pid_, reason)
 
-    def _get_node(self):
-        """ :return: pyrlang.node.Node """
+    def get_node(self):
+        """ Finds current node from global nodes dict by ``self.node_name_``.
+            A convenient way to access the node which holds the current process.
+            :rtype: pyrlang.node.Node
+        """
         return self.node_class_.all_nodes.get(self.node_name_, None)
 
     def _trigger_monitors(self, reason):
         """ On process exit inform all monitor owners that monitor us about the
             exit reason.
         """
-        node = self._get_node()
+        node = self.get_node()
         for (monitor_owner, monitor_ref) in self.monitors_.items():
             down_msg = (Atom("DOWN"),
                         monitor_ref,
@@ -178,9 +194,21 @@ class Process(BaseProcess):
             elif reason.text_ == 'kill':
                 reason = Atom('killed')
 
-        node = self._get_node()
+        node = self.get_node()
         for link in self.links_:
             # For local pids, just forward them the exit signal
             node.send_exit_signal(sender=self.pid_,
                                   receiver=link,
                                   reason=reason)
+
+    def add_monitor(self, pid: Pid, ref: Reference):
+        raise NotImplementedError()
+
+    def add_monitored_by(self, pid: Pid, ref: Reference):
+        raise NotImplementedError()
+
+    def remove_monitor(self, pid: Pid, ref: Reference):
+        raise NotImplementedError()
+
+    def remove_monitored_by(self, pid: Pid, ref: Reference):
+        raise NotImplementedError()

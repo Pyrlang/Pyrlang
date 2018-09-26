@@ -61,7 +61,7 @@ class GenBase:
 
         reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
         n = Node.all_nodes[self.node_name_]
-        n.dist_command(receiver_node=self.sender_.node_name_, message=reply)
+        n._dist_command(receiver_node=self.sender_.node_name_, message=reply)
 
 
 class GenIncomingMessage(GenBase):

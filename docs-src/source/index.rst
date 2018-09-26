@@ -52,7 +52,7 @@ Distribution Protocol Implementation
 
     dist.distribution
     dist.epmd
-    dist.node_opts
+    dist.distflags
     dist.in_dist_protocol
     dist.out_dist_protocol
     dist.base_dist_protocol

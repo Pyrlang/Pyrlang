@@ -22,6 +22,7 @@ from pyrlang.dist.base_dist_protocol import BaseDistProtocol
 from pyrlang.dist.distflags import NodeOpts
 from pyrlang.bases import BaseNode
 from pyrlang.process import Process
+import term
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
@@ -38,6 +39,12 @@ class NodeException(Exception):
 class ProcessNotFoundError(NodeException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("NoProcess: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class BadArgError(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("Bad Argument: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
 
 
@@ -180,10 +187,10 @@ class Node(BaseNode):
         """
         self.reg_names_[name] = proc.pid_
 
-    def where_is(self, ident) -> Union[Process, None]:
+    def where_is_process(self, ident):
         """ Look up a registered name or pid.
 
-            :rtype: Process or None
+            :rtype: pyrlang.process.Process or None
         """
         if isinstance(ident, Atom) and ident in self.reg_names_:
             ident = self.reg_names_[ident]
@@ -192,6 +199,21 @@ class Node(BaseNode):
             return self.processes_[ident]
 
         return None
+
+    def where_is(self, ident):
+        """ Look up a registered name or pid.
+
+            :param ident: an Atom or a Pid to convert to a Pid
+            :type ident: term.atom.Atom or term.pid.Pid
+            :rtype: term.pid.Pid
+        """
+        if isinstance(ident, Atom) and ident in self.reg_names_:
+            return self.reg_names_[ident]
+
+        if isinstance(ident, Pid):
+            return ident
+
+        raise BadArgError("where_is argument must be a pid or an atom (%s)" % ident)
 
     def _send_local_registered(self, receiver, message) -> None:
         """ Try find a named process by atom key, drop a message into its inbox_
@@ -203,7 +225,7 @@ class Node(BaseNode):
             raise NodeException("_send_local_registered receiver must be an "
                                 "atom")
 
-        receiver_obj = self.where_is(receiver)
+        receiver_obj = self.where_is_process(receiver)
         if receiver_obj is not None:
             LOG.info("Send local reg=%s receiver=%s msg=%s",
                      receiver, receiver_obj, message)
@@ -220,7 +242,7 @@ class Node(BaseNode):
         if not isinstance(receiver, Pid):
             raise NodeException("send's receiver must be a pid")
 
-        dst = self.where_is(receiver)
+        dst = self.where_is_process(receiver)
         if dst is not None:
             LOG.debug("Node._send_local: to %s <- %s", receiver, message)
             dst.deliver_message(msg=message)
@@ -232,7 +254,8 @@ class Node(BaseNode):
             located on another Erlang node.
 
             :param sender: Message sender
-            :type receiver: Pid or Atom or tuple[Atom, Pid or Atom]
+            :type sender: term.pid.Pid or None
+            :type receiver: term.pid.Pid or term.atom.Atom or Tuple[Atom, Pid or Atom]
             :param receiver: Message receiver, a pid, or a name, or a tuple with
                 node name and a receiver on the remote node.
             :param message: Any value which will be placed into the receiver
@@ -270,8 +293,8 @@ class Node(BaseNode):
     def _send_remote(self, sender, dst_node: str, receiver, message) -> None:
         # LOG.debug("send_remote to %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
-        return self.dist_command(receiver_node=dst_node,
-                                 message=m)
+        return self._dist_command(receiver_node=dst_node,
+                                  message=m)
 
     def get_cookie(self):
         """ Get string cookie value for this node.
@@ -279,7 +302,7 @@ class Node(BaseNode):
         """
         return self.node_opts_.cookie_
 
-    def dist_command(self, receiver_node: str, message: tuple) -> None:
+    def _dist_command(self, receiver_node: str, message: tuple) -> None:
         """ Locate the connection to the given node (a string).
             Place a tuple crafted by the caller into message box for Erlang
             distribution socket. It will pick up and handle the message whenever
@@ -290,6 +313,10 @@ class Node(BaseNode):
                 values
             :raises NodeException: if unable to find or connect to the node
         """
+        if self.is_exiting_:
+            LOG.warning("Ignored dist command %s (node is exiting)" % (message,))
+            return
+
         if receiver_node not in self.dist_nodes_:
             LOG.info("Connect to node %s", receiver_node)
             handler = self.dist_.connect_to_node(
@@ -298,7 +325,7 @@ class Node(BaseNode):
                 engine=self.engine_)
 
             if handler is None:
-                raise NodeException("Node not connected %s" % receiver_node)
+                raise NodeException("Node %s not connected (1)" % receiver_node)
 
             # block until connected, and get the connected message
             LOG.info("Wait for 'node_connected'")
@@ -309,76 +336,169 @@ class Node(BaseNode):
 
             LOG.info("Connected")
 
-        conn = self.dist_nodes_[receiver_node]
-        conn.inbox_.put(message)
+        conn = self.dist_nodes_.get(receiver_node, None)
+        if conn is None:
+            raise NodeException("Node %s is not connected (2)" % receiver_node)
+        else:
+            conn.inbox_.put(message)
 
-    def link(self, pid1, pid2):
+    def link(self, pid1, pid2, local_only=False):
         """ Check each of processes pid1 and pid2 if they are local, mutually
             link them. Assume remote process handles its own linking.
+
+            :param pid1: First pid
             :type pid1: term.pid.Pid
+            :param pid2: Second pid
             :type pid2: term.pid.Pid
+            :param local_only: If set to True, linking to remote pids will send
+                LINK message over distribution protocol
         """
         if pid1.is_local_to(self):
-            self.processes_[pid1].link(pid2)
+            if pid1 in self.processes_:
+                self.processes_[pid1].add_link(pid2)
+            else:
+                # not exists
+                self.send_exit_signal(pid2, pid1, Atom("noproc"))
+
+        elif not local_only:
+            link_m = ('link', pid2, pid1)
+            self._dist_command(receiver_node=pid1.node_name_, message=link_m)
 
         if pid2.is_local_to(self):
-            self.processes_[pid2].link(pid1)
+            if pid2 in self.processes_:
+                self.processes_[pid2].add_link(pid1)
+            else:
+                # not exists
+                self.send_exit_signal(pid1, pid2, Atom("noproc"))
 
-    def monitor_process(self, origin, target):
+        elif not local_only:
+            link_m = ('link', pid1, pid2)
+            self._dist_command(receiver_node=pid2.node_name_, message=link_m)
+
+    def unlink(self, pid1, pid2, local_only=False):
+        """ Mutually unlink two processes.
+
+            :param pid1: First pid
+            :type pid1: term.pid.Pid
+            :param pid2: Second pid
+            :type pid2: term.pid.Pid
+            :param local_only: If set to True, linking to remote pids will send
+                UNLINK message over distribution protocol
+        """
+        if pid1.is_local_to(self):
+            self.processes_[pid1].remove_link(pid2)
+        elif not local_only:
+            link_m = ('unlink', pid2, pid1)  # (unlink, localpid, remotepid)
+            self._dist_command(receiver_node=pid1.node_name_, message=link_m)
+
+        if pid2.is_local_to(self):
+            self.processes_[pid2].remove_link(pid1)
+        elif not local_only:
+            link_m = ('unlink', pid1, pid2)  # (unlink, localpid, remotepid)
+            self._dist_command(receiver_node=pid2.node_name_, message=link_m)
+
+    def monitor_process(self, origin_pid: Pid, target, ref=None):
         """ Locate the process referenced by the target and place the origin
             pid into its ``monitors_`` collection. When something happens to the
             ``target``, a special message will be sent to the ``origin``.
+            Remote targets are supported.
 
-            :type origin: term.pid.Pid
-            :param origin: The (possibly remote) process who will be monitoring
-                the target from now
+            :param ref: If not None, will be reused, else a new random ref will
+                be generated.
+            :type ref: None or term.reference.Reference
+            :type origin_pid: term.pid.Pid
+            :param origin_pid: The (possibly remote) process who will be monitoring
+                the target from now and wants to know when we exit.
             :type target: term.pid.Pid or term.atom.Atom
-            :param target: Name or pid of a monitor target process
-            :return: term.reference.Reference
-            :raises ProcessNotFound: if target does not exist
-       """
-        target_proc = self.where_is(target)
-        m_ref = Reference.create(node_name=self.node_name_,
-                                 creation=self.dist_.creation_)
+            :param target: Name or pid of a monitor target process.
+            :rtype: term.reference.Reference
+            :raises pyrlang.node.ProcessNotFoundError: if target does not exist.
+        """
+        target_pid = self.where_is(target)
+        m_ref = ref if ref is not None \
+            else Reference.create(node_name=self.node_name_,
+                                  creation=self.dist_.creation_)
 
-        LOG.info("MonitorP: orig=%s targ=%s -> %s", origin, target, target_proc)
+        if target_pid.is_local_to(self):
+            return self._monitor_local_process(origin_pid, target_pid, m_ref)
+        else:
+            return self._monitor_remote_process(origin_pid, target_pid, m_ref)
+
+    def _monitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
+                                ref: Reference):
+        monitor_msg = ('monitor_p', origin_pid, target_pid, ref)
+        self._dist_command(receiver_node=target_pid.node_name_,
+                           message=monitor_msg)
+
+        # if the origin is local, register monitor in it. Remote pids are
+        # handled by the remote
+        assert origin_pid.is_local_to(self)
+        origin_p = self.where_is_process(origin_pid)
+        origin_p.add_monitor(pid=target_pid, ref=ref)
+
+    def _monitor_local_process(self, origin_pid: Pid, target_pid: Pid,
+                               ref: Reference):
+        """ Monitor a local target. """
+        target_proc = self.processes_.get(target_pid, None)
+        # LOG.info("Monitor: orig=%s targ=%s -> %s", origin, target, target_proc)
 
         if target_proc is not None:
-            target_proc.monitors_[origin] = m_ref
+            target_proc.add_monitored_by(pid=origin_pid, ref=ref)
         else:
-            msg = "Monitor target %s does not exist" % target
+            msg = "Monitor target %s does not exist" % target_pid
             LOG.error(msg)
             raise ProcessNotFoundError(msg)
 
-        # if the origin is local, register monitor in it
-        if origin.is_local_to(self):
-            origin_p = self.where_is(origin)
-            origin_p.monitor_targets_.add(target_proc.pid_)
+        # if the origin is local, register monitor in it. Remote pids are
+        # handled by the remote
+        if origin_pid.is_local_to(self):
+            origin_p = self.where_is_process(origin_pid)
+            origin_p.add_monitor(pid=target_proc.pid_, ref=ref)
 
-    def demonitor_process(self, origin, target):
+    def demonitor_process(self, origin_pid, target):
         """ Locate the process ``target`` and remove the ``origin`` from its
             ``monitors_`` collection. This does not trigger any notifications
             or signals to the ``origin``.
 
-            :type origin: Pid
-            :param origin: The process who was monitoring the target previously
+            :type origin_pid: Pid
+            :param origin_pid: The process who was monitoring the target previously
             :type target: Pid or Atom
             :param target: Name or pid of a monitor target process, possibly
                 it does not exist
             :raises ProcessNotFound: if target does not exist
         """
-        target_proc = self.where_is(target)
-        if target_proc is not None:
-            target_proc.monitors_.discard(origin)
+        target_pid = self.where_is(target)
+        if target_pid.is_local_to(self):
+            return self._demonitor_local_process(origin_pid, target_pid)
         else:
-            msg = "Demonitor target %s does not exist" % target
+            return self._demonitor_remote_process(origin_pid, target_pid)
+
+    def _demonitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
+                                  ref: Reference):
+        # if the origin is local, unregister monitor from it
+        assert origin_pid.is_local_to(self)
+
+        monitor_msg = ('demonitor_p', origin_pid, target_pid, ref)
+        self._dist_command(receiver_node=target_pid.node_name_,
+                           message=monitor_msg)
+
+        origin_p = self.where_is_process(origin_pid)
+        origin_p.remove_monitor(pid=target_pid, ref=ref)
+
+    def _demonitor_local_process(self, origin_pid: Pid, target_pid: Pid,
+                                 ref: Reference):
+        target_proc = self.processes_.get(target_pid, None)
+        if target_proc is not None:
+            target_proc.remove_monitored_by(ref=ref, pid=origin_pid)
+        else:
+            msg = "Demonitor target %s does not exist" % target_pid
             LOG.error(msg)
             raise ProcessNotFoundError(msg)
 
         # if the origin is local, unregister monitor from it
-        if origin.is_local_to(self):
-            origin_p = self.where_is(origin)
-            origin_p.monitor_targets_.discard(target_proc.pid_)
+        assert origin_pid.is_local_to(self)
+        origin_p = self.where_is_process(origin_pid)
+        origin_p.remove_monitor(ref=ref, pid=target_pid)
 
     def destroy(self):
         """ Closes incoming and outgoing connections and destroys the local
@@ -404,7 +524,9 @@ class Node(BaseNode):
         self.engine_.destroy()
 
     def send_exit_signal(self, sender, receiver, reason):
-        """ Deliver local or remote exit signal to a process. """
+        """ Deliver local or remote exit signal to a process.
+            TODO: Use EXIT2 dist command for normal exits, and EXIT for link exits
+        """
         if receiver.is_local_to(self):
             recvp = self.processes_.get(receiver, None)
             if recvp is None:
@@ -413,8 +535,8 @@ class Node(BaseNode):
         else:
             # This is a remote Pid, so send something remotely
             distm = ('exit', sender, receiver, reason)
-            self.dist_command(receiver_node=receiver.node_name_,
-                              message=distm)
+            self._dist_command(receiver_node=receiver.node_name_,
+                               message=distm)
 
 
 __all__ = ['Node', 'NodeException', 'ProcessNotFoundError']

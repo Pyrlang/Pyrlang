@@ -1,4 +1,4 @@
-Dist.epmd module
+dist.epmd module
 ================
 
 .. automodule:: pyrlang.dist.epmd

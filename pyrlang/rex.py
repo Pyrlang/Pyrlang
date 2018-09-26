@@ -54,7 +54,7 @@ class Rex(Process):
             message passing.
 
             :param msg: A tuple with Atom ``$gen_call`` as the first element
-            :return: None
+            :rtype: None
         """
         gencall = gen.parse_gen_call(msg, node_name=self.node_name_)
         if isinstance(gencall, str):

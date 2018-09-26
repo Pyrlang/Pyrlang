@@ -9,8 +9,8 @@ Some examples are located in ``examples/`` directory. And there are convenient
 ``Makefile`` targets to call them, just use your Bash autocomplete when typing
 ``make example<TAB>``:
 
-Example 1: Python to Erlang
----------------------------
+1: Python to Erlang
+-------------------
 
 Demonstrates how Python node can actively find a running Erlang node and connect
 to it by attempting to send a message.
@@ -24,8 +24,8 @@ Running (in two terminal tabs):
     ``COOKIE`` will try to connect to Erlang running at ``erl@127.0.0.1``;
 *   (optional) Check whether Erlang shell received ``hello`` by typing ``flush().``
 
-Example 2: Erlang to Python
----------------------------
+2: Erlang to Python
+-------------------
 
 Demonstrates how to run a named process on Python node. Erlang node will try and
 send message to it by name.
@@ -37,8 +37,8 @@ send message to it by name.
     ``{my_process, 'py@127.0.0.1'} ! {hello, 123, [<<"test">>, self()]}.``
 *   In Python terminal tab observe log message about incoming data.
 
-Examples 3 and 4: Calling/Batch Python
---------------------------------------
+3 & 4: Calling/Batch Python
+---------------------------
 
 Examples are ``.erl`` files which demonstrate how remote notebook-style calls
 and batch calls will work with Erlang and Python.
@@ -47,8 +47,28 @@ and batch calls will work with Erlang and Python.
 *   ``make example3`` or ``make example4`` and observe what it prints.
 
 
-Example 10: Elixir and GenServer
---------------------------------
+5: Links and Monitors of Pyrlang Processes
+------------------------------------------
+
+Demonstrates Erlang remotely monitoring and linking to Pyrlang processes.
+A Python :py:class:`~pyrlang.process.Process` will trigger monitor and link
+messages when exiting.
+
+*   ``make example5a`` will start Erlang node in one terminal and wait
+*   ``make example5b`` will start Python part in another terminal, spawn some
+    test processes and send a message to Erlang side.
+*   Erlang node will link and monitor test processes, try make them exit and
+    print the results.
+
+
+6: Links and Monitors of Erlang Processes
+-----------------------------------------
+
+Demonstrates Pyrlang remotely monitoring and linking to Erlang process or node.
+
+
+10: Elixir and GenServer
+------------------------
 
 This example will demonstrate how to accept ``gen_server:call`` in your Python
 ``Process``.

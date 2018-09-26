@@ -30,6 +30,14 @@ example5a: $(ROOT)/examples/e05_links_monitors.beam
 example5b:
 	$(PY) examples/e05_links_monitors.py
 
+# Run `make example6a` to run Erlang node
+# Run `make example6b` to run Python node and wait for them to interact
+.PHONY: example6a example6b
+example6a: $(ROOT)/examples/e06_links_monitors.beam
+	$(ERL) -s e06_links_monitors -noshell
+example6b:
+	$(PY) examples/e06_links_monitors.py
+
 # Run `make example10a` to run Python node
 # Run `make example10b` to run Elixir client
 .PHONY: example10a example10b
