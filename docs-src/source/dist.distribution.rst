@@ -1,4 +1,4 @@
-Dist.distribution module
+dist.distribution module
 ========================
 
 .. automodule:: pyrlang.dist.distribution

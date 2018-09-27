@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Dist.base_dist_protocol module &#8212; Pyrlang 1.0 documentation</title>
+    <title>dist.base_dist_protocol module &#8212; Pyrlang 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Dist.out_dist_protocol module" href="dist.out_dist_protocol.html" />
+    <link rel="prev" title="dist.out_dist_protocol module" href="dist.out_dist_protocol.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -45,7 +45,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-pyrlang.dist.base_dist_protocol">
-<span id="dist-base-dist-protocol-module"></span><h1>Dist.base_dist_protocol module<a class="headerlink" href="#module-pyrlang.dist.base_dist_protocol" title="Permalink to this headline">¶</a></h1>
+<span id="dist-base-dist-protocol-module"></span><h1>dist.base_dist_protocol module<a class="headerlink" href="#module-pyrlang.dist.base_dist_protocol" title="Permalink to this headline">¶</a></h1>
 <p>Base abstract Distribution connection class</p>
 <dl class="class">
 <dt id="pyrlang.dist.base_dist_protocol.BaseDistProtocol">
@@ -105,6 +105,13 @@ and return if they match against the offered 'digest'.</p>
 <dd><p>Save engine object, to use for our async needs later.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyrlang.dist.base_dist_protocol.BaseDistProtocol.get_node">
+<code class="descname">get_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist.base_dist_protocol.BaseDistProtocol.get_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this to get access to the Pyrlang node which owns this protocol.
+:rtype: pyrlang.node.Node</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pyrlang.dist.base_dist_protocol.BaseDistProtocol.inbox_">
 <code class="descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist.base_dist_protocol.BaseDistProtocol.inbox_" title="Permalink to this definition">¶</a></dt>
@@ -142,7 +149,7 @@ when the connection has been accepted and established.</p>
 
 <dl class="method">
 <dt id="pyrlang.dist.base_dist_protocol.BaseDistProtocol.on_packet">
-<code class="descname">on_packet</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist.base_dist_protocol.BaseDistProtocol.on_packet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">on_packet</code><span class="sig-paren">(</span><em>data: bytes</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist.base_dist_protocol.BaseDistProtocol.on_packet" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -220,7 +227,7 @@ R6B support version 5.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="dist.out_dist_protocol.html" title="previous chapter">Dist.out_dist_protocol module</a></li>
+      <li>Previous: <a href="dist.out_dist_protocol.html" title="previous chapter">dist.out_dist_protocol module</a></li>
   </ul></li>
 </ul>
 </div>

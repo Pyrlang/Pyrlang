@@ -265,6 +265,30 @@ python <strong>*args</strong>.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="linking-monitoring-from-erlang-to-python">
+<h2>Linking/Monitoring from Erlang to Python<a class="headerlink" href="#linking-monitoring-from-erlang-to-python" title="Permalink to this headline">¶</a></h2>
+<p>See example6 in <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a>
+for demo on linking a Pyrlang &quot;process&quot; to Erlang process, then
+killing it and observing an EXIT signal coming back.</p>
+<p>See example7 in <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a>
+for demo on a Pyrlang &quot;process&quot; monitoring a Erlang process, then
+killing it and observing the monitor message.</p>
+</div>
+<div class="section" id="linking-monitoring-from-python-to-erlang">
+<h2>Linking/Monitoring from Python to Erlang<a class="headerlink" href="#linking-monitoring-from-python-to-erlang" title="Permalink to this headline">¶</a></h2>
+<p>See example5 in <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a>
+for demo on how Python can link and monitor local and remote pids.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To link two processes in Pyrlang use <a class="reference internal" href="node.html#pyrlang.node.Node" title="pyrlang.node.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>'s
+<a class="reference internal" href="node.html#pyrlang.node.Node.link" title="pyrlang.node.Node.link"><code class="xref py py-meth docutils literal"><span class="pre">link()</span></code></a> method.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To monitor a process in Pyrlang use <a class="reference internal" href="node.html#pyrlang.node.Node" title="pyrlang.node.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>'s
+<a class="reference internal" href="node.html#pyrlang.node.Node.monitor_process" title="pyrlang.node.Node.monitor_process"><code class="xref py py-meth docutils literal"><span class="pre">monitor_process()</span></code></a> method.</p>
+</div>
+</div>
 </div>
 
 
@@ -292,6 +316,8 @@ python <strong>*args</strong>.</p>
 <li><a class="reference internal" href="#remote-calculations-on-python-node">Remote Calculations on Python Node</a></li>
 <li><a class="reference internal" href="#todo-lazy-remote-calculations-on-python-node">TODO Lazy Remote Calculations on Python Node</a></li>
 <li><a class="reference internal" href="#gen-server-like-processes">Gen_server-like Processes</a></li>
+<li><a class="reference internal" href="#linking-monitoring-from-erlang-to-python">Linking/Monitoring from Erlang to Python</a></li>
+<li><a class="reference internal" href="#linking-monitoring-from-python-to-erlang">Linking/Monitoring from Python to Erlang</a></li>
 </ul>
 </li>
 </ul>

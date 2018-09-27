@@ -7,26 +7,27 @@
 #   message and will call `handle_one_inbox_message` which is overridden here.
 # 4. There is no way to know sender unless you add return address into the msg.
 #
-# Requires:     Erlang running on the same host as:
-#               `erl -name erl@127.0.0.1 -setcookie COOKIE`
-# Run:          from project root run `make example2`
-# Erl command:  {my_process, 'py@127.0.0.1'} ! hello.
+# Steps:
+# 1. Run `make erlshell` or `erl -name erl@127.0.0.1 -setcookie COOKIE`
+# 2. Run `make example2` in another terminal
+# 3. In Erlang shell send a message `{my_process, 'py@127.0.0.1'} ! hello`
 #
 
 import logging
 
 from term import Atom
 from pyrlang import Node, Process
-# from pyrlang import GeventEngine as async
+# from pyrlang import GeventEngine as Engine
 from pyrlang import AsyncioEngine as Engine
+from colors import color
 
-LOG = logging.getLogger("+++EXAMPLE2+++")
+LOG = logging.getLogger(color("EXAMPLE2", fg='lime'))
 logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class MyProcess(Process):
     def __init__(self, node) -> None:
-        Process.__init__(self, node)
+        Process.__init__(self, node_name=node.node_name_)
         node.register_name(self, Atom('my_process'))  # optional
         LOG.info("Registering process - 'my_process'")
 

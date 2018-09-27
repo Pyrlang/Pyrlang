@@ -1,4 +1,4 @@
-Dist.out_dist_protocol module
+dist.out_dist_protocol module
 =============================
 
 .. automodule:: pyrlang.dist.out_dist_protocol

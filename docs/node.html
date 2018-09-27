@@ -84,7 +84,7 @@ over the network.</p>
 
 <dl class="method">
 <dt id="pyrlang.node.Node.demonitor_process">
-<code class="descname">demonitor_process</code><span class="sig-paren">(</span><em>origin</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
+<code class="descname">demonitor_process</code><span class="sig-paren">(</span><em>origin_pid</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locate the process <code class="docutils literal"><span class="pre">target</span></code> and remove the <code class="docutils literal"><span class="pre">origin</span></code> from its
 <code class="docutils literal"><span class="pre">monitors_</span></code> collection. This does not trigger any notifications
 or signals to the <code class="docutils literal"><span class="pre">origin</span></code>.</p>
@@ -93,7 +93,7 @@ or signals to the <code class="docutils literal"><span class="pre">origin</span>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>origin</strong> (<em>Pid</em>) -- The process who was monitoring the target previously</li>
+<li><strong>origin_pid</strong> (<em>Pid</em>) -- The process who was monitoring the target previously</li>
 <li><strong>target</strong> (<em>Pid</em><em> or </em><em>Atom</em>) -- Name or pid of a monitor target process, possibly
 it does not exist</li>
 </ul>
@@ -110,32 +110,8 @@ it does not exist</li>
 <dt id="pyrlang.node.Node.destroy">
 <code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.destroy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Closes incoming and outgoing connections and destroys the local
-node.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.node.Node.dist_command">
-<code class="descname">dist_command</code><span class="sig-paren">(</span><em>receiver_node: str</em>, <em>message: tuple</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node.dist_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Locate the connection to the given node (a string).
-Place a tuple crafted by the caller into message box for Erlang
-distribution socket. It will pick up and handle the message whenever
-possible.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>receiver_node</strong> -- Name of a remote node</li>
-<li><strong>message</strong> -- A crafted tuple with command name and some more
-values</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyrlang.node.NodeException" title="pyrlang.node.NodeException"><strong>NodeException</strong></a> -- if unable to find or connect to the node</p>
-</td>
-</tr>
-</tbody>
-</table>
+node. This is Python, so some refs from running async handlers
+may remain.</p>
 </dd></dl>
 
 <dl class="method">
@@ -164,23 +140,50 @@ in the <code class="docutils literal"><span class="pre">_run</span></code> metho
 </dd></dl>
 
 <dl class="method">
+<dt id="pyrlang.node.Node.link">
+<code class="descname">link</code><span class="sig-paren">(</span><em>pid1</em>, <em>pid2</em>, <em>local_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check each of processes pid1 and pid2 if they are local, mutually
+link them. Assume remote process handles its own linking.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pid1</strong> (<em>term.pid.Pid</em>) -- First pid</li>
+<li><strong>pid2</strong> (<em>term.pid.Pid</em>) -- Second pid</li>
+<li><strong>local_only</strong> -- If set to True, linking to remote pids will send
+LINK message over distribution protocol</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyrlang.node.Node.monitor_process">
-<code class="descname">monitor_process</code><span class="sig-paren">(</span><em>origin</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.monitor_process" title="Permalink to this definition">¶</a></dt>
+<code class="descname">monitor_process</code><span class="sig-paren">(</span><em>origin_pid: term.pid.Pid</em>, <em>target</em>, <em>ref=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.monitor_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locate the process referenced by the target and place the origin
 pid into its <code class="docutils literal"><span class="pre">monitors_</span></code> collection. When something happens to the
-<code class="docutils literal"><span class="pre">target</span></code>, a special message will be sent to the <code class="docutils literal"><span class="pre">origin</span></code>.</p>
+<code class="docutils literal"><span class="pre">target</span></code>, a special message will be sent to the <code class="docutils literal"><span class="pre">origin</span></code>.
+Remote targets are supported.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>origin</strong> (<em>Pid</em>) -- The (possibly remote) process who will be monitoring
-the target from now</li>
-<li><strong>target</strong> (<em>Pid</em><em> or </em><em>Atom</em>) -- Name or pid of a monitor target process</li>
+<li><strong>ref</strong> (<em>None</em><em> or </em><em>term.reference.Reference</em>) -- If not None, will be reused, else a new random ref will
+be generated.</li>
+<li><strong>origin_pid</strong> (<em>term.pid.Pid</em>) -- The (possibly remote) process who will be monitoring
+the target from now and wants to know when we exit.</li>
+<li><strong>target</strong> (<em>term.pid.Pid</em><em> or </em><em>term.atom.Atom</em>) -- Name or pid of a monitor target process.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ProcessNotFound</strong> -- if target does not exist</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">term.reference.Reference</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyrlang.node.ProcessNotFoundError" title="pyrlang.node.ProcessNotFoundError"><strong>pyrlang.node.ProcessNotFoundError</strong></a> -- if target does not exist.</p>
 </td>
 </tr>
 </tbody>
@@ -245,8 +248,8 @@ located on another Erlang node.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> -- Message sender</li>
-<li><strong>receiver</strong> (<em>Pid</em><em> or </em><em>Atom</em><em> or </em><em>tuple</em><em>[</em><em>Atom</em><em>, </em><em>Pid</em><em> or </em><em>Atom</em><em>]</em>) -- Message receiver, a pid, or a name, or a tuple with
+<li><strong>sender</strong> (<em>term.pid.Pid</em><em> or </em><em>None</em>) -- Message sender</li>
+<li><strong>receiver</strong> (<em>term.pid.Pid</em><em> or </em><em>term.atom.Atom</em><em> or </em><em>Tuple</em><em>[</em><em>Atom</em><em>, </em><em>Pid</em><em> or </em><em>Atom</em><em>]</em>) -- Message receiver, a pid, or a name, or a tuple with
 node name and a receiver on the remote node.</li>
 <li><strong>message</strong> -- Any value which will be placed into the receiver
 inbox. Pyrlang processes use tuples but that is not enforced
@@ -259,14 +262,66 @@ for your own processes.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyrlang.node.Node.send_exit_signal">
+<code class="descname">send_exit_signal</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>reason</em>, <em>dist_protocol_message: str = 'exit'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.send_exit_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deliver local or remote exit signal to a process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dist_protocol_message</strong> -- Defines message which is sent to the
+distribution protocol and then converted to an integer. EXIT is
+used for link exits, and EXIT2 is used for triggering remote exits.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.unlink">
+<code class="descname">unlink</code><span class="sig-paren">(</span><em>pid1</em>, <em>pid2</em>, <em>local_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.unlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mutually unlink two processes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pid1</strong> (<em>term.pid.Pid</em>) -- First pid</li>
+<li><strong>pid2</strong> (<em>term.pid.Pid</em>) -- Second pid</li>
+<li><strong>local_only</strong> -- If set to True, linking to remote pids will send
+UNLINK message over distribution protocol</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyrlang.node.Node.where_is">
-<code class="descname">where_is</code><span class="sig-paren">(</span><em>ident</em><span class="sig-paren">)</span> &#x2192; typing.Union[pyrlang.process.Process, NoneType]<a class="headerlink" href="#pyrlang.node.Node.where_is" title="Permalink to this definition">¶</a></dt>
+<code class="descname">where_is</code><span class="sig-paren">(</span><em>ident</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.where_is" title="Permalink to this definition">¶</a></dt>
 <dd><p>Look up a registered name or pid.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process">Process</a> or None</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ident</strong> (<em>term.atom.Atom</em><em> or </em><em>term.pid.Pid</em>) -- an Atom or a Pid to convert to a Pid</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">term.pid.Pid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.where_is_process">
+<code class="descname">where_is_process</code><span class="sig-paren">(</span><em>ident</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.where_is_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a registered name or pid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process">pyrlang.process.Process</a> or None</td>
 </tr>
 </tbody>
 </table>

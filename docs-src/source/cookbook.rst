@@ -256,3 +256,30 @@ python **\*args**.
     class MyClass:
         def my_method(self, i: int, s: bytes):
             pass # return None -> atom 'undefined' in Erlang
+
+
+Linking/Monitoring from Erlang to Python
+----------------------------------------
+
+See example6 in :doc:`examples`
+for demo on linking a Pyrlang "process" to Erlang process, then
+killing it and observing an EXIT signal coming back.
+
+See example7 in :doc:`examples`
+for demo on a Pyrlang "process" monitoring a Erlang process, then
+killing it and observing the monitor message.
+
+
+Linking/Monitoring from Python to Erlang
+----------------------------------------
+
+See example5 in :doc:`examples`
+for demo on how Python can link and monitor local and remote pids.
+
+.. note::
+    To link two processes in Pyrlang use :py:class:`~pyrlang.node.Node`'s
+    :py:meth:`~pyrlang.node.Node.link` method.
+
+.. note::
+    To monitor a process in Pyrlang use :py:class:`~pyrlang.node.Node`'s
+    :py:meth:`~pyrlang.node.Node.monitor_process` method.

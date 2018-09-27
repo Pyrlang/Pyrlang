@@ -1,7 +1,7 @@
-Dist.node_opts module
+dist.distflags module
 =====================
 
-.. automodule:: pyrlang.dist.node_opts
+.. automodule:: pyrlang.dist.distflags
     :members:
     :undoc-members:
     :show-inheritance:

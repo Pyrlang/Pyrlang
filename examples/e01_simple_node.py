@@ -1,20 +1,23 @@
 #
 # Start a simple node and connect to an Erlang/Elixir node.
-# This Python node is visible as `py@127.0.0.1`.
+# This Pyrlang node will be visible as `py@127.0.0.1`.
 #
-# Requires:     Erlang running on the same host as:
-#               `erl -name erl@127.0.0.1 -setcookie COOKIE`
-# Run:          from project root run `make example1`
-# Try in Erlang shell: `net_adm:ping('py@127.0.0.1').`
+# 1. Run `make erlshell` or `erl -name erl@127.0.0.1 -setcookie COOKIE`
+# 2. In Erlang shell: `erlang:register(shell, self()).`
+# 3. In another terminal window: `make example1`
+# 4. In Erlang shell: `net_adm:ping('py@127.0.0.1').`
 #
-# Before starting example1 try in Erlang shell: `erlang:register(shell, self()).`
 # Shell process will receive 'hello' (type `flush().` to see)
 #
 
+import logging
 from pyrlang import Node
 from term import Atom
-# from pyrlang import GeventEngine as async
+# from pyrlang import GeventEngine as Engine
 from pyrlang import AsyncioEngine as Engine
+from colors import color
+
+LOG = logging.getLogger(color("EXAMPLE1", fg='lime'))
 
 
 def main():
