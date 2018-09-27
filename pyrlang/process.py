@@ -81,14 +81,16 @@ class Process(BaseProcess):
 
         self.is_exiting_ = False
 
-        self.monitors_ = dict()  # type: Dict[Pid, Reference]
+        self._monitored_by = dict()  # type: Dict[Reference, Pid]
         """ Who monitors us. Either local or remote processes. """
 
-        self.monitor_targets_ = set()  # type: Set[Pid]
-        """ Who we monitor. """
+        self._monitors = dict()  # type: Dict[Reference, Pid]
+        """ Who we monitor. NOTE: For simplicity multiple monitors of same 
+            target are not implemented. """
 
-        self.links_ = set()  # type: Set[Pid]
-        """ Bi-directional linked process pids. """
+        self._links = set()  # type: Set[Pid]
+        """ Bi-directional linked process pids. Each linked pid pair is unique
+            hence using a set to store them. """
 
         LOG.debug("Spawned process %s", self.pid_)
         if not self.passive_:
@@ -136,14 +138,14 @@ class Process(BaseProcess):
             Please use Node method :py:meth:`~pyrlang.node.Node.link` for proper
             linking.
         """
-        self.links_.add(pid)
+        self._links.add(pid)
 
     def remove_link(self, pid):
         """ Unlinks pid from this process.
             Please use Node method :py:meth:`~pyrlang.node.Node.unlink` for proper
             unlinking.
         """
-        self.links_.remove(pid)
+        self._links.remove(pid)
 
     def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and
@@ -173,7 +175,7 @@ class Process(BaseProcess):
             exit reason.
         """
         node = self.get_node()
-        for (monitor_owner, monitor_ref) in self.monitors_.items():
+        for (monitor_owner, monitor_ref) in self._monitored_by.items():
             down_msg = (Atom("DOWN"),
                         monitor_ref,
                         Atom("process"),
@@ -195,20 +197,36 @@ class Process(BaseProcess):
                 reason = Atom('killed')
 
         node = self.get_node()
-        for link in self.links_:
+        for link in self._links:
             # For local pids, just forward them the exit signal
             node.send_exit_signal(sender=self.pid_,
                                   receiver=link,
                                   reason=reason)
 
     def add_monitor(self, pid: Pid, ref: Reference):
-        raise NotImplementedError()
+        """ Helper function. To monitor a process please use Node's
+            :py:meth:`~pyrlang.node.Node.monitor_process`.
+        """
+        self._monitors[ref] = pid
 
     def add_monitored_by(self, pid: Pid, ref: Reference):
-        raise NotImplementedError()
+        """ Helper function. To monitor a process please use Node's
+            :py:meth:`~pyrlang.node.Node.monitor_process`.
+        """
+        self._monitored_by[ref] = pid
 
     def remove_monitor(self, pid: Pid, ref: Reference):
-        raise NotImplementedError()
+        """ Helper function. To demonitor a process please use Node's
+            :py:meth:`~pyrlang.node.Node.demonitor_process`.
+        """
+        existing = self._monitors.get(ref, None)
+        if existing == pid:
+            del self._monitors[ref]
 
     def remove_monitored_by(self, pid: Pid, ref: Reference):
-        raise NotImplementedError()
+        """ Helper function. To demonitor a process please use Node's
+            :py:meth:`~pyrlang.node.Node.demonitor_process`.
+        """
+        existing = self._monitored_by.get(ref, None)
+        if existing == pid:
+            del self._monitored_by[ref]

@@ -76,14 +76,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="process.html#pyrlang.process.Process.add_link">add_link() (pyrlang.process.Process method)</a>
 </li>
+      <li><a href="process.html#pyrlang.process.Process.add_monitor">add_monitor() (pyrlang.process.Process method)</a>
+</li>
+      <li><a href="process.html#pyrlang.process.Process.add_monitored_by">add_monitored_by() (pyrlang.process.Process method)</a>
+</li>
       <li><a href="dist.base_dist_protocol.html#pyrlang.dist.base_dist_protocol.BaseDistProtocol.ALIVE">ALIVE (pyrlang.dist.base_dist_protocol.BaseDistProtocol attribute)</a>
 </li>
       <li><a href="dist.epmd.html#pyrlang.dist.epmd.EPMDClient.alive2">alive2() (pyrlang.dist.epmd.EPMDClient method)</a>
 </li>
-      <li><a href="node.html#pyrlang.node.Node.all_nodes">all_nodes (pyrlang.node.Node attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="node.html#pyrlang.node.Node.all_nodes">all_nodes (pyrlang.node.Node attribute)</a>
+</li>
       <li><a href="gen.html#pyrlang.gen.GenIncomingCall.args_">args_ (pyrlang.gen.GenIncomingCall attribute)</a>
 </li>
       <li><a href="pyrlang.util.html#pyrlang.util.as_str">as_str() (in module pyrlang.util)</a>
@@ -176,10 +180,10 @@
         <li><a href="node.html#pyrlang.node.Node.destroy">(pyrlang.node.Node method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_BIT_BINARIES">DFLAG_BIT_BINARIES (in module pyrlang.dist.distflags)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_DIST_MONITOR">DFLAG_DIST_MONITOR (in module pyrlang.dist.distflags)</a>
 </li>
       <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_DIST_MONITOR_NAME">DFLAG_DIST_MONITOR_NAME (in module pyrlang.dist.distflags)</a>
@@ -191,6 +195,10 @@
       <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_MAP_TAG">DFLAG_MAP_TAG (in module pyrlang.dist.distflags)</a>
 </li>
       <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_NEW_FLOATS">DFLAG_NEW_FLOATS (in module pyrlang.dist.distflags)</a>
+</li>
+      <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_NO_MAGIC">DFLAG_NO_MAGIC (in module pyrlang.dist.distflags)</a>
+</li>
+      <li><a href="dist.distflags.html#pyrlang.dist.distflags.DFLAG_PUBLISHED">DFLAG_PUBLISHED (in module pyrlang.dist.distflags)</a>
 </li>
       <li><a href="dist.distribution.html#pyrlang.dist.distribution.ErlangDistribution.disconnect">disconnect() (pyrlang.dist.distribution.ErlangDistribution method)</a>
 </li>
@@ -340,10 +348,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="node.html#pyrlang.node.Node.link">link() (pyrlang.node.Node method)</a>
 </li>
-      <li><a href="process.html#pyrlang.process.Process.links_">links_ (pyrlang.process.Process attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="async.asyncio_engine.html#pyrlang.async.asyncio_engine.AsyncioEngine.listen_with">listen_with() (pyrlang.async.asyncio_engine.AsyncioEngine method)</a>
 
       <ul>
@@ -362,17 +366,13 @@
 </li>
       <li><a href="async.gevent_engine.html#pyrlang.async.gevent_engine.make_serve_loop">make_serve_loop() (in module pyrlang.async.gevent_engine)</a>
 </li>
-      <li><a href="gen.html#pyrlang.gen.GenIncomingMessage.message_">message_ (pyrlang.gen.GenIncomingMessage attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="gen.html#pyrlang.gen.GenIncomingMessage.message_">message_ (pyrlang.gen.GenIncomingMessage attribute)</a>
+</li>
       <li><a href="gen.html#pyrlang.gen.GenIncomingCall.mod_">mod_ (pyrlang.gen.GenIncomingCall attribute)</a>
 </li>
       <li><a href="node.html#pyrlang.node.Node.monitor_process">monitor_process() (pyrlang.node.Node method)</a>
-</li>
-      <li><a href="process.html#pyrlang.process.Process.monitor_targets_">monitor_targets_ (pyrlang.process.Process attribute)</a>
-</li>
-      <li><a href="process.html#pyrlang.process.Process.monitors_">monitors_ (pyrlang.process.Process attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -580,9 +580,13 @@
 </li>
       <li><a href="node.html#pyrlang.node.Node.register_new_process">register_new_process() (pyrlang.node.Node method)</a>
 </li>
+      <li><a href="process.html#pyrlang.process.Process.remove_link">remove_link() (pyrlang.process.Process method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="process.html#pyrlang.process.Process.remove_link">remove_link() (pyrlang.process.Process method)</a>
+      <li><a href="process.html#pyrlang.process.Process.remove_monitor">remove_monitor() (pyrlang.process.Process method)</a>
+</li>
+      <li><a href="process.html#pyrlang.process.Process.remove_monitored_by">remove_monitored_by() (pyrlang.process.Process method)</a>
 </li>
       <li><a href="dist.base_dist_protocol.html#pyrlang.dist.base_dist_protocol.BaseDistProtocol.report_dist_connected">report_dist_connected() (pyrlang.dist.base_dist_protocol.BaseDistProtocol method)</a>
 </li>

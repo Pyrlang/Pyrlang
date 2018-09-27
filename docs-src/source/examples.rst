@@ -54,17 +54,31 @@ Demonstrates Erlang remotely monitoring and linking to Pyrlang processes.
 A Python :py:class:`~pyrlang.process.Process` will trigger monitor and link
 messages when exiting.
 
-*   ``make example5a`` will start Erlang node in one terminal and wait
-*   ``make example5b`` will start Python part in another terminal, spawn some
-    test processes and send a message to Erlang side.
-*   Erlang node will link and monitor test processes, try make them exit and
-    print the results.
+*   ``make example5a`` will start Erlang node.
+*   ``make example5b`` (in another terminal) will start Python Pyrlang node.
+*   Pyrlang node will send a message starting the test.
+*   Erlang node will spawn a test process, report its pid to Python node.
+*   Python node (now knowing the pid) will monitor the Erlang process.
+*   Python node will send a exit message to Erlang side, and observe the monitor
+    message arriving back.
 
 
-6: Links and Monitors of Erlang Processes
+6 & 7: Links/Monitors of Erlang Processes
 -----------------------------------------
 
-Demonstrates Pyrlang remotely monitoring and linking to Erlang process or node.
+Demonstrates Pyrlang remotely linking to and monitoring an Erlang process.
+
+.. note::
+    For linking demo use 'example6a' and 'example6b', for monitoring demo use
+    'example7a', 'example7b' Makefile targets.
+
+*   ``make example6a`` will start Erlang node.
+*   ``make example6b`` (in another terminal) will start Python Pyrlang node.
+*   Pyrlang node will send a message starting the test.
+*   Erlang node will spawn a test process, report its pid to Python node.
+*   Python node (now knowing the pid) will monitor the Erlang process.
+*   Python node will send a exit message to Erlang side, and observe the monitor
+    message arriving back.
 
 
 10: Elixir and GenServer

@@ -1,8 +1,8 @@
-# e
+# Python -> link -> Erlang
 #
 # This example shows:
 # 1. Linking to an Erlang process from Python and killing it remotely
-# 2. Monitoring an Erlang process from Python and killing it remotely
+# 2. An exit message will be delivered to Pyrlang PID which was linked to it.
 #
 # Run: `make example6a` in one terminal window, then `make example6b` in another
 #
@@ -37,7 +37,7 @@ class LinkExample6(Process):
                                    reason=Atom("example6_link_exit"))
             self.engine_.call_later(0.5, exit_fn)
         else:
-            LOG.info("LinkExample6: Not recognized incoming %s", msg)
+            LOG.info("LinkExample6: Incoming %s", msg)
 
     def exit(self, reason=None):
         #
@@ -45,35 +45,6 @@ class LinkExample6(Process):
         #
         LOG.info("LinkExample6: Received EXIT(%s)" % reason)
         Process.exit(self, reason)
-
-
-class MonitorExample6(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
-
-    def handle_one_inbox_message(self, msg):
-        #
-        # 2.1. Erlang node spawned a process for us and replied with a Pid
-        #
-        if isinstance(msg, tuple) and msg[0] == Atom("test_monitor"):
-            LOG.info("MonitorExample6: Monitoring %s and killing", msg)
-            n = self.get_node()
-            n.monitor_process(self.pid_, msg[1])
-
-            def exit_fn():
-                n.send_exit_signal(sender=self.pid_, receiver=msg[1],
-                                   reason=Atom("example6_monitor_exit"))
-            self.engine_.call_later(0.5, exit_fn)
-        else:
-            LOG.info("MonitorExample6: Not recognized incoming %s", msg)
-
-    def exit(self, reason=None):
-        #
-        # 2.2. Exiting remote linked process should also exit this process
-        #
-        LOG.info("MonitorExample6: Received EXIT(%s)" % reason)
-        Process.exit(self, reason)
-
 
 def main():
     event_engine = Engine()
@@ -92,20 +63,6 @@ def main():
     node.send(sender=p1.pid_,
               receiver=remote_receiver_name,
               message=(Atom("example6"), Atom("test_link"), p1.pid_))
-
-    #
-    # 2. At the same time as P1 (they should not interfere) create a process P2
-    #   Send a message to process example6 on the Erlang node with "test_monitor"
-    #   command. This will spawn an Erlang process and tell us the pid.
-    #   Reply from Erlang node will trigger next steps above in ExampleProcess6
-    #
-    p2 = MonitorExample6(node)
-
-    LOG.info("Sending {example6, test_monitor, %s} to remote 'example6'" % p2.pid_)
-    remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example6"))
-    node.send(sender=p2.pid_,
-              receiver=remote_receiver_name,
-              message=(Atom("example6"), Atom("test_monitor"), p2.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)

@@ -73,6 +73,20 @@ linking.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyrlang.process.Process.add_monitor">
+<code class="descname">add_monitor</code><span class="sig-paren">(</span><em>pid: term.pid.Pid</em>, <em>ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.add_monitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function. To monitor a process please use Node's
+<a class="reference internal" href="node.html#pyrlang.node.Node.monitor_process" title="pyrlang.node.Node.monitor_process"><code class="xref py py-meth docutils literal"><span class="pre">monitor_process()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.add_monitored_by">
+<code class="descname">add_monitored_by</code><span class="sig-paren">(</span><em>pid: term.pid.Pid</em>, <em>ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.add_monitored_by" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function. To monitor a process please use Node's
+<a class="reference internal" href="node.html#pyrlang.node.Node.monitor_process" title="pyrlang.node.Node.monitor_process"><code class="xref py py-meth docutils literal"><span class="pre">monitor_process()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyrlang.process.Process.deliver_message">
 <code class="descname">deliver_message</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.deliver_message" title="Permalink to this definition">¶</a></dt>
 <dd><p>Places message into the inbox, or delivers it immediately to a
@@ -123,24 +137,6 @@ loop and handled one by one in <code class="docutils literal"><span class="pre">
 </dd></dl>
 
 <dl class="attribute">
-<dt id="pyrlang.process.Process.links_">
-<code class="descname">links_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.links_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bi-directional linked process pids.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.monitor_targets_">
-<code class="descname">monitor_targets_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.monitor_targets_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Who we monitor.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.monitors_">
-<code class="descname">monitors_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.monitors_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Who monitors us. Either local or remote processes.</p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="pyrlang.process.Process.node_name_">
 <code class="descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.node_name_" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience field to see the Node (from Node.all_nodes[name]).</p>
@@ -186,6 +182,20 @@ Return <code class="docutils literal"><span class="pre">False</span></code> to s
 <dd><p>Unlinks pid from this process.
 Please use Node method <a class="reference internal" href="node.html#pyrlang.node.Node.unlink" title="pyrlang.node.Node.unlink"><code class="xref py py-meth docutils literal"><span class="pre">unlink()</span></code></a> for proper
 unlinking.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.remove_monitor">
+<code class="descname">remove_monitor</code><span class="sig-paren">(</span><em>pid: term.pid.Pid</em>, <em>ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.remove_monitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function. To demonitor a process please use Node's
+<a class="reference internal" href="node.html#pyrlang.node.Node.demonitor_process" title="pyrlang.node.Node.demonitor_process"><code class="xref py py-meth docutils literal"><span class="pre">demonitor_process()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.process.Process.remove_monitored_by">
+<code class="descname">remove_monitored_by</code><span class="sig-paren">(</span><em>pid: term.pid.Pid</em>, <em>ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.remove_monitored_by" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function. To demonitor a process please use Node's
+<a class="reference internal" href="node.html#pyrlang.node.Node.demonitor_process" title="pyrlang.node.Node.demonitor_process"><code class="xref py py-meth docutils literal"><span class="pre">demonitor_process()</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>

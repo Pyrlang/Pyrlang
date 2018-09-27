@@ -7,7 +7,7 @@
 %%
 %% Run: `make example5a` in one terminal window, then `make example5b` in another
 %%
--module(e05_links_monitors).
+-module(e05_erl_link_monitor_python).
 
 %% API
 -export([start/0]).

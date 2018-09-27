@@ -523,9 +523,13 @@ class Node(BaseNode):
 
         self.engine_.destroy()
 
-    def send_exit_signal(self, sender, receiver, reason):
+    def send_exit_signal(self, sender, receiver, reason,
+                         dist_protocol_message: str = 'exit'):
         """ Deliver local or remote exit signal to a process.
-            TODO: Use EXIT2 dist command for normal exits, and EXIT for link exits
+
+            :param dist_protocol_message: Defines message which is sent to the
+                distribution protocol and then converted to an integer. EXIT is
+                used for link exits, and EXIT2 is used for triggering remote exits.
         """
         if receiver.is_local_to(self):
             recvp = self.processes_.get(receiver, None)
@@ -534,7 +538,7 @@ class Node(BaseNode):
             recvp.exit(reason=reason)
         else:
             # This is a remote Pid, so send something remotely
-            distm = ('exit', sender, receiver, reason)
+            distm = (dist_protocol_message, sender, receiver, reason)
             self._dist_command(receiver_node=receiver.node_name_,
                                message=distm)
 

@@ -94,16 +94,32 @@ and batch calls will work with Erlang and Python.</p>
 A Python <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a> will trigger monitor and link
 messages when exiting.</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5a</span></code> will start Erlang node in one terminal and wait</li>
-<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5b</span></code> will start Python part in another terminal, spawn some
-test processes and send a message to Erlang side.</li>
-<li>Erlang node will link and monitor test processes, try make them exit and
-print the results.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5a</span></code> will start Erlang node.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example5b</span></code> (in another terminal) will start Python Pyrlang node.</li>
+<li>Pyrlang node will send a message starting the test.</li>
+<li>Erlang node will spawn a test process, report its pid to Python node.</li>
+<li>Python node (now knowing the pid) will monitor the Erlang process.</li>
+<li>Python node will send a exit message to Erlang side, and observe the monitor
+message arriving back.</li>
 </ul>
 </div>
-<div class="section" id="links-and-monitors-of-erlang-processes">
-<h2>6: Links and Monitors of Erlang Processes<a class="headerlink" href="#links-and-monitors-of-erlang-processes" title="Permalink to this headline">¶</a></h2>
-<p>Demonstrates Pyrlang remotely monitoring and linking to Erlang process or node.</p>
+<div class="section" id="links-monitors-of-erlang-processes">
+<h2>6 &amp; 7: Links/Monitors of Erlang Processes<a class="headerlink" href="#links-monitors-of-erlang-processes" title="Permalink to this headline">¶</a></h2>
+<p>Demonstrates Pyrlang remotely linking to and monitoring an Erlang process.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For linking demo use 'example6a' and 'example6b', for monitoring demo use
+'example7a', 'example7b' Makefile targets.</p>
+</div>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example6a</span></code> will start Erlang node.</li>
+<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">example6b</span></code> (in another terminal) will start Python Pyrlang node.</li>
+<li>Pyrlang node will send a message starting the test.</li>
+<li>Erlang node will spawn a test process, report its pid to Python node.</li>
+<li>Python node (now knowing the pid) will monitor the Erlang process.</li>
+<li>Python node will send a exit message to Erlang side, and observe the monitor
+message arriving back.</li>
+</ul>
 </div>
 <div class="section" id="elixir-and-genserver">
 <h2>10: Elixir and GenServer<a class="headerlink" href="#elixir-and-genserver" title="Permalink to this headline">¶</a></h2>
@@ -145,7 +161,7 @@ and example B.</p>
 <li><a class="reference internal" href="#erlang-to-python">2: Erlang to Python</a></li>
 <li><a class="reference internal" href="#calling-batch-python">3 &amp; 4: Calling/Batch Python</a></li>
 <li><a class="reference internal" href="#links-and-monitors-of-pyrlang-processes">5: Links and Monitors of Pyrlang Processes</a></li>
-<li><a class="reference internal" href="#links-and-monitors-of-erlang-processes">6: Links and Monitors of Erlang Processes</a></li>
+<li><a class="reference internal" href="#links-monitors-of-erlang-processes">6 &amp; 7: Links/Monitors of Erlang Processes</a></li>
 <li><a class="reference internal" href="#elixir-and-genserver">10: Elixir and GenServer</a></li>
 </ul>
 </li>
