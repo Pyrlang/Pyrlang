@@ -101,6 +101,24 @@ which exists on the Python side.</p>
 <p>If the process exists on Python side, its <code class="docutils literal"><span class="pre">inbox_</span></code> field (which will be a
 Gevent or Asyncio Queue) will receive your message.</p>
 </div>
+<div class="section" id="exiting-a-pyrlang-process">
+<h2>Exiting a Pyrlang &quot;Process&quot;<a class="headerlink" href="#exiting-a-pyrlang-process" title="Permalink to this headline">¶</a></h2>
+<p>A Pyrlang &quot;process&quot; can exit if:</p>
+<ul class="simple">
+<li>you call Process.exit</li>
+<li>you call Node.exit_process</li>
+<li>you link to some other process and it exits</li>
+<li>remote node calls <code class="docutils literal"><span class="pre">erlang:exit</span></code> with its pid</li>
+</ul>
+<p>Because registering a process in the process dictionary introduces
+an extra reference to your object, be sure to tell it explicitly
+to unregister: call <a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal"><span class="pre">Process</span></code></a>'s method
+<a class="reference internal" href="process.html#pyrlang.process.Process.exit" title="pyrlang.process.Process.exit"><code class="xref py py-meth docutils literal"><span class="pre">exit()</span></code></a>.</p>
+<p>A more general way to handle both local (by pid or name) and remote processes
+(by pid) would be to use <a class="reference internal" href="node.html#pyrlang.node.Node" title="pyrlang.node.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>'s method
+<a class="reference internal" href="node.html#pyrlang.node.Node.exit_process" title="pyrlang.node.Node.exit_process"><code class="xref py py-meth docutils literal"><span class="pre">exit_process()</span></code></a>. It can send exit messages to
+remotes too.</p>
+</div>
 <div class="section" id="rpc-call-from-erlang">
 <h2>RPC call from Erlang<a class="headerlink" href="#rpc-call-from-erlang" title="Permalink to this headline">¶</a></h2>
 <p>Python node has the special named process running, called <code class="docutils literal"><span class="pre">'rex'</span></code>, which is
@@ -178,12 +196,6 @@ incoming messages.</p>
 <p>Messages sent to a pid or name will be automatically routed to such a
 process and arrive into its <code class="docutils literal"><span class="pre">self.inbox_</span></code>. The Process base class will
 constantly call <code class="docutils literal"><span class="pre">self.handle_inbox()</span></code> so you can check the messages yourself.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Because registering a process in the process dictionary introduces
-an extra reference to your object, be sure to tell it explicitly
-to unregister: call <code class="docutils literal"><span class="pre">self.exit(reason=None)</span></code> (defined in Process class).</p>
-</div>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyProcess</span><span class="p">(</span><span class="n">Process</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">Process</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
@@ -193,8 +205,13 @@ to unregister: call <code class="docutils literal"><span class="pre">self.exit(r
         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Incoming&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now sending from Erlang is easy:</p>
-<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">my_process</span><span class="p">,</span> <span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">}</span> <span class="o">!</span> <span class="n">hello</span><span class="p">.</span>
+<div class="highlight-erlang"><div class="highlight"><pre><span></span><span class="c">%% Now sending from Erlang is easy:</span>
+<span class="c">%% Note that this is syntax for sending to atom names, not to pids!</span>
+<span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">my_process</span><span class="p">,</span> <span class="n">&#39;py@127.0.0.1&#39;</span><span class="p">}</span> <span class="o">!</span> <span class="n">hello</span><span class="p">.</span>
+
+<span class="c">%% If you know the Python pid in Erlang (if you communicated it</span>
+<span class="c">%% from your Python node), then send directly to it:</span>
+<span class="p">(</span><span class="n">erl</span><span class="p">@</span><span class="mi">127</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">)</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="nv">PyProcessPid</span> <span class="o">!</span> <span class="n">hello</span><span class="p">.</span>
 </pre></div>
 </div>
 </div>
@@ -212,21 +229,26 @@ A notebook-like remote execution API, where intermediate call results are stored
 in history log and can be referred by name or index.</p>
 <p>There is helper Erlang module called <code class="docutils literal"><span class="pre">py.erl</span></code>, please use it and see
 <a class="reference internal" href="calling_python.html"><span class="doc">Remote Calling Python from Erlang</span></a> for an example.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Example3 in <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a> demonstrates this.</p>
 </div>
-<div class="section" id="todo-lazy-remote-calculations-on-python-node">
-<h2>TODO Lazy Remote Calculations on Python Node<a class="headerlink" href="#todo-lazy-remote-calculations-on-python-node" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="batch-remote-calculations-on-python-node">
+<h2>Batch Remote Calculations on Python Node<a class="headerlink" href="#batch-remote-calculations-on-python-node" title="Permalink to this headline">¶</a></h2>
 <p><strong>Problem:</strong>
-Same as with direct remote calculations: Often you would like to use some
-functional API without sending the results over the wire until they are ready.
-Lazy remote calculations API allows you to prebuild your calculation as a data
+Often you would like to use some functional API without sending the results
+over the wire until they are ready. Moreover sometimes you might want to run
+same batch on multiple nodes, this is possible now too.</p>
+<p>Batch remote calculations API allows you to prebuild your calculation as a data
 structure on Erlang side and then execute it remotely on one or more
 Pyrlang nodes, sending you the final result.
 Intermediate call results are stored in history log and can be referred by name
 or index.</p>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Describe how to calculate chain of calls on a remote node <strong>lazily</strong>
-using the new API.</p>
+<p>It is possible to apply the same batch of calls to multiple nodes.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Example4 in <a class="reference internal" href="examples.html"><span class="doc">Examples!</span></a> demonstrates this.</p>
 </div>
 </div>
 <div class="section" id="gen-server-like-processes">
@@ -309,12 +331,13 @@ for demo on how Python can link and monitor local and remote pids.</p>
 <li><a class="reference internal" href="#">Cookbook - How to Get Started</a><ul>
 <li><a class="reference internal" href="#start-the-node">Start the Node</a></li>
 <li><a class="reference internal" href="#connect-nodes">Connect nodes</a></li>
+<li><a class="reference internal" href="#exiting-a-pyrlang-process">Exiting a Pyrlang &quot;Process&quot;</a></li>
 <li><a class="reference internal" href="#rpc-call-from-erlang">RPC call from Erlang</a></li>
 <li><a class="reference internal" href="#send-from-python-locally">Send from Python locally</a></li>
 <li><a class="reference internal" href="#send-from-python-to-a-remote">Send from Python to a remote</a></li>
 <li><a class="reference internal" href="#send-to-a-python-object">Send to a Python object</a></li>
 <li><a class="reference internal" href="#remote-calculations-on-python-node">Remote Calculations on Python Node</a></li>
-<li><a class="reference internal" href="#todo-lazy-remote-calculations-on-python-node">TODO Lazy Remote Calculations on Python Node</a></li>
+<li><a class="reference internal" href="#batch-remote-calculations-on-python-node">Batch Remote Calculations on Python Node</a></li>
 <li><a class="reference internal" href="#gen-server-like-processes">Gen_server-like Processes</a></li>
 <li><a class="reference internal" href="#linking-monitoring-from-erlang-to-python">Linking/Monitoring from Erlang to Python</a></li>
 <li><a class="reference internal" href="#linking-monitoring-from-python-to-erlang">Linking/Monitoring from Python to Erlang</a></li>

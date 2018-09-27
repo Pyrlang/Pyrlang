@@ -84,7 +84,7 @@ over the network.</p>
 
 <dl class="method">
 <dt id="pyrlang.node.Node.demonitor_process">
-<code class="descname">demonitor_process</code><span class="sig-paren">(</span><em>origin_pid</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
+<code class="descname">demonitor_process</code><span class="sig-paren">(</span><em>origin_pid</em>, <em>target</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locate the process <code class="docutils literal"><span class="pre">target</span></code> and remove the <code class="docutils literal"><span class="pre">origin</span></code> from its
 <code class="docutils literal"><span class="pre">monitors_</span></code> collection. This does not trigger any notifications
 or signals to the <code class="docutils literal"><span class="pre">origin</span></code>.</p>
@@ -93,6 +93,7 @@ or signals to the <code class="docutils literal"><span class="pre">origin</span>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref</strong> (<em>term.reference.Reference</em>) -- Reference which you received when setting up a monitor.</li>
 <li><strong>origin_pid</strong> (<em>Pid</em>) -- The process who was monitoring the target previously</li>
 <li><strong>target</strong> (<em>Pid</em><em> or </em><em>Atom</em>) -- Name or pid of a monitor target process, possibly
 it does not exist</li>
@@ -115,16 +116,17 @@ may remain.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyrlang.node.Node.exit_process">
+<code class="descname">exit_process</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>reason</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.exit_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivers exit message to a local or remote process.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyrlang.node.Node.get_cookie">
 <code class="descname">get_cookie</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.get_cookie" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get string cookie value for this node.
 TODO: Cookie per connection?</p>
 </dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.node.Node.handle_inbox">
-<code class="descname">handle_inbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.handle_inbox" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.node.Node.handle_one_inbox_message">
@@ -262,19 +264,17 @@ for your own processes.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.node.Node.send_exit_signal">
-<code class="descname">send_exit_signal</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>reason</em>, <em>dist_protocol_message: str = 'exit'</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.send_exit_signal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deliver local or remote exit signal to a process.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dist_protocol_message</strong> -- Defines message which is sent to the
-distribution protocol and then converted to an integer. EXIT is
-used for link exits, and EXIT2 is used for triggering remote exits.</td>
-</tr>
-</tbody>
-</table>
+<dt id="pyrlang.node.Node.send_link_exit_notification">
+<code class="descname">send_link_exit_notification</code><span class="sig-paren">(</span><em>sender</em>, <em>receiver</em>, <em>reason</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.send_link_exit_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivers exit message due to a linked process dead to a local
+or remote process.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.signal_wake_up">
+<code class="descname">signal_wake_up</code><span class="sig-paren">(</span><em>pid</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.signal_wake_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process informs Node that it now has a signal in its signals queue.
+Try and process it when possible.</p>
 </dd></dl>
 
 <dl class="method">

@@ -63,6 +63,27 @@ If the process exists on Python side, its ``inbox_`` field (which will be a
 Gevent or Asyncio Queue) will receive your message.
 
 
+Exiting a Pyrlang "Process"
+---------------------------
+
+A Pyrlang "process" can exit if:
+
+*   you call Process.exit
+*   you call Node.exit_process
+*   you link to some other process and it exits
+*   remote node calls ``erlang:exit`` with its pid
+
+Because registering a process in the process dictionary introduces
+an extra reference to your object, be sure to tell it explicitly
+to unregister: call :py:class:`~pyrlang.process.Process`'s method
+:py:meth:`~pyrlang.process.Process.exit`.
+
+A more general way to handle both local (by pid or name) and remote processes
+(by pid) would be to use :py:class:`~pyrlang.node.Node`'s method
+:py:meth:`~pyrlang.node.Node.exit_process`. It can send exit messages to
+remotes too.
+
+
 RPC call from Erlang
 --------------------
 
@@ -157,10 +178,6 @@ Messages sent to a pid or name will be automatically routed to such a
 process and arrive into its ``self.inbox_``. The Process base class will
 constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
-.. note:: Because registering a process in the process dictionary introduces
-    an extra reference to your object, be sure to tell it explicitly
-    to unregister: call ``self.exit(reason=None)`` (defined in Process class).
-
 .. code-block:: python
 
     class MyProcess(Process):
@@ -171,11 +188,15 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
         def handle_one_inbox_message(self, msg):
             print("Incoming", msg)
 
-Now sending from Erlang is easy:
-
 .. code-block:: erlang
 
+    %% Now sending from Erlang is easy:
+    %% Note that this is syntax for sending to atom names, not to pids!
     (erl@127.0.0.1) 1> {my_process, 'py@127.0.0.1'} ! hello.
+
+    %% If you know the Python pid in Erlang (if you communicated it
+    %% from your Python node), then send directly to it:
+    (erl@127.0.0.1) 1> PyProcessPid ! hello.
 
 
 Remote Calculations on Python Node
@@ -196,22 +217,28 @@ in history log and can be referred by name or index.
 There is helper Erlang module called ``py.erl``, please use it and see
 :doc:`calling_python` for an example.
 
+.. seealso::
+    Example3 in :doc:`examples` demonstrates this.
 
-TODO Lazy Remote Calculations on Python Node
---------------------------------------------
+
+Batch Remote Calculations on Python Node
+----------------------------------------
 
 **Problem:**
-Same as with direct remote calculations: Often you would like to use some
-functional API without sending the results over the wire until they are ready.
-Lazy remote calculations API allows you to prebuild your calculation as a data
+Often you would like to use some functional API without sending the results
+over the wire until they are ready. Moreover sometimes you might want to run
+same batch on multiple nodes, this is possible now too.
+
+Batch remote calculations API allows you to prebuild your calculation as a data
 structure on Erlang side and then execute it remotely on one or more
 Pyrlang nodes, sending you the final result.
 Intermediate call results are stored in history log and can be referred by name
 or index.
 
-.. todo::
-    Describe how to calculate chain of calls on a remote node **lazily**
-    using the new API.
+It is possible to apply the same batch of calls to multiple nodes.
+
+.. seealso::
+    Example4 in :doc:`examples` demonstrates this.
 
 
 Gen_server-like Processes

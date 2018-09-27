@@ -129,6 +129,13 @@ A convenient way to access the node which holds the current process.
 <dd><p>Override this method to handle new incoming messages.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyrlang.process.Process.handle_signals">
+<code class="descname">handle_signals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.handle_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called from Node if the Node knows that there's a signal waiting
+to be handled.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pyrlang.process.Process.inbox_">
 <code class="descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.inbox_" title="Permalink to this definition">¶</a></dt>
