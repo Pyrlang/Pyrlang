@@ -33,8 +33,8 @@ class LinkExample6(Process):
             n.link(self.pid_, msg[1])
 
             def exit_fn():
-                n.send_exit_signal(sender=self.pid_, receiver=msg[1],
-                                   reason=Atom("example6_link_exit"))
+                n.exit_process(sender=self.pid_, receiver=msg[1],
+                               reason=Atom("example6_link_exit"))
             self.engine_.call_later(0.5, exit_fn)
         else:
             LOG.info("LinkExample6: Incoming %s", msg)

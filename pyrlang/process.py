@@ -92,6 +92,10 @@ class Process(BaseProcess):
         """ Bi-directional linked process pids. Each linked pid pair is unique
             hence using a set to store them. """
 
+        self._signals = []  # type: List[Tuple[str, Any]]
+        """ Exit (and maybe later other) signals are placed here and handled
+            at safe moments of time between handling messages. """
+
         LOG.debug("Spawned process %s", self.pid_)
         if not self.passive_:
             self.engine_.spawn(self.process_loop)
@@ -110,6 +114,14 @@ class Process(BaseProcess):
             return False
         return True
 
+    def handle_signals(self):
+        """ Called from Node if the Node knows that there's a signal waiting
+            to be handled. """
+        while self._signals:
+            # Signals defer exiting a process while doing something important
+            (_exit, reason) = self._signals.pop(0)
+            self._on_exit_signal(reason)
+
     def handle_inbox(self):
         """ Do not override `handle_inbox`, instead go for
             `handle_one_inbox_message`
@@ -118,7 +130,11 @@ class Process(BaseProcess):
             msg = self.inbox_.get()
             if msg is None:
                 break
+            # try:
             self.handle_one_inbox_message(msg)
+            # except Exception as exc:
+            #    LOG.error("%s", exc)
+            #    self.exit(exc)
 
     def handle_one_inbox_message(self, msg):
         """ Override this method to handle new incoming messages. """
@@ -152,6 +168,11 @@ class Process(BaseProcess):
             monitors and unregisters the object from the node process
             dictionary.
         """
+        self._signals.append(('exit', reason))
+        self.get_node().signal_wake_up(self.pid_)
+
+    def _on_exit_signal(self, reason):
+        """ Internal function triggered between message handling. """
         if reason is None:
             reason = Atom('normal')
 
@@ -175,7 +196,7 @@ class Process(BaseProcess):
             exit reason.
         """
         node = self.get_node()
-        for (monitor_owner, monitor_ref) in self._monitored_by.items():
+        for (monitor_ref, monitor_owner) in self._monitored_by.items():
             down_msg = (Atom("DOWN"),
                         monitor_ref,
                         Atom("process"),
@@ -199,9 +220,9 @@ class Process(BaseProcess):
         node = self.get_node()
         for link in self._links:
             # For local pids, just forward them the exit signal
-            node.send_exit_signal(sender=self.pid_,
-                                  receiver=link,
-                                  reason=reason)
+            node.send_link_exit_notification(sender=self.pid_,
+                                             receiver=link,
+                                             reason=reason)
 
     def add_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's

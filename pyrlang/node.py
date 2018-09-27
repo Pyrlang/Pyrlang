@@ -14,7 +14,7 @@
 
 import logging
 
-from typing import Dict, Union
+from typing import Dict, Union, Set
 
 from pyrlang.async.base_engine import BaseEngine
 from pyrlang.dist.distribution import ErlangDistribution
@@ -105,6 +105,8 @@ class Node(BaseNode):
         # integer.
         self.node_opts_ = NodeOpts(cookie=cookie)
 
+        self._signal_wakeups = set()  # type: Set[Pid]
+
         self.dist_nodes_ = {}  # type: Dict[str, BaseDistProtocol]
         self.dist_ = ErlangDistribution(node_name=node_name, engine=engine)
 
@@ -126,10 +128,24 @@ class Node(BaseNode):
 
     def _loop(self) -> bool:
         """ Returns True to continue running. False to stop. """
-        self.handle_inbox()
+        self._handle_inbox()
+        self._handle_signals()
         return not self.is_exiting_
 
-    def handle_inbox(self):
+    def _handle_signals(self):
+        """ For all knowns processes which might have a pending signal waiting,
+            give CPU time to that process. """
+        while self._signal_wakeups:
+            s_pid = self._signal_wakeups.pop()
+            if s_pid in self.processes_:
+                self.processes_[s_pid].handle_signals()
+
+    def signal_wake_up(self, pid):
+        """ Process informs Node that it now has a signal in its signals queue.
+            Try and process it when possible. """
+        self._signal_wakeups.add(pid)
+
+    def _handle_inbox(self):
         while True:
             msg = self.inbox_.get()
             if msg is None:
@@ -419,10 +435,14 @@ class Node(BaseNode):
             else Reference.create(node_name=self.node_name_,
                                   creation=self.dist_.creation_)
 
-        if target_pid.is_local_to(self):
+        if not origin_pid.is_local_to(self):
+            # Origin is remote and wants to monitor local process
             return self._monitor_local_process(origin_pid, target_pid, m_ref)
-        else:
-            return self._monitor_remote_process(origin_pid, target_pid, m_ref)
+        if target_pid.is_local_to(self):
+            # Target is local and we notify a local process
+            return self._monitor_local_process(origin_pid, target_pid, m_ref)
+        # Target is remote and a distribution message has to be sent
+        return self._monitor_remote_process(origin_pid, target_pid, m_ref)
 
     def _monitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
                                 ref: Reference):
@@ -449,17 +469,19 @@ class Node(BaseNode):
             LOG.error(msg)
             raise ProcessNotFoundError(msg)
 
-        # if the origin is local, register monitor in it. Remote pids are
-        # handled by the remote
+        # if the origin is local, register monitor in it.
+        # Remotely set monitors have remote origin
         if origin_pid.is_local_to(self):
             origin_p = self.where_is_process(origin_pid)
             origin_p.add_monitor(pid=target_proc.pid_, ref=ref)
 
-    def demonitor_process(self, origin_pid, target):
+    def demonitor_process(self, origin_pid, target, ref):
         """ Locate the process ``target`` and remove the ``origin`` from its
             ``monitors_`` collection. This does not trigger any notifications
             or signals to the ``origin``.
 
+            :param ref: Reference which you received when setting up a monitor.
+            :type ref: term.reference.Reference
             :type origin_pid: Pid
             :param origin_pid: The process who was monitoring the target previously
             :type target: Pid or Atom
@@ -468,22 +490,26 @@ class Node(BaseNode):
             :raises ProcessNotFound: if target does not exist
         """
         target_pid = self.where_is(target)
+
+        LOG.info("demonitor orig=%s target=%s ref=%s", origin_pid, target_pid, ref)
+
+        if not origin_pid.is_local_to(self):
+            # Remote node monitored us but now wants to release
+            return self._demonitor_local_process(origin_pid, target_pid, ref=ref)
         if target_pid.is_local_to(self):
-            return self._demonitor_local_process(origin_pid, target_pid)
-        else:
-            return self._demonitor_remote_process(origin_pid, target_pid)
+            # Target process is local for this node
+            return self._demonitor_local_process(origin_pid, target_pid, ref=ref)
+        # Target process is remote, and we need to send monitor message
+        return self._demonitor_remote_process(origin_pid, target_pid, ref=ref)
 
     def _demonitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
                                   ref: Reference):
-        # if the origin is local, unregister monitor from it
-        assert origin_pid.is_local_to(self)
-
         monitor_msg = ('demonitor_p', origin_pid, target_pid, ref)
         self._dist_command(receiver_node=target_pid.node_name_,
                            message=monitor_msg)
 
         origin_p = self.where_is_process(origin_pid)
-        origin_p.remove_monitor(pid=target_pid, ref=ref)
+        origin_p.remove_monitored_by(pid=target_pid, ref=ref)
 
     def _demonitor_local_process(self, origin_pid: Pid, target_pid: Pid,
                                  ref: Reference):
@@ -496,9 +522,10 @@ class Node(BaseNode):
             raise ProcessNotFoundError(msg)
 
         # if the origin is local, unregister monitor from it
-        assert origin_pid.is_local_to(self)
-        origin_p = self.where_is_process(origin_pid)
-        origin_p.remove_monitor(ref=ref, pid=target_pid)
+        # Remotely set monitors have remote origin
+        if origin_pid.is_local_to(self):
+            origin_p = self.where_is_process(origin_pid)
+            origin_p.remove_monitor(ref=ref, pid=target_pid)
 
     def destroy(self):
         """ Closes incoming and outgoing connections and destroys the local
@@ -523,8 +550,23 @@ class Node(BaseNode):
 
         self.engine_.destroy()
 
-    def send_exit_signal(self, sender, receiver, reason,
-                         dist_protocol_message: str = 'exit'):
+    def exit_process(self, sender, receiver, reason):
+        """ Delivers exit message to a local or remote process. """
+        self._send_exit_signal(sender=sender,
+                               receiver=receiver,
+                               reason=reason,
+                               dist_protocol_message='exit2')
+
+    def send_link_exit_notification(self, sender, receiver, reason):
+        """ Delivers exit message due to a linked process dead to a local
+            or remote process. """
+        self._send_exit_signal(sender=sender,
+                               receiver=receiver,
+                               reason=reason,
+                               dist_protocol_message='exit')
+
+    def _send_exit_signal(self, sender, receiver, reason,
+                          dist_protocol_message: str = 'exit'):
         """ Deliver local or remote exit signal to a process.
 
             :param dist_protocol_message: Defines message which is sent to the

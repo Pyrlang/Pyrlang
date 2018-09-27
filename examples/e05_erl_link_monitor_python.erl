@@ -26,19 +26,17 @@ start() ->
 
 test_loop() ->
     receive
-        {example5, test_exit, Pid1} ->
-            %% Step 1: Now process P1 was created remotely and we know its Pid
-            io:format("EXAMPLE5: sending exit to remote ~p...~n", [Pid1]),
-            erlang:exit(Pid1, example5_exit_reason),
-            test_loop();
-
         {example5, test_link, Pid2} ->
-            io:format("EXAMPLE5: linking AND sending exit to remote ~p...~n", [Pid2]),
-
+            Reason2 = example5_link_reason,
+            io:format("EXAMPLE5: linking AND sending exit(~p) to remote ~p...~n",
+                      [Pid2, Reason2]),
             erlang:link(Pid2),
-            erlang:exit(Pid2, example5_link_reason),
-            receive {'EXIT', Pid2, Reason2} ->
-                io:format("EXAMPLE5: Remote exited with ~p~n", [Reason2])
+            erlang:exit(Pid2, Reason2),
+            receive
+                {'EXIT', Pid2, Reason2} ->
+                    io:format("EXAMPLE5: Remote exited: ~p~n", [Reason2]);
+                {'EXIT', Pid2, Reason2_1} ->
+                    io:format("EXAMPLE5: Remote exited UNEXPECTEDLY ~p~n", [Reason2_1])
             end,
             test_loop();
 

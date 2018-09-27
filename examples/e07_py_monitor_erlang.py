@@ -34,12 +34,11 @@ class MonitorExample7(Process):
             n.monitor_process(self.pid_, msg[1])
 
             def exit_fn():
-                n.send_exit_signal(sender=self.pid_, receiver=msg[1],
-                                   reason=Atom("example7_monitor_exit"),
-                                   dist_protocol_message='exit2')
+                n.exit_process(sender=self.pid_, receiver=msg[1],
+                               reason=Atom("example7_monitor_exit"))
             self.engine_.call_later(0.5, exit_fn)
         else:
-            LOG.info("MonitorExample7: Not recognized incoming %s", msg)
+            LOG.info("MonitorExample7: Incoming %s", msg)
 
     def exit(self, reason=None):
         #
@@ -59,13 +58,13 @@ def main():
     #   command. This will spawn an Erlang process and tell us the pid.
     #   Reply from Erlang node will trigger next steps above in ExampleProcess6
     #
-    p2 = MonitorExample7(node)
+    proc = MonitorExample7(node)
 
-    LOG.info("Sending {example7, test_monitor, %s} to remote 'example7'" % p2.pid_)
+    LOG.info("Sending {example7, test_monitor, %s} to remote 'example7'" % proc.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example7"))
-    node.send(sender=p2.pid_,
+    node.send(sender=proc.pid_,
               receiver=remote_receiver_name,
-              message=(Atom("example7"), Atom("test_monitor"), p2.pid_))
+              message=(Atom("example7"), Atom("test_monitor"), proc.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)
@@ -75,7 +74,7 @@ def main():
     # 3. End, sending a stop message
     #
     LOG.info(color("Stopping remote loop", fg="red"))
-    node.send(sender=p1.pid_, receiver=remote_receiver_name,
+    node.send(sender=proc.pid_, receiver=remote_receiver_name,
               message=(Atom("example7"), Atom("stop")))
 
     event_engine.sleep(sleep_sec)

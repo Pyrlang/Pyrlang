@@ -28,10 +28,10 @@ example4: $(ERLLIBDIR)/py.beam $(ROOT)/examples/e04_batch_call_python.beam
 # Run `make example5a` to run Erlang node
 # Run `make example5b` to run Python node and wait for them to interact
 .PHONY: example5a example5b
-example5a: $(ROOT)/examples/e05_links_monitors.beam
-	$(ERL) -s e05_links_monitors -noshell
+example5a: $(ROOT)/examples/e05_erl_link_monitor_python.beam
+	$(ERL) -s e05_erl_link_monitor_python -noshell
 example5b:
-	$(PY) examples/e05_links_monitors.py
+	$(PY) examples/e05_erl_link_monitor_python.py
 
 # Run `make example6a` to run Erlang node
 # Run `make example6b` to run Python node and wait for them to interact
