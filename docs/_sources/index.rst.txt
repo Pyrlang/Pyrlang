@@ -17,6 +17,7 @@ changes required.
     :maxdepth: 2
     :caption: Contents:
 
+    build-library
     examples
     configuration
     cookbook
