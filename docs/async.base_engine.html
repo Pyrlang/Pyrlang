@@ -45,60 +45,60 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.async.base_engine">
-<span id="async-base-engine-module"></span><h1>async.base_engine module<a class="headerlink" href="#module-pyrlang.async.base_engine" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrlang.async_support.base_engine">
+<span id="async-base-engine-module"></span><h1>async.base_engine module<a class="headerlink" href="#module-pyrlang.async_support.base_engine" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="pyrlang.async.base_engine.BaseEngine">
-<em class="property">class </em><code class="descclassname">pyrlang.async.base_engine.</code><code class="descname">BaseEngine</code><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine">
+<em class="property">class </em><code class="descclassname">pyrlang.async_support.base_engine.</code><code class="descname">BaseEngine</code><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>This is base class for Pluggable Async Engines.
 This class abstracts away aspects handled by asyncio, gevent and similar
 event engines allowing different library to be selected.</p>
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.call_later">
-<code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.call_later" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.call_later">
+<code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.call_later" title="Permalink to this definition">¶</a></dt>
 <dd><p>Schedules fn to be called after sleep(t).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.connect_with">
-<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.connect_with" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.connect_with">
+<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.connect_with" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connects to host_port with a given BaseProtocol handler.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.destroy">
-<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.destroy" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.destroy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.listen_with">
-<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.listen_with" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.listen_with">
+<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.listen_with" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spawns a task which would listen on a random port with a given
 BaseProtocol handler</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.queue_new">
-<code class="descname">queue_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pyrlang.async.base_engine.BaseQueue<a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.queue_new" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.queue_new">
+<code class="descname">queue_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pyrlang.async_support.base_engine.BaseQueue<a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.queue_new" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new Queue object compatible with the current async engine.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.run_forever">
-<code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.run_forever" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.run_forever">
+<code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.run_forever" title="Permalink to this definition">¶</a></dt>
 <dd><p>Continues running event loop forever.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.sleep">
-<code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.sleep" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.sleep">
+<code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.sleep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sleeps given amount of seconds in a nice compatible way.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.socket_module">
-<code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.socket_module" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.socket_module">
+<code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.socket_module" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns current socket module (modified to be compatible with the
 current async library). Used functions are:
 *   socket.create_connection
@@ -107,8 +107,8 @@ current async library). Used functions are:
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseEngine.spawn">
-<code class="descname">spawn</code><span class="sig-paren">(</span><em>a_callable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseEngine.spawn" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseEngine.spawn">
+<code class="descname">spawn</code><span class="sig-paren">(</span><em>a_callable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseEngine.spawn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spawns a task which will call loop_fn repeatedly while it
 returns False, else will stop.</p>
 </dd></dl>
@@ -116,22 +116,22 @@ returns False, else will stop.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="pyrlang.async.base_engine.BaseQueue">
-<em class="property">class </em><code class="descclassname">pyrlang.async.base_engine.</code><code class="descname">BaseQueue</code><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseQueue">
+<em class="property">class </em><code class="descclassname">pyrlang.async_support.base_engine.</code><code class="descname">BaseQueue</code><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseQueue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseQueue.get">
-<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.get" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseQueue.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseQueue.get" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseQueue.is_empty">
-<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.is_empty" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseQueue.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseQueue.is_empty" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_engine.BaseQueue.put">
-<code class="descname">put</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_engine.BaseQueue.put" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_engine.BaseQueue.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_engine.BaseQueue.put" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -185,7 +185,7 @@ returns False, else will stop.</p>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/async.base_engine.rst.txt"
