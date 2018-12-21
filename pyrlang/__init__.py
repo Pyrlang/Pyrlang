@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pyrlang.async_support import GeventEngine
+from pyrlang.async_support import AsyncioEngine
+from pyrlang.gen_server import GenServer
 from pyrlang.node import Node, NodeException
 from pyrlang.process import Process
-from pyrlang.gen_server import GenServer
 from pyrlang.util import start_pyrlang
-
-from pyrlang.async.gevent_engine import GeventEngine
-from pyrlang.async.asyncio_engine import AsyncioEngine
 
 start_pyrlang()
 

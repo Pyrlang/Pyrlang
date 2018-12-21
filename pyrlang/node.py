@@ -16,7 +16,7 @@ import logging
 
 from typing import Dict, Union, Set
 
-from pyrlang.async.base_engine import BaseEngine
+from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.dist.distribution import ErlangDistribution
 from pyrlang.dist.base_dist_protocol import BaseDistProtocol
 from pyrlang.dist.distflags import NodeOpts

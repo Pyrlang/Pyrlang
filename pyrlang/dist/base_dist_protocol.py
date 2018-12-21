@@ -20,10 +20,10 @@ import struct
 from hashlib import md5
 from typing import Union
 
-from term import util
-from pyrlang.async.base_engine import BaseEngine
-from pyrlang.async.base_protocol import BaseProtocol
+from pyrlang.async_support.base_engine import BaseEngine
+from pyrlang.async_support.base_protocol import BaseProtocol
 from term import codec
+from term import util
 from term.atom import Atom
 
 LOG = logging.getLogger("pyrlang.dist")

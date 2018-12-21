@@ -21,8 +21,8 @@ from typing import Type
 import asyncio
 from asyncio import Queue, QueueEmpty
 
-from pyrlang.async.base_engine import BaseEngine, BaseQueue
-from pyrlang.async.base_protocol import BaseProtocol
+from pyrlang.async_support.base_engine import BaseEngine, BaseQueue
+from pyrlang.async_support.base_protocol import BaseProtocol
 
 LOG = logging.getLogger("pyrlang")
 

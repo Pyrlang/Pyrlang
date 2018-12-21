@@ -21,8 +21,8 @@ from gevent import socket, select
 from gevent.queue import Queue, Empty
 from gevent.server import StreamServer
 
-from pyrlang.async.base_engine import BaseEngine, BaseQueue
-from pyrlang.async.base_protocol import BaseProtocol
+from pyrlang.async_support.base_engine import BaseEngine, BaseQueue
+from pyrlang.async_support.base_protocol import BaseProtocol
 
 LOG = logging.getLogger("pyrlang")
 

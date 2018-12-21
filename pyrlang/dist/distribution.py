@@ -18,9 +18,9 @@
 
 import logging
 
+from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.dist.epmd import EPMDClient
 from pyrlang.dist.out_dist_protocol import OutDistProtocol
-from pyrlang.async.base_engine import BaseEngine
 
 LOG = logging.getLogger("pyrlang.dist")
 
