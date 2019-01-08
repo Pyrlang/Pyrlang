@@ -21,7 +21,7 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 class MyProcess(GenServer):
     def __init__(self, node) -> None:
-        GenServer.__init__(self, node,
+        GenServer.__init__(self, node.node_name_,
                            accepted_calls=['hello', 'hello_again'])
         node.register_name(self, Atom('my_process'))
         LOG.info("registering process - 'my_process'")
