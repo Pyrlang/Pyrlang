@@ -15,7 +15,7 @@ import logging
 
 from typing import Set
 
-from pyrlang.async.base_engine import BaseEngine
+from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.bases import BaseProcess
 from term.reference import Reference
 from term.pid import Pid

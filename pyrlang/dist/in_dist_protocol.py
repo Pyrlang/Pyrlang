@@ -21,10 +21,10 @@ import logging
 import random
 import struct
 
-from term import util
+from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.dist import dist_protocol
 from pyrlang.dist.base_dist_protocol import *
-from pyrlang.async.base_engine import BaseEngine
+from term import util
 
 LOG = logging.getLogger("pyrlang.dist")
 LOG.setLevel(logging.INFO)

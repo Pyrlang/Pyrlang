@@ -2,8 +2,8 @@
 git+git://github.com/Pyrlang/Term@master#egg=term
 
 # Gevent-only requirements, can remove if not using Gevent
-gevent==1.2.1
-greenlet==0.4.12
+gevent==1.3.7
+greenlet==0.4.15
 
 # Documentation requirements
 Jinja2==2.9.6

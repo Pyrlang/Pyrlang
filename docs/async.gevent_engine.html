@@ -45,12 +45,12 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.async.gevent_engine">
-<span id="async-gevent-engine-module"></span><h1>async.gevent_engine module<a class="headerlink" href="#module-pyrlang.async.gevent_engine" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrlang.async_support.gevent_engine">
+<span id="async-gevent-engine-module"></span><h1>async.gevent_engine module<a class="headerlink" href="#module-pyrlang.async_support.gevent_engine" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="pyrlang.async.gevent_engine.GeventEngine">
-<em class="property">class </em><code class="descclassname">pyrlang.async.gevent_engine.</code><code class="descname">GeventEngine</code><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async.base_engine.BaseEngine" title="pyrlang.async.base_engine.BaseEngine"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async.base_engine.BaseEngine</span></code></a></p>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine">
+<em class="property">class </em><code class="descclassname">pyrlang.async_support.gevent_engine.</code><code class="descname">GeventEngine</code><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseEngine" title="pyrlang.async_support.base_engine.BaseEngine"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async_support.base_engine.BaseEngine</span></code></a></p>
 <p>Compatibility driver for Gevent.
 Create it before creating Node and pass as argument 'engine' like so:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">e</span> <span class="o">=</span> <span class="n">GeventEngine</span><span class="p">()</span>
@@ -58,13 +58,13 @@ Create it before creating Node and pass as argument 'engine' like so:</p>
 </pre></div>
 </div>
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.call_later">
-<code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.call_later" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.call_later">
+<code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.call_later" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.connect_with">
-<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'pyrlang.async.base_protocol.BaseProtocol'&gt;, &lt;class 'gevent._socket3.socket'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.connect_with" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.connect_with">
+<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'pyrlang.async_support.base_protocol.BaseProtocol'&gt;, &lt;class 'gevent._socket3.socket'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.connect_with" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper which creates a new connection and feeds the data stream into
 a protocol handler class.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -88,39 +88,39 @@ on_connected, consume, and on_connection_lost</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.destroy">
-<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.destroy" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.destroy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.listen_with">
-<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'gevent.server.StreamServer'&gt;, &lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.listen_with" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.listen_with">
+<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'gevent.server.StreamServer'&gt;, &lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.listen_with" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.queue_new">
-<code class="descname">queue_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pyrlang.async.base_engine.BaseQueue<a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.queue_new" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.queue_new">
+<code class="descname">queue_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pyrlang.async_support.base_engine.BaseQueue<a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.queue_new" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create Gevent queue adapter</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.run_forever">
-<code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.run_forever" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.run_forever">
+<code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.run_forever" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.sleep">
-<code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.sleep" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.sleep">
+<code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.sleep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.socket_module">
-<code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.socket_module" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.socket_module">
+<code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.socket_module" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventEngine.spawn">
-<code class="descname">spawn</code><span class="sig-paren">(</span><em>loop_fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventEngine.spawn" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventEngine.spawn">
+<code class="descname">spawn</code><span class="sig-paren">(</span><em>loop_fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventEngine.spawn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spawns a task which will call loop_fn repeatedly while it
 returns False, else will stop.</p>
 </dd></dl>
@@ -128,30 +128,30 @@ returns False, else will stop.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="pyrlang.async.gevent_engine.GeventQueue">
-<em class="property">class </em><code class="descclassname">pyrlang.async.gevent_engine.</code><code class="descname">GeventQueue</code><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventQueue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async.base_engine.BaseQueue" title="pyrlang.async.base_engine.BaseQueue"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async.base_engine.BaseQueue</span></code></a></p>
+<dt id="pyrlang.async_support.gevent_engine.GeventQueue">
+<em class="property">class </em><code class="descclassname">pyrlang.async_support.gevent_engine.</code><code class="descname">GeventQueue</code><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventQueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseQueue" title="pyrlang.async_support.base_engine.BaseQueue"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async_support.base_engine.BaseQueue</span></code></a></p>
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventQueue.get">
-<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventQueue.get" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventQueue.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventQueue.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attempt to fetch one item from the queue, or return None.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventQueue.is_empty">
-<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventQueue.is_empty" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventQueue.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventQueue.is_empty" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.gevent_engine.GeventQueue.put">
-<code class="descname">put</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.GeventQueue.put" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.GeventQueue.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.GeventQueue.put" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrlang.async.gevent_engine.make_serve_loop">
-<code class="descclassname">pyrlang.async.gevent_engine.</code><code class="descname">make_serve_loop</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.gevent_engine.make_serve_loop" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.gevent_engine.make_serve_loop">
+<code class="descclassname">pyrlang.async_support.gevent_engine.</code><code class="descname">make_serve_loop</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.gevent_engine.make_serve_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>A basic connection handler that takes an accepted connection and feeds
 the data stream into the receiver protocol handler class.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -222,7 +222,7 @@ on_connected, consume, and on_connection_lost</li>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/async.gevent_engine.rst.txt"

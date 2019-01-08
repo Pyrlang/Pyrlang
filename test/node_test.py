@@ -2,10 +2,11 @@ import unittest
 
 from time import sleep
 
-from pyrlang import Node, Atom
-from pyrlang.async.base_engine import BaseEngine
-from pyrlang.async.asyncio_engine import AsyncioEngine
+from pyrlang import Node
+from pyrlang.async_support.base_engine import BaseEngine
+from pyrlang.async_support.asyncio_engine import AsyncioEngine
 # from pyrlang.async.gevent_engine import GeventEngine
+from term import Atom
 
 
 def start_stop_with(ev_engine: BaseEngine, py_node_name: str):

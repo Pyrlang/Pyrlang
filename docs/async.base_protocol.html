@@ -45,40 +45,40 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.async.base_protocol">
-<span id="async-base-protocol-module"></span><h1>async.base_protocol module<a class="headerlink" href="#module-pyrlang.async.base_protocol" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrlang.async_support.base_protocol">
+<span id="async-base-protocol-module"></span><h1>async.base_protocol module<a class="headerlink" href="#module-pyrlang.async_support.base_protocol" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="pyrlang.async.base_protocol.BaseProtocol">
-<em class="property">class </em><code class="descclassname">pyrlang.async.base_protocol.</code><code class="descname">BaseProtocol</code><span class="sig-paren">(</span><em>*_args</em>, <em>**_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol">
+<em class="property">class </em><code class="descclassname">pyrlang.async_support.base_protocol.</code><code class="descname">BaseProtocol</code><span class="sig-paren">(</span><em>*_args</em>, <em>**_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Defines abstract protocol handler class. Adapters from Gevent, Asyncio
 etc are created in corresponding modules and are plugged in when
 engine is selected.</p>
 <dl class="attribute">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.close_requested_">
-<code class="descname">close_requested_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.close_requested_" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.close_requested_">
+<code class="descname">close_requested_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.close_requested_" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set this to True and the connection will be closed soon.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.destroy">
-<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.destroy" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.destroy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop due to an external demand.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.on_connected">
-<code class="descname">on_connected</code><span class="sig-paren">(</span><em>host_port: tuple</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.on_connected" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.on_connected">
+<code class="descname">on_connected</code><span class="sig-paren">(</span><em>host_port: tuple</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.on_connected" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.on_connection_lost">
-<code class="descname">on_connection_lost</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.on_connection_lost" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.on_connection_lost">
+<code class="descname">on_connection_lost</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.on_connection_lost" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.on_incoming_data">
-<code class="descname">on_incoming_data</code><span class="sig-paren">(</span><em>data: bytes</em><span class="sig-paren">)</span> &#x2192; typing.Union[bytes, NoneType]<a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.on_incoming_data" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.on_incoming_data">
+<code class="descname">on_incoming_data</code><span class="sig-paren">(</span><em>data: bytes</em><span class="sig-paren">)</span> &#x2192; typing.Union[bytes, NoneType]<a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.on_incoming_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attempt to consume first part of data as a packet</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -95,19 +95,19 @@ nothing. Returning None requests to close the connection</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.periodic_check">
-<code class="descname">periodic_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.periodic_check" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.periodic_check">
+<code class="descname">periodic_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.periodic_check" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override this to do periodic checks on something.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.send">
-<code class="descname">send</code><span class="sig-paren">(</span><em>msg: bytes</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.send" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>msg: bytes</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.send" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pyrlang.async.base_protocol.BaseProtocol.send_buffer_">
-<code class="descname">send_buffer_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.async.base_protocol.BaseProtocol.send_buffer_" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrlang.async_support.base_protocol.BaseProtocol.send_buffer_">
+<code class="descname">send_buffer_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.async_support.base_protocol.BaseProtocol.send_buffer_" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collects outgoing data.</p>
 </dd></dl>
 
@@ -162,7 +162,7 @@ nothing. Returning None requests to close the connection</td>
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/async.base_protocol.rst.txt"
