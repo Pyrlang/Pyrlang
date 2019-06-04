@@ -19,6 +19,7 @@ DFLAG_PUBLISHED = 0x01
 """ Visible or hidden node. """
 
 DFLAG_ATOM_CACHE = 0x02
+""" Supports atoms sent in batches. """
 
 DFLAG_EXT_REFS = 0x04
 """ The node supports encoding/decoding of external references. """
@@ -47,8 +48,12 @@ DFLAG_NEW_FLOATS = 0x800
 DFLAG_UNICODE_IO = 0x1000
 DFLAG_DIST_HDR_ATOM_CACHE = 0x2000
 DFLAG_SMALL_ATOM_TAGS = 0x4000
-# 0x8000
+
+DFLAG_INTERNAL_TAGS = 0x8000
+""" Used internally by ETS compressed option in Erlang/OTP. """
+
 DFLAG_UTF8_ATOMS = 0x10000
+
 DFLAG_MAP_TAG = 0x20000
 """ The node can handle map encoding. """
 
@@ -57,9 +62,17 @@ DFLAG_BIG_CREATION = 0x40000
 # Added in R21-R22
 DFLAG_SEND_SENDER = 0x80000
 DFLAG_BIG_SEQTRACE_LABELS = 0x100000
+
 DFLAG_NO_MAGIC = 0x200000
 """ Internal for pending connection (BEAM VM internal). """
 
+DFLAG_EXIT_PAYLOAD = 0x400000
+""" The node supports additional payload for exit messages,
+    DOP_PAYLOAD_MONITOR_P_EXIT, DOP_PAYLOAD_EXIT_TT, DOP_PAYLOAD_EXIT
+    otherwise DOP_MONITOR_P_EXIT, DOP_EXIT_TT, DOP_EXIT are used. 
+"""
+DFLAG_FRAGMENTS = 0x800000
+""" The node supports fragmentation for large packets. """
 
 DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_EXT_PIDS_PORTS |
@@ -75,7 +88,7 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
 """
 
 
-class NodeOpts:
+class DistributionFlags:
     """ A class holding an integer with features that are supported
         by this node, and the network cookie.
     """

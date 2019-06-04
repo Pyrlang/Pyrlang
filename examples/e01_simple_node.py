@@ -11,10 +11,8 @@
 #
 
 import logging
-from pyrlang import Node
+from pyrlang2 import Node
 from term import Atom
-# from pyrlang import GeventEngine as Engine
-from pyrlang import AsyncioEngine as Engine
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE1", fg='lime'))

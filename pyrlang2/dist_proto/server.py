@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" The module implements incoming TCP distribution protocol (i.e. initiated
+""" The module implements incoming TCP dist_proto protocol (i.e. initiated
     by another node with the help of EPMD). Protocol only performs handling of
     incoming data, the socket is handled by the Async Engine (pyrlang.async).
 """
@@ -21,28 +21,27 @@ import logging
 import random
 import struct
 
-from pyrlang.async_support.base_engine import BaseEngine
-from pyrlang.dist import dist_protocol
-from pyrlang.dist.base_dist_protocol import *
+from pyrlang2.dist_proto import version
+from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, DistributionError
 from term import util
 
 LOG = logging.getLogger("pyrlang.dist")
 LOG.setLevel(logging.INFO)
 
 
-class InDistProtocol(BaseDistProtocol):
+class DistServerProtocol(BaseDistProtocol):
     """ Protocol handles incoming connections from other nodes.
     """
 
-    def __init__(self, node_name: str, engine: BaseEngine):
-        BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
+    def __init__(self, node_name: str):
+        super().__init__(node_name=node_name)
 
     def on_connection_lost(self):
-        BaseDistProtocol.on_connection_lost(self)
+        super().on_connection_lost()
         self.state_ = self.DISCONNECTED
 
     def on_packet(self, data) -> bool:
-        """ Handle incoming distribution packet
+        """ Handle incoming dist_proto packet
 
             :param data: The packet after the header had been removed
         """
@@ -63,12 +62,12 @@ class InDistProtocol(BaseDistProtocol):
             return self.protocol_error(
                 "Unexpected packet (expecting RECV_NAME)")
 
-        # Read peer distribution version and compare to ours
+        # Read peer dist_proto version and compare to ours
         peer_max_min = (data[1], data[2])
-        if dist_protocol.dist_version_check(peer_max_min):
+        if version.dist_version_check(peer_max_min):
             return self.protocol_error(
                 "Dist protocol version have: %s got: %s"
-                % (str(dist_protocol.DIST_VSN_PAIR), str(peer_max_min)))
+                % (str(version.DIST_VSN_PAIR), str(peer_max_min)))
         self.peer_distr_version_ = peer_max_min
 
         self.peer_flags_ = util.u32(data[3:7])
@@ -117,7 +116,7 @@ class InDistProtocol(BaseDistProtocol):
                  % (my_challenge, self.node_name_))
         msg = b'n' \
               + struct.pack(">HII",
-                            dist_protocol.DIST_VSN,
+                            version.DIST_VSN,
                             n.node_opts_.dflags_,
                             my_challenge) \
               + bytes(self.node_name_, "latin1")
@@ -127,8 +126,8 @@ class InDistProtocol(BaseDistProtocol):
         """ After cookie has been verified, send the confirmation by digesting
             our cookie with the remote challenge
         """
-        digest = InDistProtocol.make_digest(peers_challenge, cookie)
+        digest = DistServerProtocol.make_digest(peers_challenge, cookie)
         self._send_packet2(b'a' + digest)
 
 
-__all__ = ['InDistProtocol']
+__all__ = ['DistServerProtocol']

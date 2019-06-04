@@ -321,7 +321,7 @@ class Node(BaseNode):
     def _dist_command(self, receiver_node: str, message: tuple) -> None:
         """ Locate the connection to the given node (a string).
             Place a tuple crafted by the caller into message box for Erlang
-            distribution socket. It will pick up and handle the message whenever
+            dist_proto socket. It will pick up and handle the message whenever
             possible.
 
             :param receiver_node: Name of a remote node
@@ -367,7 +367,7 @@ class Node(BaseNode):
             :param pid2: Second pid
             :type pid2: term.pid.Pid
             :param local_only: If set to True, linking to remote pids will send
-                LINK message over distribution protocol
+                LINK message over dist_proto protocol
         """
         if pid1.is_local_to(self):
             if pid1 in self.processes_:
@@ -399,7 +399,7 @@ class Node(BaseNode):
             :param pid2: Second pid
             :type pid2: term.pid.Pid
             :param local_only: If set to True, linking to remote pids will send
-                UNLINK message over distribution protocol
+                UNLINK message over dist_proto protocol
         """
         if pid1.is_local_to(self):
             self.processes_[pid1].remove_link(pid2)
@@ -441,7 +441,7 @@ class Node(BaseNode):
         if target_pid.is_local_to(self):
             # Target is local and we notify a local process
             return self._monitor_local_process(origin_pid, target_pid, m_ref)
-        # Target is remote and a distribution message has to be sent
+        # Target is remote and a dist_proto message has to be sent
         return self._monitor_remote_process(origin_pid, target_pid, m_ref)
 
     def _monitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
@@ -571,7 +571,7 @@ class Node(BaseNode):
         """ Deliver local or remote exit signal to a process.
 
             :param dist_protocol_message: Defines message which is sent to the
-                distribution protocol and then converted to an integer. EXIT is
+                dist_proto protocol and then converted to an integer. EXIT is
                 used for link exits, and EXIT2 is used for triggering remote exits.
         """
         if receiver.is_local_to(self):

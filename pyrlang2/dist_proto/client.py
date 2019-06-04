@@ -12,35 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" The module implements outgoing TCP distribution connection (i.e. initiated
+""" The module implements outgoing TCP dist_proto connection (i.e. initiated
     by our node to another node with the help of EPMD).
 """
-
-import random
 import logging
+import random
 
-from pyrlang.async_support.base_engine import BaseEngine
-from pyrlang.dist import dist_protocol
-from pyrlang.dist.base_dist_protocol import *
+from pyrlang2.dist_proto import version
+from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, DistributionError
 from term import util
 
 LOG = logging.getLogger("pyrlang.dist")
 LOG.setLevel(logging.INFO)
 
 
-class OutDistProtocol(BaseDistProtocol):
+class DistClientProtocol(BaseDistProtocol):
     """ Handles outgoing connections from our to other nodes. """
 
-    def __init__(self, node_name: str, engine: BaseEngine):
-        BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
+    def __init__(self, node_name: str):
+        super().__init__(node_name=node_name)
 
     def on_connected(self, host_port):
-        BaseDistProtocol.on_connected(self, host_port=host_port)
+        super().on_connected(host_port=host_port)
         self._send_name()
         self.state_ = self.RECV_STATUS
 
     def on_packet(self, data) -> bool:
-        """ Handle incoming distribution packet
+        """ Handle incoming dist_proto packet
 
             :param data: The packet after the header had been removed
         """
@@ -66,7 +64,7 @@ class OutDistProtocol(BaseDistProtocol):
     def _send_name(self):
         """ Create and send first welcome packet. """
         pkt = b'n' + \
-              bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
+              bytes([version.DIST_VSN, version.DIST_VSN]) + \
               util.to_u32(self.get_node().node_opts_.dflags_) + \
               bytes(self.node_name_, "latin-1")
         LOG.info("send_name %s (name=%s)", pkt, self.node_name_)

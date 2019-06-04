@@ -12,23 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Distribution class is not a separate running Greenlet, but rather a helper,
-    which is called upon.
+""" Distribution class is a separate running Task which owns its TCP connection.
 """
 
 import logging
 
-from pyrlang.async_support.base_engine import BaseEngine
-from pyrlang.dist.epmd import EPMDClient
-from pyrlang.dist.out_dist_protocol import OutDistProtocol
+from pyrlang2.dist_proto import EPMDClient
+from pyrlang2.dist_proto import OutDistProtocol
 
 LOG = logging.getLogger("pyrlang.dist")
 
 
 class ErlangDistribution:
-    """ Implements network part of the EPMD registration and Erlang distribution
-        protocol. Extends functionality of Node, so all functions take
-        Node as a parameter but don't store it to avoid creating a ref cycle.
+    """ Implements network part of the EPMD registration and Erlang dist_proto
+        protocol.
     """
 
     def __init__(self, node_name: str, engine: BaseEngine) -> None:
@@ -59,12 +56,12 @@ class ErlangDistribution:
 
         self.epmd_ = EPMDClient(engine)
 
-    def connect(self) -> bool:
+    async def connect(self) -> bool:
         """ Looks up EPMD daemon and connects to it trying to discover other 
             Erlang nodes.
         """
         while True:
-            if self.epmd_.connect():
+            if await self.epmd_.connect():
                 return self.epmd_.alive2(self)
 
             self.engine_.sleep(5.0)

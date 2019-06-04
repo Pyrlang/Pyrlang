@@ -14,15 +14,13 @@
 
 """ Base abstract Distribution connection class
 """
-
+import asyncio
 import logging
 import struct
 from hashlib import md5
 from typing import Union
 
 from pyrlang.bases import NodeDB
-from pyrlang.async_support.base_engine import BaseEngine
-from pyrlang.async_support.base_protocol import BaseProtocol
 from term import codec
 from term import util
 from term.atom import Atom
@@ -62,8 +60,11 @@ class DistributionError(Exception):
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class BaseDistProtocol(BaseProtocol):
-    """ Defines Erlang distribution protocol. """
+class BaseDistProtocol(asyncio.Protocol):
+    """ Defines Erlang distribution protocol (shared parts).
+        Concrete implementations for incoming (DistServerProtocol) and outgoing
+        (DistClientProtocol) are located in the corresponding modules.
+    """
 
     #
     # Used by both Incoming and Outgoing protocols
@@ -91,7 +92,7 @@ class BaseDistProtocol(BaseProtocol):
 
     node_db = NodeDB()
 
-    def __init__(self, node_name: str, engine: BaseEngine):
+    def __init__(self, node_name: str):
         """ Create connection handler object. """
         super().__init__()
 
@@ -104,11 +105,7 @@ class BaseDistProtocol(BaseProtocol):
 
         self.addr_ = None
 
-        self.engine_ = engine
-        """ Save engine object, to use for our async needs later. """
-
-        # refer to util.make_handler_in which reads this
-        self.inbox_ = engine.queue_new()
+        self.inbox_ = asyncio.Queue()
         """ Inbox is used to ask the connection to do something. """
 
         self.peer_distr_version_ = (None, None)  # type: (int, int)
@@ -123,7 +120,7 @@ class BaseDistProtocol(BaseProtocol):
         self.state_ = self.DISCONNECTED
         """ FSM state for the protocol state-machine. """
 
-        from pyrlang.node import Node
+        from pyrlang2.node import Node
         self.node_class_ = Node
 
         self._schedule_periodic_ping_remote()
