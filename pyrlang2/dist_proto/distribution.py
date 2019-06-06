@@ -17,6 +17,7 @@
 import asyncio
 import logging
 
+import pyrlang2
 from pyrlang2.dist_proto import DistClientProtocol
 from pyrlang2.dist_proto.epmd_client import EPMDClient
 
@@ -78,26 +79,27 @@ class ErlangDistribution:
         self.disconnect_epmd()
         del self.epmd_
 
-    async def connect_to_node(self, local_node: str, remote_node: str) -> [
-        None]:
+    async def connect_to_node(self,
+                              local_node: str,
+                              remote_node: str) -> bool:
         """ Query EPMD where is the node, and initiate dist connection.
 
-            :param local_node: Reference to Erlang Node object
+            :param local_node: name of the local Erlang Node object (will be
+                reached via `Node.all_nodes[local_node]`)
             :param remote_node: String with node 'name@ip'
-            :return: Handler or None
+            :return: boolean whether the connection succeeded
         """
-        try:
-            host_port = await self.epmd_.query_node(remote_node)
-            future = await asyncio.get_event_loop().create_connection(
+        host_port = await EPMDClient.query_node(remote_node)
+        if host_port is None:
+            # Connection to node failed, node is not known
+            return False
+        else:
+            _future = await asyncio.get_event_loop().create_connection(
                 DistClientProtocol,
                 host=host_port[0],
                 port=host_port[1]
             )
-            return future
-
-        except Exception as e:
-            LOG.error("Dist: " + str(e))
-            return None
+            return True
 
 
 __all__ = ['ErlangDistribution']

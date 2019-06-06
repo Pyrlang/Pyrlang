@@ -16,6 +16,7 @@ import logging
 from typing import Dict, Set
 
 from pyrlang2.dist_proto import DistributionFlags, ErlangDistribution
+from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
 from pyrlang2.errors import BadArgError, NodeException
 from term import Pid, Atom
 
@@ -111,7 +112,10 @@ class Node:
         # to get the correct node creation
         await self.dist_.start_distribution()
 
-        LOG.info("Node async_loop ended")
+        while not self.is_exiting_:
+            await asyncio.sleep(1)
+
+        # LOG.info("Node async_loop ended")
 
     def register_new_process(self, proc=None) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
@@ -273,12 +277,12 @@ class Node:
             :raises NodeException: if unable to find or connect to the node
         """
         if self.is_exiting_:
-            LOG.warning(
-                "Ignored dist command %s (node is exiting)" % (message,))
+            LOG.warning("Ignored dist command %s (node is exiting)", message)
             return
 
         if receiver_node not in self.dist_nodes_:
-            LOG.info("Connect to node %s", receiver_node)
+            LOG.info("send_remote: Node %s is not connected. Trying...",
+                     receiver_node)
             handler = await self.dist_.connect_to_node(
                 local_node=self.node_name_,
                 remote_node=receiver_node

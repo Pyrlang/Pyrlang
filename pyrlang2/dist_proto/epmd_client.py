@@ -21,6 +21,7 @@ import logging
 import socket
 import struct
 import sys
+from typing import Tuple
 
 from pyrlang2.dist_proto import version
 from term import util
@@ -87,7 +88,7 @@ class EPMDClient(asyncio.Protocol):
         # Try to connect for N tries then fail
         for n_try in range(self.n_connection_attempts_):
             try:
-                LOG.info("Connecting to EPMD %s:%d" % (self.host_, self.port_))
+                LOG.info("Connecting to EPMD %s:%d", self.host_, self.port_)
 
                 self.reader_, self.writer_ = await asyncio.open_connection(
                     host=self.host_,
@@ -121,12 +122,11 @@ class EPMDClient(asyncio.Protocol):
 
         creation = await self._read_alive2_reply()
         if creation >= 0:
-            LOG.info("Connected successfully (creation %d)"
-                     % creation)
+            LOG.info("Connected successfully (creation %d)", creation)
             dist.creation_ = creation
             return True
 
-        LOG.error("ALIVE2 failed with creation %d" % creation)
+        LOG.error("ALIVE2 failed with creation %d", creation)
         return False
 
     async def _read_alive2_reply(self) -> int:
@@ -136,13 +136,13 @@ class EPMDClient(asyncio.Protocol):
                 On error returns -1
         """
         # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
-        reply = await self.transport_.recv(2)
+        reply = await self.reader_.read(2)
         if not reply:
             LOG.error("ALIVE2 Read error. Closed? %s", reply)
             return -1
 
         if reply[1] == 0:
-            cr = self.transport_.recv(2)
+            cr = await self.reader_.read(2)
             (creation,) = struct.unpack(">H", cr)
             return creation
 
@@ -171,20 +171,21 @@ class EPMDClient(asyncio.Protocol):
                                     dist_vsn, extra)
         LOG.debug("sending ALIVE2 req n=%s (%s) vsn=%s",
                   node_name, nodetype, dist_vsn)
-        self._req(msg)
+        await self._req(msg)
 
     async def _req(self, req: bytes):
         """ Generic helper function to send a preformatted request to EPMD
         """
         header = struct.pack(">H", len(req))
-        self.transport_.sendall(header + req)
+        self.writer_.write(header + req)
 
-    async def query_node(self, node_name: str) -> tuple:
+    @staticmethod
+    async def query_node(node_name: str) -> [Tuple[str, int], None]:
         """ Query EPMD about the port to the given node.
 
             :param node_name: String with node "name@ip" or "name@hostname"
-            :return: Host and port where the node is, or None
-            :rtype: tuple(str, int)
+            :return: Host and port where the node is, or None if not found
+            :rtype: [tuple(str, int), None]
             :throws EPMDClientError: if something is wrong with input
             :throws EPMDConnectionError: if connection went wrong
         """
@@ -198,7 +199,7 @@ class EPMDClient(asyncio.Protocol):
         # not sure if latin-1 here
         port_please2 = bytes([REQ_PORT_PLEASE2]) + bytes(r_name, "utf8")
 
-        resp = await self._fire_forget_query(r_ip, port_please2)
+        resp = await EPMDClient._fire_forget_query(r_ip, port_please2)
 
         # RESP_PORT2
         # Response Error structure
@@ -206,11 +207,14 @@ class EPMDClient(asyncio.Protocol):
         # 119   Result > 0
         if len(resp) < 2 or resp[0] != RESP_PORT2:
             raise EPMDConnectionError(
-                "PORT_PLEASE2 to %s sent wrong response %s" % (r_ip, resp))
+                "PORT_PLEASE2 to %s sent wrong response %s", r_ip, resp)
 
         if resp[1] != 0:
-            raise EPMDConnectionError(
-                "PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
+            # raise EPMDConnectionError(
+            #     "PORT_PLEASE2 to %s: error %d" % (r_ip, resp[1]))
+            LOG.info("EPMD: Node '%s' is not known to EPMD on %s",
+                     node_name, r_ip)
+            return None
 
         # Response structure
         # 1     1       2       1           1           2               ...
@@ -225,7 +229,7 @@ class EPMDClient(asyncio.Protocol):
         if not version.dist_version_check(versions):
             raise EPMDConnectionError(
                 "Remote node %s supports protocol version %s and we "
-                "support %d" % (node_name, versions, version.DIST_VSN))
+                "support %d", node_name, versions, version.DIST_VSN)
 
         # ignore node name and extra
 
@@ -234,12 +238,19 @@ class EPMDClient(asyncio.Protocol):
     @staticmethod
     async def _fire_forget_query(ip: str, query: bytes) -> bytes:
         """ Connect to node, fire the query, read and disconnect. """
-        reader, writer = await asyncio.open_connection(
-            host=ip, port=EPMD_DEFAULT_PORT,
-            # timeout=EPMD_REMOTE_DEFAULT_TIMEOUT
-        )
+        try:
+            reader, writer = await asyncio.open_connection(
+                host=ip,
+                port=EPMD_DEFAULT_PORT,
+                # timeout=EPMD_REMOTE_DEFAULT_TIMEOUT
+            )
+        except Exception as err:
+            LOG.error(str(err))
+            raise err
+
         query1 = util.to_u16(len(query)) + query
-        await writer.write(query1)
+        print(query1)
+        writer.write(query1)
 
         # Expect that after everything is received, the peer will close
         # the socket automatically, so we will too
