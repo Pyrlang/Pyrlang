@@ -11,7 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from pyrlang2.util import start_pyrlang
-from pyrlang2.node import Node
 
-start_pyrlang()
+import logging
+
+LOG = logging.getLogger("pyrlang")
+
+
+class NodeException(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("NodeException: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class ProcessNotFoundError(NodeException):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("NoProcess: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class BadArgError(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("Bad Argument: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)

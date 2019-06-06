@@ -14,11 +14,11 @@
 
 """ Distribution class is a separate running Task which owns its TCP connection.
 """
-
+import asyncio
 import logging
 
-from pyrlang2.dist_proto import EPMDClient
-from pyrlang2.dist_proto import OutDistProtocol
+from pyrlang2.dist_proto import DistClientProtocol
+from pyrlang2.dist_proto.epmd_client import EPMDClient
 
 LOG = logging.getLogger("pyrlang.dist")
 
@@ -28,11 +28,7 @@ class ErlangDistribution:
         protocol.
     """
 
-    def __init__(self, node_name: str, engine: BaseEngine) -> None:
-        self.engine_ = engine
-        """ Async adapter engine for network and timer operations implemented 
-            either as Gevent or asyncio """
-
+    def __init__(self, node_name: str) -> None:
         self.node_name_ = node_name
         """ Node name, a string. """
 
@@ -41,32 +37,36 @@ class ErlangDistribution:
             newly connected nodes. 
         """
 
-        # Listener for Incoming connections from other nodes
-        # Create handler using make_handler_in helper
-        proto_kwargs = {"node_name": node_name,
-                        "engine": engine}
+        self.in_port_ = None  # type: [None, int]
+        self.in_srv_ = None  # type: [None, asyncio.AbstractServer]
+        self.epmd_ = EPMDClient()
+        self.n_connect_tries_ = 5
 
-        from pyrlang.dist.in_dist_protocol import InDistProtocol
-        (self.in_srv_, self.in_port_) = self.engine_.listen_with(
-            protocol_class=InDistProtocol,
-            protocol_args=[],
-            protocol_kwargs=proto_kwargs
+    async def start_server(self):
+        """ Start listening for incoming connections.
+        """
+        # Create handler using make_handler_in helper
+        # proto_kwargs = {"node_name": node_name}
+
+        from pyrlang2.dist_proto.server import DistServerProtocol
+        self.in_srv_ = await asyncio.get_event_loop().create_server(
+            host='0.0.0.0',
+            port=0,
+            protocol_factory=DistServerProtocol
         )
+        _, self.in_port_ = self.in_srv_.sockets[0].getsockname()
         LOG.info("Listening for dist connections on port %s", self.in_port_)
 
-        self.epmd_ = EPMDClient(engine)
-
-    async def connect(self) -> bool:
-        """ Looks up EPMD daemon and connects to it trying to discover other 
-            Erlang nodes.
+    async def start_distribution(self) -> bool:
+        """ 1. Starts local Erlang distribution server on a random port
+            2. Looks up EPMD daemon and connects to it trying to discover other
+                Erlang nodes.
         """
-        while True:
-            if await self.epmd_.connect():
-                return self.epmd_.alive2(self)
+        await self.start_server()
+        await self.epmd_.connect()
+        return await self.epmd_.alive2(self)
 
-            self.engine_.sleep(5.0)
-
-    def disconnect(self) -> None:
+    def disconnect_epmd(self) -> None:
         """ Finish EPMD connection, this will remove the node from the list of
             available nodes on EPMD
         """
@@ -75,28 +75,25 @@ class ErlangDistribution:
 
     def destroy(self):
         LOG.info("Stopping dist service")
-        self.disconnect()
+        self.disconnect_epmd()
         del self.epmd_
 
-    def connect_to_node(self, local_node: str, remote_node: str,
-                        engine: BaseEngine):
-        """ Query EPMD where is the node, and initiate dist connection. Blocks
-            the Greenlet until the connection is made or have failed.
+    async def connect_to_node(self, local_node: str, remote_node: str) -> [
+        None]:
+        """ Query EPMD where is the node, and initiate dist connection.
 
-            :param engine: Async engine adapter (GeventEngine or AsyncioEngine)
             :param local_node: Reference to Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: Handler or None
         """
         try:
-            host_port = self.epmd_.query_node(remote_node)
-            (handler, _sock) = self.engine_.connect_with(
-                protocol_class=OutDistProtocol,
-                protocol_args=[],
-                protocol_kwargs={"node_name": local_node, "engine": engine},
-                host_port=host_port
+            host_port = await self.epmd_.query_node(remote_node)
+            future = await asyncio.get_event_loop().create_connection(
+                DistClientProtocol,
+                host=host_port[0],
+                port=host_port[1]
             )
-            return handler
+            return future
 
         except Exception as e:
             LOG.error("Dist: " + str(e))

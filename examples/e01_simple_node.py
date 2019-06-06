@@ -9,29 +9,34 @@
 #
 # Shell process will receive 'hello' (type `flush().` to see)
 #
-
+import asyncio
 import logging
+
+from colors import color
+
 from pyrlang2 import Node
 from term import Atom
-from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE1", fg='lime'))
 
 
-def main():
-    event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-
+async def example_main(node):
     fake_pid = node.register_new_process()
 
     # To be able to send to Erlang shell by name first give it a registered
     # name: `erlang:register(shell, self()).`
     # To see an incoming message in shell: `flush().`
-    node.send(sender=fake_pid,
-              receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
-              message=Atom('hello'))
+    await node.send(sender=fake_pid,
+                    receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+                    message=Atom('hello'))
+    LOG.info("example_main: Done")
 
-    event_engine.run_forever()
+
+def main():
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    ev = asyncio.get_event_loop()
+    ev.create_task(example_main(node))
+    ev.run_forever()
 
 
 if __name__ == "__main__":

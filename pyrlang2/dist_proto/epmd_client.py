@@ -17,12 +17,12 @@
     nodes on the local machine and helps nodes finding each other.
 """
 import asyncio
-import functools
 import logging
+import socket
 import struct
 import sys
 
-from pyrlang2.dist import dist_protocol
+from pyrlang2.dist_proto import version
 from term import util
 
 LOG = logging.getLogger("pyrlang")
@@ -60,10 +60,14 @@ class EPMDClient(asyncio.Protocol):
     """
 
     def __init__(self) -> None:
-        self.host_port_ = ('127.0.0.1', EPMD_DEFAULT_PORT)
+        self.host_ = '127.0.0.1'
         """ The local EPMD is always located on the local host. """
 
-        self.transport_ = None  # type: [asyncio.Transport, None]
+        self.port_ = EPMD_DEFAULT_PORT
+        """ We expect local EPMD to be available on the default port. """
+
+        self.reader_ = None  # type: [asyncio.StreamReader, None]
+        self.writer_ = None  # type: [asyncio.StreamWriter, None]
         self.n_connection_attempts_ = 5
 
     def close(self):
@@ -71,8 +75,8 @@ class EPMDClient(asyncio.Protocol):
             list.
         """
         LOG.info("Closing EPMD socket")
-        self.transport_.close()
-        self.transport_ = None
+        self.writer_.close()
+        self.reader_.close()
 
     async def connect(self) -> bool:
         """ Establish a long running connection to EPMD, will not return until
@@ -83,18 +87,13 @@ class EPMDClient(asyncio.Protocol):
         # Try to connect for N tries then fail
         for n_try in range(self.n_connection_attempts_):
             try:
-                LOG.info("Connecting %s:%d" % self.host_port_)
+                LOG.info("Connecting to EPMD %s:%d" % (self.host_, self.port_))
 
-                client_completed = asyncio.Future()
-                client_factory = functools.partial(
-                    EPMDClient,
-                    future=client_completed
+                self.reader_, self.writer_ = await asyncio.open_connection(
+                    host=self.host_,
+                    port=self.port_
                 )
-                await asyncio.get_event_loop().create_connection(
-                    client_factory,
-                    *self.host_port_
-                )
-                LOG.info("Socket connected")
+                LOG.info("EPMD socket connected")
                 return True
 
             except Exception as err:
@@ -102,23 +101,25 @@ class EPMDClient(asyncio.Protocol):
                           "Try `epmd -daemon`", err)
                 await asyncio.sleep(5.0)
 
-        LOG.error("Could not connect to EPMD in %d tries" % self.n_connection_attempts_)
-        return True
+        LOG.error("Could not connect to EPMD in %d tries" %
+                  self.n_connection_attempts_)
+        return False
 
-    def alive2(self, dist) -> bool:
+    async def alive2(self, dist) -> bool:
         """ Send initial hello (ALIVE2) to EPMD
 
             :type dist: pyrlang.dist.distribution.ErlangDistribution
             :param dist: The distribution object from the node
             :rtype: bool
         """
-        self._req_alive2(nodetype=NODE_HIDDEN,
-                         node_name=dist.node_name_,
-                         in_port=dist.in_port_,
-                         dist_vsn=dist_protocol.DIST_VSN_PAIR,
-                         extra="")
+        assert isinstance(dist.in_port_, int)
+        await self._req_alive2(nodetype=NODE_HIDDEN,
+                               node_name=dist.node_name_,
+                               in_port=dist.in_port_,
+                               dist_vsn=version.DIST_VSN_PAIR,
+                               extra="")
 
-        creation = self._read_alive2_reply()
+        creation = await self._read_alive2_reply()
         if creation >= 0:
             LOG.info("Connected successfully (creation %d)"
                      % creation)
@@ -128,14 +129,14 @@ class EPMDClient(asyncio.Protocol):
         LOG.error("ALIVE2 failed with creation %d" % creation)
         return False
 
-    def _read_alive2_reply(self) -> int:
+    async def _read_alive2_reply(self) -> int:
         """ Read reply from ALIVE2 request, check the result code, read creation
 
             :return: Creation value if all is well, connection remains on.
                 On error returns -1
         """
         # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
-        reply = self.transport_.recv(2)
+        reply = await self.transport_.recv(2)
         if not reply:
             LOG.error("ALIVE2 Read error. Closed? %s", reply)
             return -1
@@ -164,41 +165,40 @@ class EPMDClient(asyncio.Protocol):
 
         return msg1 + msg2 + msg3
 
-    def _req_alive2(self, nodetype: int, node_name: str, in_port: int,
-                    dist_vsn: tuple, extra: str):
+    async def _req_alive2(self, nodetype: int, node_name: str, in_port: int,
+                          dist_vsn: tuple, extra: str):
         msg = self._make_req_alive2(nodetype, node_name, in_port,
                                     dist_vsn, extra)
         LOG.debug("sending ALIVE2 req n=%s (%s) vsn=%s",
                   node_name, nodetype, dist_vsn)
         self._req(msg)
 
-    def _req(self, req: bytes):
+    async def _req(self, req: bytes):
         """ Generic helper function to send a preformatted request to EPMD
         """
         header = struct.pack(">H", len(req))
         self.transport_.sendall(header + req)
 
-    def query_node(self, node: str) -> tuple:
+    async def query_node(self, node_name: str) -> tuple:
         """ Query EPMD about the port to the given node.
 
-            :param node: String with node "name@ip" or "name@hostname"
+            :param node_name: String with node "name@ip" or "name@hostname"
             :return: Host and port where the node is, or None
             :rtype: tuple(str, int)
             :throws EPMDClientError: if something is wrong with input
             :throws EPMDConnectionError: if connection went wrong
         """
         # Trim the host name/IP after the @ and resolve the DNS name
-        if "@" not in node:
+        if "@" not in node_name:
             raise EPMDClientError("Node must have @ in it")
 
-        (r_name, r_ip_or_hostname) = node.split("@")
-        socket = self.engine_.socket_module()
+        (r_name, r_ip_or_hostname) = node_name.split("@")
         r_ip = socket.gethostbyname(r_ip_or_hostname)
 
         # not sure if latin-1 here
         port_please2 = bytes([REQ_PORT_PLEASE2]) + bytes(r_name, "utf8")
 
-        resp = self._fire_forget_query(r_ip, port_please2)
+        resp = await self._fire_forget_query(r_ip, port_please2)
 
         # RESP_PORT2
         # Response Error structure
@@ -222,34 +222,36 @@ class EPMDClient(asyncio.Protocol):
         # node_type = resp[4]
         # protocol = resp[5]
         versions = (util.u16(resp, 6), util.u16(resp, 8))
-        if not dist_protocol.dist_version_check(versions):
+        if not version.dist_version_check(versions):
             raise EPMDConnectionError(
                 "Remote node %s supports protocol version %s and we "
-                "support %d" % (node, versions, dist_protocol.DIST_VSN))
+                "support %d" % (node_name, versions, version.DIST_VSN))
 
         # ignore node name and extra
 
         return r_ip, r_port
 
-    def _fire_forget_query(self, ip: str, query: bytes) -> bytes:
+    @staticmethod
+    async def _fire_forget_query(ip: str, query: bytes) -> bytes:
         """ Connect to node, fire the query, read and disconnect. """
-        socket = self.engine_.socket_module()
-        s = socket.create_connection(address=(ip, EPMD_DEFAULT_PORT),
-                                     timeout=EPMD_REMOTE_DEFAULT_TIMEOUT)
+        reader, writer = await asyncio.open_connection(
+            host=ip, port=EPMD_DEFAULT_PORT,
+            # timeout=EPMD_REMOTE_DEFAULT_TIMEOUT
+        )
         query1 = util.to_u16(len(query)) + query
-        s.send(query1)
+        await writer.write(query1)
 
         # Expect that after everything is received, the peer will close
         # the socket automatically, so we will too
         result = b''
         while True:
-            incoming = s.recv(4096)
+            incoming = await reader.read(4096)
             if incoming == b'':
                 break
 
             result += incoming
 
-        s.close()
+        writer.close()
         return result
 
 
