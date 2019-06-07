@@ -15,6 +15,7 @@
 """ The module implements outgoing TCP dist_proto connection (i.e. initiated
     by our node to another node with the help of EPMD).
 """
+import asyncio
 import logging
 import random
 
@@ -32,8 +33,8 @@ class DistClientProtocol(BaseDistProtocol):
     def __init__(self, node_name: str):
         super().__init__(node_name=node_name)
 
-    def on_connected(self, host_port):
-        super().on_connected(host_port=host_port)
+    def connection_made(self, transport: asyncio.Transport):
+        super().connection_made(transport)
         self._send_name()
         self.state_ = self.RECV_STATUS
 
@@ -45,7 +46,8 @@ class DistClientProtocol(BaseDistProtocol):
         # LOG("Dist-out[%s]: recv %s" % (self.state_, data))
 
         if self.state_ == self.CONNECTED:
-            return self.on_packet_connected(data)
+            asyncio.get_event_loop().create_task(self.on_packet_connected(data))
+            return True
 
         if self.state_ == self.RECV_STATUS:
             return self.on_packet_recvstatus(data)
@@ -128,5 +130,5 @@ class DistClientProtocol(BaseDistProtocol):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Outgoing: established with %s" % self.peer_name_)
+        LOG.info("Outgoing dist connection: established with %s" % self.peer_name_)
         return True

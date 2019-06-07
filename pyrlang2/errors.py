@@ -33,3 +33,21 @@ class BadArgError(Exception):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("Bad Argument: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
+
+
+class EPMDClientError(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("EPMD: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class EPMDConnectionError(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("EPMD: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class DistributionError(Exception):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("DistributionError: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)

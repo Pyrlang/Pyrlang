@@ -24,6 +24,7 @@ import sys
 from typing import Tuple
 
 from pyrlang2.dist_proto import version
+from pyrlang2.errors import EPMDClientError, EPMDConnectionError
 from term import util
 
 LOG = logging.getLogger("pyrlang")
@@ -41,18 +42,6 @@ PY3 = sys.version_info[0] >= 3
 
 EPMD_DEFAULT_PORT = 4369
 EPMD_REMOTE_DEFAULT_TIMEOUT = 5.0
-
-
-class EPMDClientError(Exception):
-    def __init__(self, msg, *args, **kwargs):
-        LOG.error("EPMD: %s", msg)
-        Exception.__init__(self, msg, *args, **kwargs)
-
-
-class EPMDConnectionError(Exception):
-    def __init__(self, msg, *args, **kwargs):
-        LOG.error("EPMD: %s", msg)
-        Exception.__init__(self, msg, *args, **kwargs)
 
 
 class EPMDClient(asyncio.Protocol):
@@ -223,9 +212,11 @@ class EPMDClient(asyncio.Protocol):
         # LowestVersion Nlen    NodeName    Elen    >Extra
 
         r_port = util.u16(resp, 2)
-        # node_type = resp[4]
-        # protocol = resp[5]
+        node_type = resp[4]
+        protocol = resp[5]
         versions = (util.u16(resp, 6), util.u16(resp, 8))
+        LOG.info("EPMD: Node %s is at %s:%d (type=%d proto=%d)",
+                 node_name, r_ip, r_port, node_type, protocol)
         if not version.dist_version_check(versions):
             raise EPMDConnectionError(
                 "Remote node %s supports protocol version %s and we "
@@ -249,7 +240,6 @@ class EPMDClient(asyncio.Protocol):
             raise err
 
         query1 = util.to_u16(len(query)) + query
-        print(query1)
         writer.write(query1)
 
         # Expect that after everything is received, the peer will close

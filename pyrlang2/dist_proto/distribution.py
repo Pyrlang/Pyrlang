@@ -84,8 +84,7 @@ class ErlangDistribution:
                               remote_node: str) -> bool:
         """ Query EPMD where is the node, and initiate dist connection.
 
-            :param local_node: name of the local Erlang Node object (will be
-                reached via `Node.all_nodes[local_node]`)
+            :param local_node: name of the local Erlang Node object
             :param remote_node: String with node 'name@ip'
             :return: boolean whether the connection succeeded
         """
@@ -94,8 +93,8 @@ class ErlangDistribution:
             # Connection to node failed, node is not known
             return False
         else:
-            _future = await asyncio.get_event_loop().create_connection(
-                DistClientProtocol,
+            await asyncio.get_event_loop().create_connection(
+                lambda: DistClientProtocol(node_name=local_node),
                 host=host_port[0],
                 port=host_port[1]
             )

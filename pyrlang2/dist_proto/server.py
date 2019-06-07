@@ -107,7 +107,7 @@ class DistServerProtocol(BaseDistProtocol):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Incoming established with %s", self.peer_name_)
+        LOG.info("Incoming dist established from %s", self.peer_name_)
         return True
 
     def _send_challenge(self, my_challenge):
