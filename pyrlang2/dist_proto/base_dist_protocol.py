@@ -157,7 +157,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         packet = self.unconsumed_data_[offset:(offset + pkt_size)]
 
-        LOG.info("in %d: %s", len(packet), packet)
+        # LOG.info("in %d: %s", len(packet), packet)
         if self.on_packet(packet):
             self.unconsumed_data_ = self.unconsumed_data_[(offset + pkt_size):]
             return
@@ -188,14 +188,14 @@ class BaseDistProtocol(asyncio.Protocol):
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        LOG.info("out %d: %s", len(content), content)
+        # LOG.info("out %d: %s", len(content), content)
         msg = struct.pack(">H", len(content)) + content
         self.transport_.write(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        LOG.info("out %d: %s", len(content), content)
+        # LOG.info("out %d: %s", len(content), content)
         msg = struct.pack(">I", len(content)) + content
         self.transport_.write(msg)
 

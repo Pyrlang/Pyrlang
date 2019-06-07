@@ -50,10 +50,13 @@ class Node:
     all_nodes = {}  # type: Dict[str, Node]
     """ All existing local Node objects indexed by node_name: str """
 
-    def __init__(self, node_name: str, cookie: str) -> None:
+    def __init__(self, node_name: str, cookie: str,
+                 hidden: bool = False) -> None:
         """ Sets up the new node, initiating EPMD connection as necessary
             :param node_name: str
             :param cookie: str
+            :param hidden: bool - set to True if you want node to be hidden
+                (i.e. not visible in remote ``nodes().``)
         """
         self.node_name_ = node_name  # type: str
         """ Node name as seen on the network. Use full node names here:
@@ -89,6 +92,8 @@ class Node:
             an integer. The remote node will receive these flags to know what
             features we can support.
         """
+        if not hidden:
+            self.node_opts_.set_node_published()
 
         self._signal_wakeups = set()  # type: Set[Pid]
 
