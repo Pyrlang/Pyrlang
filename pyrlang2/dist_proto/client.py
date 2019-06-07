@@ -20,7 +20,7 @@ import logging
 import random
 
 from pyrlang2.dist_proto import version
-from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, DistributionError
+from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
 from term import util
 
 LOG = logging.getLogger("pyrlang.dist")
@@ -38,16 +38,15 @@ class DistClientProtocol(BaseDistProtocol):
         self._send_name()
         self.state_ = self.RECV_STATUS
 
-    def on_packet(self, data) -> bool:
+    def on_packet(self, data: bytes) -> bytes:
         """ Handle incoming dist_proto packet
 
             :param data: The packet after the header had been removed
         """
-        # LOG("Dist-out[%s]: recv %s" % (self.state_, data))
+        LOG.info("Dist-out[%s]: recv %s", self.state_, data)
 
         if self.state_ == self.CONNECTED:
-            asyncio.get_event_loop().create_task(self.on_packet_connected(data))
-            return True
+            return self.on_packet_connected(data)
 
         if self.state_ == self.RECV_STATUS:
             return self.on_packet_recvstatus(data)
@@ -61,7 +60,7 @@ class DistClientProtocol(BaseDistProtocol):
         elif self.state_ == self.ALIVE:
             return self.on_packet_alive(data)
 
-        raise DistributionError("Unknown state for on_packet: %s" % self.state_)
+        self.protocol_error("Unknown state for on_packet: %s" % self.state_)
 
     def _send_name(self):
         """ Create and send first welcome packet. """
@@ -72,28 +71,36 @@ class DistClientProtocol(BaseDistProtocol):
         LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
         self._send_packet2(pkt)
 
-    def on_packet_recvstatus(self, data):
+    def on_packet_recvstatus(self, data: bytes) -> bytes:
         if chr(data[0]) != 's':
-            return self.protocol_error("Handshake 's' packet expected")
+            self.protocol_error("Handshake 's' packet expected")
+            # raise
 
-        if data == b'salive':  # a duplicate connection detected
+        # a duplicate connection detected
+        if data.startswith(b'salive'):
             self.state_ = self.ALIVE
-            return True
+            return data[6:]  # cut after b'salive'
 
-        if data != b'sok' and data != b'ok_simultaneous':
-            return self.protocol_error("Handshake bad status: %s" % data)
+        if data.startswith(b'sok_simultaneous'):
+            self.state_ = self.RECV_CHALLENGE
+            return data[16:]  # cut after b'sok_simultaneous'
 
-        self.state_ = self.RECV_CHALLENGE
-        return True
+        if data.startswith(b'sok'):
+            self.state_ = self.RECV_CHALLENGE
+            return data[3:]  # cut after b'sok'
 
-    def on_packet_alive(self, data):
-        if data == b'true':
+        self.protocol_error("Handshake bad status: %s" % data)
+        # raise
+
+    def on_packet_alive(self, data: bytes) -> bytes:
+        if data.startswith(b'true'):
             self.state_ = self.CONNECTED  # not sure if we have to challenge
-            return True
+            return data[4:]
 
-        return self.protocol_error("Duplicate connection denied")
+        self.protocol_error("Duplicate connection denied")
+        # raise
 
-    def on_packet_recvchallenge(self, data):
+    def on_packet_recvchallenge(self, data: bytes) -> bytes:
         if chr(data[0]) != 'n':
             return self.protocol_error("Handshake 'n' packet expected")
 
@@ -105,7 +112,7 @@ class DistClientProtocol(BaseDistProtocol):
         self._send_challenge_reply(challenge)
 
         self.state_ = self.RECV_CHALLENGE_ACK
-        return True
+        return b''  # assume everything is consumed?
 
     def _send_challenge_reply(self, challenge: int):
         digest = self.make_digest(challenge, self.get_node().get_cookie())
@@ -114,15 +121,17 @@ class DistClientProtocol(BaseDistProtocol):
         pkt = b'r' + util.to_u32(self.my_challenge_) + digest
         return self._send_packet2(pkt)
 
-    def on_packet_recvchallenge_ack(self, data):
+    def on_packet_recvchallenge_ack(self, data: bytes) -> bytes:
         if chr(data[0]) != 'a':
-            return self.protocol_error("Handshake 'r' packet expected")
+            self.protocol_error("Handshake 'r' packet expected")
+            # raise
 
         digest = data[1:]
         if not self.check_digest(digest=digest,
                                  challenge=self.my_challenge_,
                                  cookie=self.get_node().get_cookie()):
-            return self.protocol_error("Handshake digest verification failed")
+            self.protocol_error("Handshake digest verification failed")
+            # raise
 
         self.packet_len_size_ = 4
         self.state_ = self.CONNECTED
@@ -130,5 +139,6 @@ class DistClientProtocol(BaseDistProtocol):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Outgoing dist connection: established with %s" % self.peer_name_)
-        return True
+        LOG.info("Outgoing dist connection: established with %s",
+                 self.peer_name_)
+        return b''  # assume everything is consumed?

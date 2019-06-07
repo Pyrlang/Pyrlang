@@ -158,15 +158,23 @@ class BaseDistProtocol(asyncio.Protocol):
         packet = self.unconsumed_data_[offset:(offset + pkt_size)]
 
         # LOG.info("in %d: %s", len(packet), packet)
-        if self.on_packet(packet):
-            self.unconsumed_data_ = self.unconsumed_data_[(offset + pkt_size):]
-            return
+        # self.unconsumed_data_ = self.unconsumed_data_[(offset + pkt_size):]
 
-        # Protocol error has occured and instead we return None to request
-        # connection close
+        # Try to consume some data, remember the unconsumed tail
+        # Loop while the data is consumed, stop when not consumed anymore
+        while True:
+            packet = self.on_packet(packet)
+            if self.unconsumed_data_ == packet:
+                break
+            self.unconsumed_data_ = packet
+            if packet == b'':
+                break
+
+        LOG.info("unconsumed: %s, state=%s", self.unconsumed_data_, self.state_)
+
         return
 
-    def on_packet(self, data: bytes) -> bool:
+    def on_packet(self, data: bytes) -> bytes:
         raise NotImplementedError()
 
     def get_node(self):
@@ -234,7 +242,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            from pyrlang.node import ProcessNotFoundError
+            from pyrlang2.errors import ProcessNotFoundError
             try:
                 return n.monitor_process(origin_pid=sender,
                                          target=target,
@@ -244,7 +252,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            from pyrlang.node import ProcessNotFoundError
+            from pyrlang2.errors import ProcessNotFoundError
             try:
                 return n.demonitor_process(origin_pid=sender, target=target,
                                            ref=ref)
@@ -351,9 +359,9 @@ class BaseDistProtocol(asyncio.Protocol):
                      + bytes(str(challenge), "ascii")).digest()
         return result
 
-    def protocol_error(self, msg) -> bool:
-        LOG.error("Error: %s (state %s)" % (msg, self.state_))
-        return False
+    def protocol_error(self, msg):
+        LOG.error("Error: %s (state %s)", msg, self.state_)
+        raise DistributionError(msg=msg)
 
     @staticmethod
     def check_digest(digest: bytes, challenge: int, cookie: str) -> bool:
@@ -365,12 +373,12 @@ class BaseDistProtocol(asyncio.Protocol):
         #  "peer digest", digest)
         return digest == expected_digest
 
-    async def on_packet_connected(self, data):
+    def on_packet_connected(self, data: bytes) -> bytes:
         """ Handle incoming dist packets in the connected state. """
         # TODO: Update timeout timer, that we have connectivity still
         if data == b'':
             self._send_packet4(b'')
-            return True  # this was a keepalive
+            return b''  # this was a keepalive
 
         msg_type = chr(data[0])
 
@@ -382,13 +390,14 @@ class BaseDistProtocol(asyncio.Protocol):
             else:
                 msg_term = None
 
-            await self.on_passthrough_message(control_term, msg_term)
+            asyncio.get_event_loop().create_task(
+                self.on_passthrough_message(control_term, msg_term)
+            )
+            return tail
 
         else:
-            return self.protocol_error(
-                "Unexpected dist message type: %s" % msg_type)
-
-        return True
+            self.protocol_error("Unexpected dist message type: %s" % msg_type)
+            # raise
 
     def report_dist_connected(self):
         assert (self.peer_name_ is not None)

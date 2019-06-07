@@ -55,7 +55,7 @@ class Process:
             polling inbox.
         """
 
-        from pyrlang.node import Node
+        from pyrlang2.node import Node
         self.node_class_ = Node
 
         node_obj = Node.all_nodes[node_name]
@@ -151,14 +151,14 @@ class Process:
 
     def add_link(self, pid):
         """ Links pid to this process.
-            Please use Node method :py:meth:`~pyrlang.node.Node.link` for proper
+            Please use Node method :py:meth:`~pyrlang2.node.Node.link` for proper
             linking.
         """
         self._links.add(pid)
 
     def remove_link(self, pid):
         """ Unlinks pid from this process.
-            Please use Node method :py:meth:`~pyrlang.node.Node.unlink` for
+            Please use Node method :py:meth:`~pyrlang2.node.Node.unlink` for
             proper unlinking.
         """
         self._links.remove(pid)
@@ -180,14 +180,14 @@ class Process:
         self._trigger_monitors(reason)
         self._trigger_links(reason)
 
-        from pyrlang import Node
+        from pyrlang2 import Node
         n = Node.all_nodes[self.node_name_]
         n.on_exit_process(self.pid_, reason)
 
     def get_node(self):
         """ Finds current node from global nodes dict by ``self.node_name_``.
             A convenient way to access the node which holds the current process.
-            :rtype: pyrlang.node.Node
+            :rtype: pyrlang2.node.Node
         """
         return self.node_class_.all_nodes.get(self.node_name_, None)
 
@@ -226,19 +226,19 @@ class Process:
 
     def add_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's
-            :py:meth:`~pyrlang.node.Node.monitor_process`.
+            :py:meth:`~pyrlang2.node.Node.monitor_process`.
         """
         self._monitors[ref] = pid
 
     def add_monitored_by(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's
-            :py:meth:`~pyrlang.node.Node.monitor_process`.
+            :py:meth:`~pyrlang2.node.Node.monitor_process`.
         """
         self._monitored_by[ref] = pid
 
     def remove_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To demonitor a process please use Node's
-            :py:meth:`~pyrlang.node.Node.demonitor_process`.
+            :py:meth:`~pyrlang2.node.Node.demonitor_process`.
         """
         existing = self._monitors.get(ref, None)
         if existing == pid:
@@ -246,7 +246,7 @@ class Process:
 
     def remove_monitored_by(self, pid: Pid, ref: Reference):
         """ Helper function. To demonitor a process please use Node's
-            :py:meth:`~pyrlang.node.Node.demonitor_process`.
+            :py:meth:`~pyrlang2.node.Node.demonitor_process`.
         """
         existing = self._monitored_by.get(ref, None)
         if existing == pid:

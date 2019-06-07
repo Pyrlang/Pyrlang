@@ -22,7 +22,8 @@ import random
 import struct
 
 from pyrlang2.dist_proto import version
-from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, DistributionError
+from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, \
+    DistributionError
 from term import util
 
 LOG = logging.getLogger("pyrlang.dist")
@@ -36,11 +37,11 @@ class DistServerProtocol(BaseDistProtocol):
     def __init__(self, node_name: str):
         super().__init__(node_name=node_name)
 
-    def on_connection_lost(self):
-        super().on_connection_lost()
+    def connection_lost(self, exc):
+        super().connection_lost(exc)
         self.state_ = self.DISCONNECTED
 
-    def on_packet(self, data) -> bool:
+    def on_packet(self, data: bytes) -> bytes:
         """ Handle incoming dist_proto packet
 
             :param data: The packet after the header had been removed
@@ -56,38 +57,42 @@ class DistServerProtocol(BaseDistProtocol):
 
         raise DistributionError("Unknown state for on_packet: %s" % self.state_)
 
-    def on_packet_recvname(self, data) -> bool:
+    def on_packet_recvname(self, data: bytes) -> bytes:
         """ Handle RECV_NAME command, the first packet in a new connection. """
-        if data[0] != ord('n'):
-            return self.protocol_error(
-                "Unexpected packet (expecting RECV_NAME)")
+        if not data.startswith(b'n'):
+            self.protocol_error("Unexpected packet (expecting RECV_NAME)")
+            # raise
 
         # Read peer dist_proto version and compare to ours
         peer_max_min = (data[1], data[2])
         if version.dist_version_check(peer_max_min):
-            return self.protocol_error(
+            self.protocol_error(
                 "Dist protocol version have: %s got: %s"
-                % (str(version.DIST_VSN_PAIR), str(peer_max_min)))
-        self.peer_distr_version_ = peer_max_min
+                % (str(version.DIST_VSN_PAIR), str(peer_max_min))
+            )
+            # raise
 
+        self.peer_distr_version_ = peer_max_min
         self.peer_flags_ = util.u32(data[3:7])
         self.peer_name_ = data[7:].decode("latin1")
         LOG.info("RECV_NAME: %s %s", self.peer_distr_version_, self.peer_name_)
 
         # Report
-        self._send_packet2(b"sok")
+        self._send_packet2(b'sok')
 
         self.my_challenge_ = int(random.random() * 0x7fffffff)
         self._send_challenge(self.my_challenge_)
 
         self.state_ = self.WAIT_CHALLENGE_REPLY
 
-        return True
+        return b''  # assume everything is consumed
 
-    def on_packet_challengereply(self, data):
-        if data[0] != ord('r'):
-            return self.protocol_error(
-                "Unexpected packet (expecting CHALLENGE_REPLY) %s" % data)
+    def on_packet_challengereply(self, data: bytes) -> bytes:
+        if not data.startswith(b'r'):
+            self.protocol_error(
+                "Unexpected packet (expecting CHALLENGE_REPLY) %s" % data
+            )
+            # raise
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
@@ -97,8 +102,8 @@ class DistServerProtocol(BaseDistProtocol):
         if not self.check_digest(digest=peer_digest,
                                  challenge=self.my_challenge_,
                                  cookie=my_cookie):
-            return self.protocol_error(
-                "Disallowed node connection (check the cookie)")
+            self.protocol_error("Disallowed node connection (check the cookie)")
+            # raise
 
         self._send_challenge_ack(peers_challenge, my_cookie)
         self.packet_len_size_ = 4
@@ -108,7 +113,7 @@ class DistServerProtocol(BaseDistProtocol):
         # TODO: start timer with node_opts_.network_tick_time_
 
         LOG.info("Incoming dist established from %s", self.peer_name_)
-        return True
+        return b''  # assume data is consumed
 
     def _send_challenge(self, my_challenge):
         n = self.get_node()

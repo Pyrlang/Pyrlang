@@ -102,13 +102,13 @@ class Node:
 
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
-        # from pyrlang2.rex import Rex
-        # self.rex_ = Rex(node=self)
+        from pyrlang2.rex import Rex
+        self.rex_ = Rex(node=self)
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
-        # from pyrlang2.net_kernel import NetKernel
-        # self.net_kernel_ = NetKernel(node=self)
+        from pyrlang2.net_kernel import NetKernel
+        self.net_kernel_ = NetKernel(node=self)
 
         asyncio.get_event_loop().create_task(self._async_loop())
 
@@ -262,8 +262,8 @@ class Node:
                            message) -> None:
         # LOG.debug("send_remote to %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
-        return await self._dist_command(receiver_node=dst_node,
-                                        message=m)
+        return await self.dist_command(receiver_node=dst_node,
+                                       message=m)
 
     def get_cookie(self):
         """ Get string cookie value for this node.
@@ -271,7 +271,7 @@ class Node:
         """
         return self.node_opts_.cookie_
 
-    async def _dist_command(self, receiver_node: str, message: tuple) -> None:
+    async def dist_command(self, receiver_node: str, message: tuple) -> None:
         """ Locate the connection to the given node (a string).
             Place a tuple crafted by the caller into message box for Erlang
             dist_proto socket. It will pick up and handle the message whenever
@@ -332,7 +332,7 @@ class Node:
 
         elif not local_only:
             link_m = ('link', pid2, pid1)
-            self._dist_command(receiver_node=pid1.node_name_, message=link_m)
+            self.dist_command(receiver_node=pid1.node_name_, message=link_m)
 
         if pid2.is_local_to(self):
             if pid2 in self.processes_:
@@ -343,7 +343,7 @@ class Node:
 
         elif not local_only:
             link_m = ('link', pid1, pid2)
-            self._dist_command(receiver_node=pid2.node_name_, message=link_m)
+            self.dist_command(receiver_node=pid2.node_name_, message=link_m)
 
     def unlink(self, pid1, pid2, local_only=False):
         """ Mutually unlink two processes.
@@ -359,13 +359,13 @@ class Node:
             self.processes_[pid1].remove_link(pid2)
         elif not local_only:
             link_m = ('unlink', pid2, pid1)  # (unlink, localpid, remotepid)
-            self._dist_command(receiver_node=pid1.node_name_, message=link_m)
+            self.dist_command(receiver_node=pid1.node_name_, message=link_m)
 
         if pid2.is_local_to(self):
             self.processes_[pid2].remove_link(pid1)
         elif not local_only:
             link_m = ('unlink', pid1, pid2)  # (unlink, localpid, remotepid)
-            self._dist_command(receiver_node=pid2.node_name_, message=link_m)
+            self.dist_command(receiver_node=pid2.node_name_, message=link_m)
 
     def monitor_process(self, origin_pid: Pid, target, ref=None):
         """ Locate the process referenced by the target and place the origin
@@ -401,8 +401,8 @@ class Node:
     def _monitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
                                 ref: Reference):
         monitor_msg = ('monitor_p', origin_pid, target_pid, ref)
-        self._dist_command(receiver_node=target_pid.node_name_,
-                           message=monitor_msg)
+        self.dist_command(receiver_node=target_pid.node_name_,
+                          message=monitor_msg)
 
         # if the origin is local, register monitor in it. Remote pids are
         # handled by the remote
@@ -461,8 +461,8 @@ class Node:
     def _demonitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
                                   ref: Reference):
         monitor_msg = ('demonitor_p', origin_pid, target_pid, ref)
-        self._dist_command(receiver_node=target_pid.node_name_,
-                           message=monitor_msg)
+        self.dist_command(receiver_node=target_pid.node_name_,
+                          message=monitor_msg)
 
         origin_p = self.where_is_process(origin_pid)
         origin_p.remove_monitored_by(pid=target_pid, ref=ref)
@@ -536,5 +536,5 @@ class Node:
         else:
             # This is a remote Pid, so send something remotely
             distm = (dist_protocol_message, sender, receiver, reason)
-            await self._dist_command(receiver_node=receiver.node_name_,
-                                     message=distm)
+            await self.dist_command(receiver_node=receiver.node_name_,
+                                    message=distm)
