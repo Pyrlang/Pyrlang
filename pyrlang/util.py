@@ -44,5 +44,5 @@ def as_str(x: Union[bytes, str, Atom]):
     elif isinstance(x, str):
         return x
     elif isinstance(x, Atom):
-        return x.text_
+        return x
     raise Exception("Expected a binary, atom or a string, got %s" % str(x))

@@ -124,7 +124,7 @@ def parse_gen_call(msg, node_name: str):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Atom) or msg[0] != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, _call_mfa_gl) = msg
@@ -155,7 +155,7 @@ def parse_gen_message(msg, node_name: str):
         return "Only {tuple} messages allowed"
 
     # ignore tuples with non-atom 1st, ignore non-gen_call mesages
-    if not isinstance(msg[0], Atom) or msg[0].text_ != '$gen_call':
+    if not isinstance(msg[0], Atom) or msg[0] != '$gen_call':
         return "Only {$gen_call, _, _} messages allowed"
 
     (_, _sender_mref, gcmsg) = msg
