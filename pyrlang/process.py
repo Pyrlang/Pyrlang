@@ -211,10 +211,10 @@ class Process(BaseProcess):
             If Reason is 'kill' it will be converted to 'killed'.
         """
         if isinstance(reason, Atom):
-            if reason.text_ == 'normal':
+            if reason == 'normal':
                 return
 
-            elif reason.text_ == 'kill':
+            elif reason == 'kill':
                 reason = Atom('killed')
 
         node = self.get_node()
