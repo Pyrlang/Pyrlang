@@ -16,7 +16,6 @@ import traceback
 
 from pyrlang import gen
 from pyrlang.process import Process
-from pyrlang.node import Node
 from term.atom import Atom
 
 LOG = logging.getLogger("pyrlang.rex")
@@ -34,10 +33,11 @@ class Rex(Process):
             :py:func:`~Pyrlang.gen.parse_gen_call` function
     """
 
-    def __init__(self, node) -> None:
+    def __init__(self) -> None:
         """ :param node: pyrlang.node.Node
         """
-        Process.__init__(self, node_name=node.node_name_)
+        Process.__init__(self)
+        node = self.node_db.get()
         node.register_name(self, Atom('rex'))
 
         self.traceback_depth_ = 5
@@ -66,9 +66,6 @@ class Rex(Process):
             pmod = __import__(gencall.mod_, fromlist=[''])
             pfun = getattr(pmod, gencall.fun_)
             args = gencall.args_
-            # For calls to Pyrlang.notebook.notebook module, always prepend node_name
-            if gencall.mod_ == "pyrlang.notebook.notebook" and gencall.fun_ == "new_context":
-                args.insert(0, self.node_name_)
 
             # Call the thing
             val = pfun(*args)

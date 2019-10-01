@@ -30,13 +30,13 @@ class Notebook(GenServer):
         in subsequent calls.
     """
 
-    def __init__(self, options: dict, node_name: str):
+    def __init__(self, options: dict):
         calls = ["nb_call",
                  "nb_retrieve",
                  "nb_batch",
                  "exit"  # allow Process.exit to be called remotely
                  ]
-        super().__init__(node_name, accepted_calls=calls)
+        super().__init__(accepted_calls=calls)
 
         self.history_ = dict()
         """ Recent calculation results indexed by integers or names. """
@@ -202,10 +202,10 @@ class Notebook(GenServer):
         return dict(map(resolve_arg, dct.items()))
 
 
-def new_context(node_name: str, options: dict) -> Pid:
+def new_context(options: dict) -> Pid:
     """ Create a new remote-call notebook context. Node_name argument will be
         automatically prepended to args by Rex.
     """
-    nb = Notebook(options=options, node_name=node_name)
+    nb = Notebook(options=options)
     return nb.pid_
 

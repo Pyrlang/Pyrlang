@@ -24,7 +24,7 @@ from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.dist import dist_protocol
 from term import util
 
-LOG = logging.getLogger("pyrlang")
+LOG = logging.getLogger(__name__)
 
 NODE_HIDDEN = 77
 NODE_NORMAL = 72
