@@ -21,6 +21,7 @@
         :py:class:`~Pyrlang.gen_server.GenServer` and following the docs.
 """
 
+from pyrlang.bases import NodeDB
 from pyrlang.util import as_str
 from term.atom import Atom
 from term.pid import Pid
@@ -31,6 +32,8 @@ class GenBase:
     """ Base class for Gen messages, do not use directly. See
         ``GenIncomingMessage`` and ``GenIncomingCall``.
     """
+    node_db = NodeDB()
+
     def __init__(self, sender: Pid, ref: Reference, node_name: str):
         self.node_name_ = node_name
 
@@ -46,7 +49,7 @@ class GenBase:
         """ Reply with a gen:call result
         """
         from pyrlang.node import Node
-        n = Node.all_nodes[self.node_name_]
+        n = self.node_db.get(self.node_name_)
         n.send(sender=local_pid,
                receiver=self.sender_,
                message=(self.ref_, result))
@@ -60,7 +63,8 @@ class GenBase:
         from pyrlang.node import Node
 
         reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
-        n = Node.all_nodes[self.node_name_]
+        n = self.node_db.get(self.node_name_)
+
         n._dist_command(receiver_node=self.sender_.node_name_, message=reply)
 
 

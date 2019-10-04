@@ -29,9 +29,7 @@ class NetKernel(GenServer):
     def __init__(self, node) -> None:
         """ :param node: pyrlang.node.Node
         """
-        GenServer.__init__(self,
-                           node_name=node.node_name_,
-                           accepted_calls=['is_auth'])
+        GenServer.__init__(self, accepted_calls=['is_auth'])
         node.register_name(self, Atom('net_kernel'))
 
     @staticmethod

@@ -20,14 +20,14 @@ from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.dist.distribution import ErlangDistribution
 from pyrlang.dist.base_dist_protocol import BaseDistProtocol
 from pyrlang.dist.distflags import NodeOpts
-from pyrlang.bases import BaseNode
+from pyrlang.bases import BaseNode, NodeDB
 from pyrlang.process import Process
 import term
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
 
-LOG = logging.getLogger("pyrlang")
+LOG = logging.getLogger(__name__)
 
 
 class NodeException(Exception):
@@ -49,7 +49,7 @@ class BadArgError(Exception):
 
 
 class Node(BaseNode):
-    """ Implements an Erlang node which has a network name, a dictionary of 
+    """ Implements an Erlang node which has a network name, a dictionary of
         processes and registers itself via EPMD.
         Node handles the networking asynchronously.
 
@@ -71,13 +71,13 @@ class Node(BaseNode):
             ``e.sleep(1)`` in it, will give CPU time to the node.
     """
 
-    all_nodes = {}  # type: Dict[str, Node]
-    """ All existing Node objects indexed by node_name: str """
+    node_db = NodeDB()
 
     def __init__(self, node_name: str, cookie: str, engine: BaseEngine) -> None:
         BaseNode.__init__(self, node_name=node_name, engine=engine)
 
-        Node.all_nodes[node_name] = self
+        # register node to db
+        self.node_db.register(self)
 
         self.inbox_ = engine.queue_new()
         """ Message queue based on ``gevent.Queue``. It is periodically checked
@@ -117,7 +117,7 @@ class Node(BaseNode):
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
         from pyrlang.rex import Rex
-        self.rex_ = Rex(node=self)
+        self.rex_ = Rex()
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
@@ -546,9 +546,10 @@ class Node(BaseNode):
         self.dist_nodes_.clear()
 
         self.dist_.destroy()
-        del Node.all_nodes[self.node_name_]
+        self.node_db.remove(self)
 
         self.engine_.destroy()
+        del self
 
     def exit_process(self, sender, receiver, reason):
         """ Delivers exit message to a local or remote process. """

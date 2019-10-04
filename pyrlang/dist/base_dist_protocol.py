@@ -20,6 +20,7 @@ import struct
 from hashlib import md5
 from typing import Union
 
+from pyrlang.bases import NodeDB
 from pyrlang.async_support.base_engine import BaseEngine
 from pyrlang.async_support.base_protocol import BaseProtocol
 from term import codec
@@ -87,6 +88,8 @@ class BaseDistProtocol(BaseProtocol):
     ALIVE = 'alive'
     RECV_CHALLENGE = 'recv_challenge'
     RECV_CHALLENGE_ACK = 'recv_challenge_ack'
+
+    node_db = NodeDB()
 
     def __init__(self, node_name: str, engine: BaseEngine):
         """ Create connection handler object. """
@@ -165,7 +168,7 @@ class BaseDistProtocol(BaseProtocol):
         """ Use this to get access to the Pyrlang node which owns this protocol.
             :rtype: pyrlang.node.Node
         """
-        return self.node_class_.all_nodes.get(self.node_name_, None)
+        return self.node_db.get(self.node_name_)
 
     def on_connection_lost(self):
         """ Handler is called when the client has disconnected """
