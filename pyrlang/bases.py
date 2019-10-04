@@ -64,9 +64,15 @@ class NodeDB:
             return in_data.node_name_
 
     def get_all(self):
+        """
+        return the dict of registered nodes
+        """
         return self.__db
 
     def get(self, node_name=None):
+        """
+        Get the active node or the one specified
+        """
         node_name = node_name or self.__active_node
         if not node_name:
             raise AttributeError("there is no active node")
@@ -76,12 +82,20 @@ class NodeDB:
             raise AttributeError(msg)
         return self.__db[node_name]
 
-    def register(self, node, activate=True):
+    def register(self, node):
+        """
+        registers and sets the node as the active one
+        """
         self.__db[self._get_key(node)] = node
-        if activate:
-            self.activate(node)
+        self.activate(node)
 
     def activate(self, node):
+        """
+        set the node as active one.
+
+        Can't be done if there already exists an active node, so that one
+        needs to be deactivated first
+        """
         if self.__active_node is not None:
             raise AttributeError("there is already an active node: "
                                  "{}".format(self.__active_node))
@@ -90,8 +104,23 @@ class NodeDB:
             raise AttributeError("node {} not in database".format(node))
         self.__active_node = node_name
 
-    def deactivate(self):
+    def deactivate(self, node):
+        """
+        Remove the node as the active one
+
+        This should typically not be done and exists for edge test cases and
+        strange things.
+        """
+        key = self._get_key(node)
+        if key != self.__active_node:
+            raise AttributeError("{} is not the active node".format(node))
         self.__active_node = None
 
     def remove(self, node):
-        self.__db.pop(self._get_key(node))
+        """
+        Remove the node from the db
+        """
+        key = self._get_key(node)
+        if key == self.__active_node:
+            self.deactivate(node)
+        self.__db.pop(key)
