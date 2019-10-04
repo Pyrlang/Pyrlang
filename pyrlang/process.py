@@ -101,6 +101,9 @@ class Process(BaseProcess):
         if not self.passive_:
             self.engine_.spawn(self.process_loop)
 
+    def __etf__(self):
+        return self.pid_
+
     def process_loop(self) -> bool:
         """ Polls inbox in an endless loop. Returns ``True`` to continue running.
             Return ``False`` to stop.
