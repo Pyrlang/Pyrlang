@@ -17,8 +17,11 @@ from typing import Dict, Set
 
 from pyrlang2.dist_proto import DistributionFlags, ErlangDistribution
 from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
+from pyrlang2.net_kernel import NetKernel
 from pyrlang2.errors import BadArgError, NodeException, ProcessNotFoundError
+from pyrlang2.node_db import NodeDB
 from pyrlang2.process import Process
+from pyrlang2.rex import Rex
 from term import Pid, Atom, Reference
 
 LOG = logging.getLogger("pyrlang")
@@ -47,7 +50,7 @@ class Node:
             ``e.sleep(1)`` in it, will give CPU time to the node.
     """
 
-    all_nodes = {}  # type: Dict[str, Node]
+    node_db = NodeDB()
     """ All existing local Node objects indexed by node_name: str """
 
     def __init__(self, node_name: str, cookie: str,
@@ -62,7 +65,7 @@ class Node:
         """ Node name as seen on the network. Use full node names here:
             ``name@hostname`` """
 
-        Node.all_nodes[node_name] = self
+        self.node_db.register(self)
 
         self.inbox_ = asyncio.Queue()
         """ Contains Pyrlang's own messages to the local node. """
@@ -102,12 +105,10 @@ class Node:
 
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
-        from pyrlang2.rex import Rex
         self.rex_ = Rex(node=self)
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
-        from pyrlang2.net_kernel import NetKernel
         self.net_kernel_ = NetKernel(node=self)
 
         asyncio.get_event_loop().create_task(self._async_loop())
@@ -502,7 +503,8 @@ class Node:
         self.dist_nodes_.clear()
 
         self.dist_.destroy()
-        del Node.all_nodes[self.node_name_]
+        self.node_db.remove(self.node_name_)
+        del self
 
     def exit_process(self, sender, receiver, reason):
         """ Delivers exit message to a local or remote process. """

@@ -20,7 +20,7 @@ import struct
 from hashlib import md5
 from typing import Union, Tuple
 
-from pyrlang.bases import NodeDB
+from pyrlang2.node_db import NodeDB
 from pyrlang2.errors import DistributionError
 from term import codec
 from term import util

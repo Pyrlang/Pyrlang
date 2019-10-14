@@ -23,6 +23,7 @@
 import asyncio
 
 from pyrlang2.util import as_str
+from pyrlang2.node_db import NodeDB
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
@@ -32,7 +33,7 @@ class GenBase:
     """ Base class for Gen messages, do not use directly. See
         ``GenIncomingMessage`` and ``GenIncomingCall``.
     """
-
+    node_db = NodeDB()
     def __init__(self, sender: Pid, ref: Reference, node_name: str):
         self.node_name_ = node_name
 
@@ -47,13 +48,12 @@ class GenBase:
     def reply(self, local_pid: Pid, result):
         """ Reply with a gen:call result
         """
-        from pyrlang2.node import Node
-        n = Node.all_nodes[self.node_name_]
+        n = self.node_db.get(self.node_name_)
         # Call immediately as soon as async event loop allows
         asyncio.get_event_loop().create_task(
-            Node.send(n, sender=local_pid,
-                      receiver=self.sender_,
-                      message=(self.ref_, result))
+            n.send(sender=local_pid,
+                   receiver=self.sender_,
+                   message=(self.ref_, result))
         )
 
     def reply_exit(self, local_pid: Pid, reason):
@@ -62,14 +62,12 @@ class GenBase:
             NOTE: The gen:call caller attempts to monitor the target first. If
                 the monitor attempt fails, the exit here won't work
         """
-        from pyrlang2.node import Node
 
         reply = ('monitor_p_exit', local_pid, self.sender_, self.ref_, reason)
-        n = Node.all_nodes[self.node_name_]
+        n = self.node_db.get(self.node_name_)
         asyncio.get_event_loop().create_task(
-            Node.dist_command(n,
-                              receiver_node=self.sender_.node_name_,
-                              message=reply)
+            n.dist_command(receiver_node=self.sender_.node_name_,
+                           message=reply)
         )
 
 

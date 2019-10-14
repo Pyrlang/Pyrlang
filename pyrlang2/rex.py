@@ -16,7 +16,6 @@ import traceback
 
 from pyrlang2 import gen
 from pyrlang2.process import Process
-from pyrlang2.node import Node
 from term.atom import Atom
 
 LOG = logging.getLogger("pyrlang.rex")
