@@ -90,13 +90,14 @@ class Process:
         """ Bi-directional linked process pids. Each linked pid pair is unique
             hence using a set to store them. """
 
-        self._signals = []  # type: List[Tuple[str, Any]]
+        self._signals = asyncio.Queue()
         """ Exit (and maybe later other) signals are placed here and handled
             at safe moments of time between handling messages. """
 
         LOG.debug("Spawned process %s", self.pid_)
         if not self.passive_:
             asyncio.get_event_loop().create_task(self.process_loop())
+            asyncio.get_running_loop().create_task(self.handle_signals())
 
     async def process_loop(self):
         """ Polls inbox in an endless loop.
@@ -108,20 +109,19 @@ class Process:
         while not self.is_exiting_:
             # If any messages have been handled recently, do not sleep
             # Else if no messages, sleep for some short time
-            if self._handle_inbox() == 0:
-                await asyncio.sleep(0.01)
+            await self.receive()
 
         LOG.debug("Process %s process_loop stopped", self.pid_)
 
-    def handle_signals(self):
+    async def handle_signals(self):
         """ Called from Node if the Node knows that there's a signal waiting
             to be handled. """
-        while self._signals:
+        while True:
             # Signals defer exiting a process while doing something important
-            (_exit, reason) = self._signals.pop(0)
+            (_exit, reason) = await self._signals.get()
             self._on_exit_signal(reason)
 
-    def _handle_inbox(self) -> int:
+    def handle_inbox(self) -> int:
         """ Do not override `handle_inbox`, instead go for
             `handle_one_inbox_message`
             :returns: How many messages have been handled
@@ -168,7 +168,7 @@ class Process:
             monitors and unregisters the object from the node process
             dictionary.
         """
-        self._signals.append(('exit', reason))
+        self._signals.put_nowait(('exit', reason))
         self.get_node().signal_wake_up(self.pid_)
 
     def _on_exit_signal(self, reason):

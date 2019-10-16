@@ -220,22 +220,22 @@ class BaseDistProtocol(asyncio.Protocol):
         n = self.get_node()
 
         if ctrl_msg_type == CONTROL_TERM_REG_SEND:
-            return await n.send(sender=control_term[1],
-                                receiver=control_term[3],
-                                message=msg_term)
+            return await n._send(sender=control_term[1],
+                                 receiver=control_term[3],
+                                 message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return await n.send(sender=None,
-                                receiver=control_term[2],
-                                message=msg_term)
+            return await n._send(sender=None,
+                                 receiver=control_term[2],
+                                 message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_LINK:
             (_, from_pid, to_pid) = control_term
-            n.link(from_pid, to_pid, local_only=True)
+            await n.link(from_pid, to_pid, local_only=True)
 
         elif ctrl_msg_type == CONTROL_TERM_UNLINK:
             (_, from_pid, to_pid) = control_term
-            n.unlink(from_pid, to_pid, local_only=True)
+            await n.unlink(from_pid, to_pid, local_only=True)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
@@ -259,7 +259,7 @@ class BaseDistProtocol(asyncio.Protocol):
         elif ctrl_msg_type in [CONTROL_TERM_EXIT, CONTROL_TERM_EXIT2]:
             (_, from_pid, to_pid, reason) = control_term
             if to_pid.is_local_to(n):
-                n.exit_process(from_pid, to_pid, reason)
+                n.  exit_process(from_pid, to_pid, reason)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P_EXIT:
             (_, from_pid, to_pid, ref, reason) = control_term

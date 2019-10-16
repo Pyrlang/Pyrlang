@@ -8,11 +8,11 @@
 #
 
 import logging
+import asyncio
 
 from term import Atom
-from pyrlang import Node, Process
-# from pyrlang import GeventEngine as Engine
-from pyrlang import AsyncioEngine as Engine
+from pyrlang2.node import Node
+from pyrlang2.process import Process
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE6", fg='lime'))
@@ -20,8 +20,8 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class LinkExample6(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
+    def __init__(self) -> None:
+        Process.__init__(self)
 
     def handle_one_inbox_message(self, msg):
         #
@@ -30,12 +30,12 @@ class LinkExample6(Process):
         if isinstance(msg, tuple) and msg[0] == Atom("test_link"):
             LOG.info("LinkExample6: Linking to %s and killing", msg)
             n = self.get_node()
-            n.link(self.pid_, msg[1])
+            n.link_cast(self.pid_, msg[1])
 
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
                                reason=Atom("example6_link_exit"))
-            self.engine_.call_later(0.5, exit_fn)
+            asyncio.get_running_loop().call_later(0.5, exit_fn)
         else:
             LOG.info("LinkExample6: Incoming %s", msg)
 
@@ -47,8 +47,8 @@ class LinkExample6(Process):
         Process.exit(self, reason)
 
 def main():
-    event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    event_engine = asyncio.get_event_loop()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
 
     #
     # 1. Create a process P1
@@ -56,28 +56,36 @@ def main():
     #   command. This will spawn an Erlang process and tell us the pid.
     #   Reply from Erlang node will trigger next steps above in ExampleProcess6
     #
-    p1 = LinkExample6(node)
+    p1 = LinkExample6()
 
     LOG.info("Sending {example6, test_link, %s} to remote 'example6'" % p1.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example6"))
-    node.send(sender=p1.pid_,
-              receiver=remote_receiver_name,
-              message=(Atom("example6"), Atom("test_link"), p1.pid_))
+    send_task = lambda: node.send(sender=p1.pid_,
+                                  receiver=remote_receiver_name,
+                                  message=(Atom("example6"),
+                                           Atom("test_link"),
+                                           p1.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)
-    event_engine.sleep(sleep_sec)
 
     #
     # 3. End, sending a stop message
     #
-    LOG.info(color("Stopping remote loop", fg="red"))
-    node.send(sender=p1.pid_, receiver=remote_receiver_name,
-              message=(Atom("example6"), Atom("stop")))
+    def task_sleep1():
+        LOG.info(color("Stopping remote loop", fg="red"))
+        node.send(sender=p1.pid_,
+                  receiver=remote_receiver_name,
+                  message=(Atom("example6"), Atom("stop")))
 
-    event_engine.sleep(sleep_sec)
-    node.destroy()
-    LOG.error("Done")
+    def task_sleep2():
+        node.destroy()
+        LOG.error("Done")
+
+    event_engine.call_soon(send_task)
+    event_engine.call_later(sleep_sec, task_sleep1)
+    event_engine.call_later(2 * sleep_sec, task_sleep2)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

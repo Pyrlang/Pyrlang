@@ -123,6 +123,22 @@ class Node:
 
         # LOG.info("Node async_loop ended")
 
+    async def handle_signals(self):
+        while self._signal_wakeups:
+            s_pid = self._signal_wakeups.pop()
+            if s_pid not in self.processes_:
+                LOG.info("got signal for untracked process %s", s_pid)
+                continue
+            await self.processes_[s_pid].handle_signals()
+
+    def signal_wake_up(self, pid):
+        self._signal_wakeups.add(pid)
+        asyncio.get_running_loop().create_task(self.handle_signals())
+
+    def on_exit_process(self, exiting_pid, reason):
+        LOG.info("Process %s exited with %s", exiting_pid, reason)
+        del self.processes_[exiting_pid]
+
     def register_new_process(self, proc=None) -> Pid:
         """ Generate a new pid and add the process to the process dictionary.
 
@@ -182,7 +198,13 @@ class Node:
         raise BadArgError(
             "where_is argument must be a pid or an atom (%s)" % ident)
 
-    async def send(self, sender, receiver, message) -> None:
+    def send(self, sender, receiver, message) -> None:
+        """ Create task that sends the message
+        """
+        send_task = self._send(sender, receiver, message)
+        asyncio.get_running_loop().create_task(send_task)
+
+    async def _send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
@@ -334,7 +356,17 @@ class Node:
         else:
             conn.inbox_.put_nowait(message)
 
-    def link(self, pid1, pid2, local_only=False):
+    def link_cast(self, pid1, pid2, local_only=False):
+        """ unsafe casting of link
+
+            you can't assume it has got effect when this function returns
+            Convinience methot for being able to call it outside a async
+            function
+         """
+        link_task = self.link(pid1, pid2, local_only)
+        asyncio.get_running_loop().create_task(link_task)
+
+    async def link(self, pid1, pid2, local_only=False):
         """ Check each of processes pid1 and pid2 if they are local, mutually
             link them. Assume remote process handles its own linking.
 
@@ -350,24 +382,26 @@ class Node:
                 self.processes_[pid1].add_link(pid2)
             else:
                 # not exists
-                self._send_exit_signal(pid2, pid1, Atom("noproc"))
+                await self._send_exit_signal(pid2, pid1, Atom("noproc"))
 
         elif not local_only:
             link_m = ('link', pid2, pid1)
-            self.dist_command(receiver_node=pid1.node_name_, message=link_m)
+            await self.dist_command(receiver_node=pid1.node_name_,
+                                    message=link_m)
 
         if pid2.is_local_to(self):
             if pid2 in self.processes_:
                 self.processes_[pid2].add_link(pid1)
             else:
                 # not exists
-                self._send_exit_signal(pid1, pid2, Atom("noproc"))
+                await self._send_exit_signal(pid1, pid2, Atom("noproc"))
 
         elif not local_only:
             link_m = ('link', pid1, pid2)
-            self.dist_command(receiver_node=pid2.node_name_, message=link_m)
+            await self.dist_command(receiver_node=pid2.node_name_,
+                                    message=link_m)
 
-    def unlink(self, pid1, pid2, local_only=False):
+    async def unlink(self, pid1, pid2, local_only=False):
         """ Mutually unlink two processes.
 
             :param pid1: First pid
@@ -381,13 +415,15 @@ class Node:
             self.processes_[pid1].remove_link(pid2)
         elif not local_only:
             link_m = ('unlink', pid2, pid1)  # (unlink, localpid, remotepid)
-            self.dist_command(receiver_node=pid1.node_name_, message=link_m)
+            await self.dist_command(receiver_node=pid1.node_name_,
+                                   message=link_m)
 
         if pid2.is_local_to(self):
             self.processes_[pid2].remove_link(pid1)
         elif not local_only:
             link_m = ('unlink', pid1, pid2)  # (unlink, localpid, remotepid)
-            self.dist_command(receiver_node=pid2.node_name_, message=link_m)
+            await self.dist_command(receiver_node=pid2.node_name_,
+                                   message=link_m)
 
     def monitor_process(self, origin_pid: Pid, target, ref=None):
         """ Locate the process referenced by the target and place the origin
@@ -529,12 +565,20 @@ class Node:
 
     def exit_process(self, sender, receiver, reason):
         """ Delivers exit message to a local or remote process. """
-        self._send_exit_signal(sender=sender,
-                               receiver=receiver,
-                               reason=reason,
-                               dist_protocol_message='exit2')
 
-    async def send_link_exit_notification(self, sender, receiver, reason):
+        exit_task = self._send_exit_signal(sender=sender,
+                                           receiver=receiver,
+                                           reason=reason,
+                                           dist_protocol_message='exit2')
+        asyncio.get_running_loop().create_task(exit_task)
+
+    def send_link_exit_notification(self, sender, receiver, reason):
+        link_exit_task = self._send_link_exit_notification(sender,
+                                                           receiver,
+                                                           reason)
+        asyncio.get_running_loop().create_task(link_exit_task)
+
+    async def _send_link_exit_notification(self, sender, receiver, reason):
         """ Delivers exit message due to a linked process dead to a local
             or remote process. """
         await self._send_exit_signal(sender=sender,
