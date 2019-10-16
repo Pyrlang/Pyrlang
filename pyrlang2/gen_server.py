@@ -46,14 +46,13 @@ class GenServer(Process):
     """ Inherit from this instead of inheriting from the
         :py:class:`~Pyrlang.process.Process` to gain the ability to convert
         incoming ``gen:call`` messages into regular Python method calls. """
-    def __init__(self, node_name: str,
-                 accepted_calls: Union[list, None] = None):
+    def __init__(self, accepted_calls: Union[list, None] = None):
         """
         :param accepted_calls: None or list of strings, defines allowed names
             which will be converted into method calls on ``self``. A call name
             is first element of the tuple (atom, binary or ASCII string).
         """
-        super().__init__(node_name=node_name)
+        super().__init__()
 
         self.traceback_depth_ = 10
 
@@ -80,7 +79,7 @@ class GenServer(Process):
             return self.handle_info(msg)
 
         elif isinstance(sys_msg, GenIncomingMessage):
-            LOG.info("In call %s", sys_msg)
+            LOG.debug("In call %s", sys_msg)
             self._handle_incoming_call(sys_msg)
 
         else:

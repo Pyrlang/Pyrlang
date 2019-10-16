@@ -24,7 +24,7 @@ from pyrlang2.process import Process
 from pyrlang2.rex import Rex
 from term import Pid, Atom, Reference
 
-LOG = logging.getLogger("pyrlang")
+LOG = logging.getLogger(__name__)
 
 
 class Node:
@@ -105,11 +105,11 @@ class Node:
 
         # Spawn and register (automatically) the process 'rex' for remote
         # execution, which takes 'rpc:call's from Erlang
-        self.rex_ = Rex(node=self)
+        self.rex_ = Rex()
 
         # Spawn and register (automatically) the 'net_kernel' process which
         # handles special ping messages
-        self.net_kernel_ = NetKernel(node=self)
+        self.net_kernel_ = NetKernel()
 
         asyncio.get_event_loop().create_task(self._async_loop())
 
@@ -196,7 +196,7 @@ class Node:
                 inbox. Pyrlang processes use tuples but that is not enforced
                 for your own processes.
         """
-        # LOG.debug("send to %s <- %s", receiver, message)
+        LOG.debug("send to %s <- %s", receiver, message)
 
         if isinstance(receiver, tuple):
             (r_node, r_name) = receiver
@@ -224,6 +224,26 @@ class Node:
 
         raise NodeException("Don't know how to send to %s" % receiver)
 
+    def register_dist_node(self, addr, proto):
+        """
+        add the protocol to dist nodes so that we can use it
+        :param addr:
+        :param proto:
+        :return:
+        """
+        self.dist_nodes_[addr] = proto
+
+    def unregister_dist_node(self, addr):
+        """
+        remove dist node (disconnected most likley)
+        :param addr:
+        :return:
+        """
+        if addr not in self.dist_nodes_:
+            return
+
+        self.dist_nodes_.pop(addr)
+
     def _send_local_registered(self, receiver, message) -> None:
         """ Try find a named process by atom key, drop a message into its inbox_
 
@@ -240,7 +260,8 @@ class Node:
                      receiver, receiver_obj, message)
             receiver_obj.deliver_message(msg=message)
         else:
-            LOG.warning("Send to unknown %s ignored", receiver)
+            LOG.warning("Send to unknown %s ignored\n\n%s\n\n", receiver,
+                        self.reg_names_)
 
     def _send_local(self, receiver, message) -> None:
         """ Try find a process by pid and drop a message into its ``inbox_``.
@@ -311,7 +332,7 @@ class Node:
         if conn is None:
             raise NodeException("Node %s is not connected (2)" % receiver_node)
         else:
-            conn.inbox_.put(message)
+            conn.inbox_.put_nowait(message)
 
     def link(self, pid1, pid2, local_only=False):
         """ Check each of processes pid1 and pid2 if they are local, mutually
@@ -445,7 +466,7 @@ class Node:
         """
         target_pid = self.where_is(target)
 
-        LOG.info("demonitor orig=%s target=%s ref=%s", origin_pid, target_pid,
+        LOG.debug("demonitor orig=%s target=%s ref=%s", origin_pid, target_pid,
                  ref)
 
         if not origin_pid.is_local_to(self):

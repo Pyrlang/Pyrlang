@@ -25,13 +25,12 @@ class NetKernel(GenServer):
         one specific ``is_auth`` message, which is used by ``net_adm:ping``.
     """
 
-    def __init__(self, node) -> None:
+    def __init__(self) -> None:
         """ :param node: pyrlang2.node.Node
         """
         GenServer.__init__(self,
-                           node_name=node.node_name_,
                            accepted_calls=['is_auth'])
-        node.register_name(self, Atom('net_kernel'))
+        self.node_db.get().register_name(self, Atom('net_kernel'))
 
     @staticmethod
     def is_auth():

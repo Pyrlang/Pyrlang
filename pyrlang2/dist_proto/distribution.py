@@ -21,7 +21,7 @@ import pyrlang2
 from pyrlang2.dist_proto import DistClientProtocol
 from pyrlang2.dist_proto.epmd_client import EPMDClient
 
-LOG = logging.getLogger("pyrlang.dist")
+LOG = logging.getLogger(__name__)
 
 
 class ErlangDistribution:
@@ -53,9 +53,9 @@ class ErlangDistribution:
         self.in_srv_ = await asyncio.get_event_loop().create_server(
             host='0.0.0.0',
             port=0,
-            protocol_factory=DistServerProtocol
+            protocol_factory=lambda: DistServerProtocol(self.node_name_)
         )
-        _, self.in_port_ = self.in_srv_.sockets[0].getsockname()
+        self.in_port_ = self.in_srv_.sockets[0].getsockname()[1]
         LOG.info("Listening for dist connections on port %s", self.in_port_)
 
     async def start_distribution(self) -> bool:
@@ -64,8 +64,16 @@ class ErlangDistribution:
                 Erlang nodes.
         """
         await self.start_server()
-        await self.epmd_.connect()
-        return await self.epmd_.alive2(self)
+        if not await self.epmd_.connect():
+            return False
+
+        res = await self.epmd_.alive2(self)
+        asyncio.get_running_loop().create_task(self.run_dist_server())
+        return res
+
+    async def run_dist_server(self):
+        async with self.in_srv_:
+            await self.in_srv_.serve_forever()
 
     def disconnect_epmd(self) -> None:
         """ Finish EPMD connection, this will remove the node from the list of

@@ -18,7 +18,7 @@ from pyrlang2 import gen
 from pyrlang2.process import Process
 from term.atom import Atom
 
-LOG = logging.getLogger("pyrlang.rex")
+LOG = logging.getLogger(__name__)
 
 
 class Rex(Process):
@@ -33,11 +33,11 @@ class Rex(Process):
             :py:func:`~Pyrlang.gen.parse_gen_call` function
     """
 
-    def __init__(self, node) -> None:
+    def __init__(self) -> None:
         """ :param node: pyrlang2.node.Node
         """
-        Process.__init__(self, node_name=node.node_name_)
-        node.register_name(self, Atom('rex'))
+        Process.__init__(self)
+        self.node_db.get(self.node_name_).register_name(self, Atom('rex'))
 
         self.traceback_depth_ = 5
         """ This being non-zero enables formatting exception tracebacks with the
@@ -65,12 +65,6 @@ class Rex(Process):
             pmod = __import__(gencall.mod_, fromlist=[''])
             pfun = getattr(pmod, gencall.fun_)
             args = gencall.args_
-            # For calls to Pyrlang.notebook.notebook module,
-            # always prepend node_name
-            if gencall.mod_ == "pyrlang.notebook.notebook" \
-                    and gencall.fun_ == "new_context":
-                args.insert(0, self.node_name_)
-
             # Call the thing
             val = pfun(*args)
 

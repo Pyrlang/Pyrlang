@@ -13,10 +13,12 @@
 # 3. In Erlang shell send a message `{my_process, 'py@127.0.0.1'} ! hello`
 #
 
+import asyncio
 import logging
 
 from term import Atom
-from pyrlang import Node, Process
+from pyrlang2.node import Node
+from pyrlang2.process import Process
 # from pyrlang import GeventEngine as Engine
 from pyrlang import AsyncioEngine as Engine
 from colors import color
@@ -26,9 +28,9 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class MyProcess(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
-        node.register_name(self, Atom('my_process'))  # optional
+    def __init__(self) -> None:
+        Process.__init__(self)
+        self.node_db.get().register_name(self, Atom('my_process'))  # optional
         LOG.info("Registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
@@ -36,9 +38,9 @@ class MyProcess(Process):
 
 
 def main():
-    event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-    MyProcess(node)
+    Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    MyProcess()
+    event_engine = asyncio.get_event_loop()
     event_engine.run_forever()
 
 

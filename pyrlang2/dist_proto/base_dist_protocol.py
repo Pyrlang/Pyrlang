@@ -26,7 +26,7 @@ from term import codec
 from term import util
 from term.atom import Atom
 
-LOG = logging.getLogger("pyrlang.dist")
+LOG = logging.getLogger(__name__)
 
 # Distribution protocol delivers pairs of (control_term, message).
 # http://erlang.org/doc/apps/erts/erl_dist_protocol.html
@@ -115,9 +115,6 @@ class BaseDistProtocol(asyncio.Protocol):
         self.state_ = self.DISCONNECTED
         """ FSM state for the protocol state-machine. """
 
-        from pyrlang2.node import Node
-        self.node_class_ = Node
-
         self.transport_ = None  # type: [None, asyncio.Transport]
         self.unconsumed_data_ = b''
 
@@ -139,9 +136,13 @@ class BaseDistProtocol(asyncio.Protocol):
 
     def data_received(self, data: bytes) -> None:
         self.unconsumed_data_ += data
+        while self._data_received_inner():
+            pass  # rerun inner until we have nothing more to do
+
+    def _data_received_inner(self) -> bool:
         if len(self.unconsumed_data_) < self.packet_len_size_:
             # Not ready yet, keep reading
-            return
+            return False
 
         # Dist protocol switches from 2 byte packet length to 4 at some point
         if self.packet_len_size_ == 2:
@@ -153,26 +154,20 @@ class BaseDistProtocol(asyncio.Protocol):
 
         if len(self.unconsumed_data_) < self.packet_len_size_ + pkt_size:
             # Length is already visible but the data is not here yet
-            return
+            return False
+
+        #packet = self.unconsumed_data_[offset:]
 
         packet = self.unconsumed_data_[offset:(offset + pkt_size)]
-
-        # LOG.info("in %d: %s", len(packet), packet)
-        # self.unconsumed_data_ = self.unconsumed_data_[(offset + pkt_size):]
+        self.unconsumed_data_ = self.unconsumed_data_[(offset + pkt_size):]
 
         # Try to consume some data, remember the unconsumed tail
         # Loop while the data is consumed, stop when not consumed anymore
-        while True:
-            packet = self.on_packet(packet)
-            if self.unconsumed_data_ == packet:
-                break
-            self.unconsumed_data_ = packet
-            if packet == b'':
-                break
+        self.on_packet(packet)
 
-        LOG.info("unconsumed: %s, state=%s", self.unconsumed_data_, self.state_)
-
-        return
+        LOG.debug("unconsumed: %s, state=%s", self.unconsumed_data_,
+                  self.state_)
+        return True
 
     def on_packet(self, data: bytes) -> bytes:
         raise NotImplementedError()
@@ -188,7 +183,9 @@ class BaseDistProtocol(asyncio.Protocol):
         self.state_ = self.DISCONNECTED
 
         if self.peer_name_ is not None:
-            self._inform_local_node(("node_disconnected", self.peer_name_))
+            #self._inform_local_node(("node_disconnected", self.peer_name_))
+            n = self.node_db.get(self.node_name_)
+            n.unregister_dist_node(self.addr_)
 
     def _inform_local_node(self, msg):
         self.get_node().inbox_.put_nowait(msg)
@@ -196,14 +193,14 @@ class BaseDistProtocol(asyncio.Protocol):
     def _send_packet2(self, content: bytes):
         """ Send a handshake-time status message with a 2 byte length prefix
         """
-        # LOG.info("out %d: %s", len(content), content)
+        LOG.debug("out %d: %s", len(content), content)
         msg = struct.pack(">H", len(content)) + content
         self.transport_.write(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
-        # LOG.info("out %d: %s", len(content), content)
+        LOG.debug("out %d: %s", len(content), content)
         msg = struct.pack(">I", len(content)) + content
         self.transport_.write(msg)
 
@@ -211,7 +208,7 @@ class BaseDistProtocol(asyncio.Protocol):
         """ On incoming 'p' message with control and data, handle it.
             :raises DistributionError: when 'p' message is not a tuple
         """
-        # LOG.info("Dist t=%s; control_t=%s", msg_term, control_term)
+        LOG.info("Dist msg_t=%s; ctrl_t=%s", msg_term, control_term)
 
         if type(control_term) != tuple:
             raise DistributionError(
@@ -275,18 +272,17 @@ class BaseDistProtocol(asyncio.Protocol):
         else:
             LOG.error("Unhandled 'p' message: %s; %s", control_term, msg_term)
 
-    def periodic_check(self):
+    async def listen_on_inbox(self):
         while True:
-            try:
-                msg = self.inbox_.get_nowait()
-                self._handle_one_inbox_message(msg)
-            except asyncio.QueueEmpty:
-                break
+            msg = await self.inbox_.get()
+            self._handle_one_inbox_message(msg)
+            self.inbox_.task_done()
 
     def _periodic_ping_remote(self):
         self._schedule_periodic_ping_remote()
 
         if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
+            LOG.debug("sending periodic ping")
             self._send_packet4(b'')
 
     def _schedule_periodic_ping_remote(self):
@@ -386,7 +382,11 @@ class BaseDistProtocol(asyncio.Protocol):
             (control_term, tail) = codec.binary_to_term(data[1:])
 
             if tail != b'':
-                (msg_term, tail) = codec.binary_to_term(tail)
+                try:
+                    (msg_term, tail) = codec.binary_to_term(tail)
+                except codec.PyCodecError:
+                    # it's ok probably just another package waiting
+                    msg_term = None
             else:
                 msg_term = None
 
@@ -402,7 +402,10 @@ class BaseDistProtocol(asyncio.Protocol):
     def report_dist_connected(self):
         assert (self.peer_name_ is not None)
         LOG.info("Connected to %s", self.peer_name_)
-        self._inform_local_node(('node_connected', self.peer_name_, self))
+        # self._inform_local_node(('node_connected', self.peer_name_, self))
+        n = self.node_db.get(self.node_name_)
+        n.register_dist_node(self.peer_name_, self)
+        asyncio.get_running_loop().create_task(self.listen_on_inbox())
 
 
 __all__ = ['BaseDistProtocol']

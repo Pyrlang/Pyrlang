@@ -23,7 +23,7 @@ from pyrlang2.dist_proto import version
 from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
 from term import util
 
-LOG = logging.getLogger("pyrlang.dist")
+LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
 
@@ -43,7 +43,6 @@ class DistClientProtocol(BaseDistProtocol):
 
             :param data: The packet after the header had been removed
         """
-        LOG.info("Dist-out[%s]: recv %s", self.state_, data)
 
         if self.state_ == self.CONNECTED:
             return self.on_packet_connected(data)

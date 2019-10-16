@@ -27,7 +27,7 @@ from pyrlang2.dist_proto import version
 from pyrlang2.errors import EPMDClientError, EPMDConnectionError
 from term import util
 
-LOG = logging.getLogger("pyrlang")
+LOG = logging.getLogger(__name__)
 
 NODE_HIDDEN = 77
 NODE_NORMAL = 72

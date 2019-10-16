@@ -26,8 +26,8 @@ from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol, \
     DistributionError
 from term import util
 
-LOG = logging.getLogger("pyrlang.dist")
-LOG.setLevel(logging.INFO)
+LOG = logging.getLogger(__name__)
+# LOG.setLevel(logging.INFO)
 
 
 class DistServerProtocol(BaseDistProtocol):
