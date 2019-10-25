@@ -27,7 +27,9 @@ start() ->
 helper_process_loop(0) ->
     ok;
 helper_process_loop(Count) ->
-    receive stop -> ok
+    receive stop ->
+        io:format("Dying on request~n"),
+        ok
     after 400 ->
         io:format("Helper process: ~p; ~p~n",
                   [erlang:process_info(self(), links),

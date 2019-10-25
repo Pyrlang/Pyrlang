@@ -17,7 +17,11 @@ import logging
 LOG = logging.getLogger("pyrlang")
 
 
-class NodeException(Exception):
+class PyrlangException(Exception):
+    pass
+
+
+class NodeException(PyrlangException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("NodeException: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
@@ -29,25 +33,31 @@ class ProcessNotFoundError(NodeException):
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class BadArgError(Exception):
+class BadArgError(PyrlangException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("Bad Argument: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class EPMDClientError(Exception):
+class EPMDClientError(PyrlangException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("EPMD: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class EPMDConnectionError(Exception):
+class EPMDConnectionError(PyrlangException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("EPMD: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)
 
 
-class DistributionError(Exception):
+class DistributionError(PyrlangException):
     def __init__(self, msg, *args, **kwargs):
         LOG.error("DistributionError: %s", msg)
+        Exception.__init__(self, msg, *args, **kwargs)
+
+
+class ProcessTimeoutError(PyrlangException):
+    def __init__(self, msg, *args, **kwargs):
+        LOG.error("ProcessTimeoutError: %s", msg)
         Exception.__init__(self, msg, *args, **kwargs)

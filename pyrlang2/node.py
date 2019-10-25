@@ -198,13 +198,13 @@ class Node:
         raise BadArgError(
             "where_is argument must be a pid or an atom (%s)" % ident)
 
-    def send(self, sender, receiver, message) -> None:
+    def send_nowait(self, sender, receiver, message) -> None:
         """ Create task that sends the message
         """
-        send_task = self._send(sender, receiver, message)
+        send_task = self.send(sender, receiver, message)
         asyncio.get_running_loop().create_task(send_task)
 
-    async def _send(self, sender, receiver, message) -> None:
+    async def send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
             located on another Erlang node.
 
@@ -282,8 +282,7 @@ class Node:
                      receiver, receiver_obj, message)
             receiver_obj.deliver_message(msg=message)
         else:
-            LOG.warning("Send to unknown %s ignored\n\n%s\n\n", receiver,
-                        self.reg_names_)
+            LOG.warning("Send to unknown %s ignored", receiver)
 
     def _send_local(self, receiver, message) -> None:
         """ Try find a process by pid and drop a message into its ``inbox_``.
@@ -459,8 +458,9 @@ class Node:
     def _monitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
                                 ref: Reference):
         monitor_msg = ('monitor_p', origin_pid, target_pid, ref)
-        self.dist_command(receiver_node=target_pid.node_name_,
-                          message=monitor_msg)
+        dc_task = self.dist_command(receiver_node=target_pid.node_name_,
+                                    message=monitor_msg)
+        asyncio.get_running_loop().create_task(dc_task)
 
         # if the origin is local, register monitor in it. Remote pids are
         # handled by the remote

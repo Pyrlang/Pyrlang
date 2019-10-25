@@ -62,11 +62,11 @@ def main():
 
     LOG.info("Sending {example7, test_monitor, %s} to remote 'example7'" % proc.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example7"))
-    send_task = lambda: node.send(sender=proc.pid_,
-                                  receiver=remote_receiver_name,
-                                  message=(Atom("example7"),
-                                           Atom("test_monitor"),
-                                           proc.pid_))
+    send_task = node.send(sender=proc.pid_,
+                          receiver=remote_receiver_name,
+                          message=(Atom("example7"),
+                                   Atom("test_monitor"),
+                                   proc.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)
@@ -76,16 +76,17 @@ def main():
     #
     def stop_task():
         LOG.info(color("Stopping remote loop", fg="red"))
-        node.send(sender=proc.pid_, receiver=remote_receiver_name,
-                  message=(Atom("example7"), Atom("stop")))
+        node.send_nowait(sender=proc.pid_, receiver=remote_receiver_name,
+                         message=(Atom("example7"), Atom("stop")))
 
     def destroy_task():
+        LOG.error("Destroying")
         node.destroy()
         LOG.error("Done")
 
-    event_engine.call_soon(send_task)
+    event_engine.create_task(send_task)
     event_engine.call_later(sleep_sec, stop_task)
-    event_engine.call_later(2 * sleep_sec, destroy_task)
+    # event_engine.call_later(3 * sleep_sec, destroy_task)
     event_engine.run_forever()
 
 

@@ -24,6 +24,7 @@ import asyncio
 
 from pyrlang2.util import as_str
 from pyrlang2.node_db import NodeDB
+from pyrlang2.process import Process
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
@@ -34,6 +35,7 @@ class GenBase:
         ``GenIncomingMessage`` and ``GenIncomingCall``.
     """
     node_db = NodeDB()
+
     def __init__(self, sender: Pid, ref: Reference, node_name: str):
         self.node_name_ = node_name
 
@@ -172,6 +174,26 @@ def parse_gen_message(msg, node_name: str):
                               ref=mref,
                               message=gcmsg,
                               node_name=node_name)
+
+
+class GenServerInterface(object):
+    def __init__(self, calling_process: Process, destination_pid):
+        self._calling_process = calling_process
+        self._destination_pid = destination_pid
+        self._node = calling_process.get_node()
+
+    async def _do_call(self, label, request, timeout=5):
+        m_ref = self._node.monitor_process(self._calling_process.pid_,
+                                           self._destination_pid)
+        print("\n\njso do call {}\n\n".format(m_ref))
+        calling_pid = self._calling_process.pid_
+        msg = (label, {calling_pid, m_ref}, request)
+        await self._node.send(calling_pid,
+                              self._destination_pid,
+                              msg)
+
+    async def call(self, request, timeout=None):
+        return await self._do_call(Atom('$gen_call'), request, timeout)
 
 
 __all__ = ['GenIncomingCall', 'GenIncomingMessage',

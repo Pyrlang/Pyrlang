@@ -220,14 +220,14 @@ class BaseDistProtocol(asyncio.Protocol):
         n = self.get_node()
 
         if ctrl_msg_type == CONTROL_TERM_REG_SEND:
-            return await n._send(sender=control_term[1],
-                                 receiver=control_term[3],
-                                 message=msg_term)
+            return await n.send(sender=control_term[1],
+                                receiver=control_term[3],
+                                message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_SEND:
-            return await n._send(sender=None,
-                                 receiver=control_term[2],
-                                 message=msg_term)
+            return await n.send(sender=None,
+                                receiver=control_term[2],
+                                message=msg_term)
 
         elif ctrl_msg_type == CONTROL_TERM_LINK:
             (_, from_pid, to_pid) = control_term
