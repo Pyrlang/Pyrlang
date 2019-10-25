@@ -20,8 +20,8 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class LinkExample6(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
+    def __init__(self) -> None:
+        Process.__init__(self)
 
     def handle_one_inbox_message(self, msg):
         #
@@ -56,7 +56,7 @@ def main():
     #   command. This will spawn an Erlang process and tell us the pid.
     #   Reply from Erlang node will trigger next steps above in ExampleProcess6
     #
-    p1 = LinkExample6(node)
+    p1 = LinkExample6()
 
     LOG.info("Sending {example6, test_link, %s} to remote 'example6'" % p1.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example6"))
