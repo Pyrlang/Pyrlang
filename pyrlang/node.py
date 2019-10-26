@@ -460,7 +460,8 @@ class Node(BaseNode):
                                ref: Reference):
         """ Monitor a local target. """
         target_proc = self.processes_.get(target_pid, None)
-        # LOG.info("Monitor: orig=%s targ=%s -> %s", origin, target, target_proc)
+        LOG.info("Monitor: orig=%s targ=%s -> %s", origin_pid, target_pid,
+                 target_proc)
 
         if target_proc is not None:
             target_proc.add_monitored_by(pid=origin_pid, ref=ref)

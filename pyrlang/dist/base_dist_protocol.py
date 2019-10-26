@@ -196,7 +196,7 @@ class BaseDistProtocol(BaseProtocol):
         """ On incoming 'p' message with control and data, handle it.
             :raises DistributionError: when 'p' message is not a tuple
         """
-        # LOG.info("Dist t=%s; control_t=%s", msg_term, control_term)
+        LOG.debug("Dist t=%s; control_t=%s", msg_term, control_term)
 
         if type(control_term) != tuple:
             raise DistributionError("In a 'p' message control term must be a "

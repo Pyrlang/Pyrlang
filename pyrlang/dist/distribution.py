@@ -60,7 +60,7 @@ class ErlangDistribution:
         self.epmd_ = EPMDClient(engine)
 
     def connect(self) -> bool:
-        """ Looks up EPMD daemon and connects to it trying to discover other 
+        """ Looks up EPMD daemon and connects to it trying to discover other
             Erlang nodes.
         """
         while True:

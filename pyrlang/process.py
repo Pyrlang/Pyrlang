@@ -151,7 +151,7 @@ class Process(BaseProcess):
         if self.passive_:
             self.handle_one_inbox_message(msg)
         else:
-            self.inbox_.put(msg)
+            self.inbox_.put_nowait(msg)
 
     def add_link(self, pid):
         """ Links pid to this process.

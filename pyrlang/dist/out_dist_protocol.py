@@ -44,7 +44,7 @@ class OutDistProtocol(BaseDistProtocol):
 
             :param data: The packet after the header had been removed
         """
-        # LOG("Dist-out[%s]: recv %s" % (self.state_, data))
+        LOG.debug("Dist-out[%s]: recv %s" % (self.state_, data))
 
         if self.state_ == self.CONNECTED:
             return self.on_packet_connected(data)

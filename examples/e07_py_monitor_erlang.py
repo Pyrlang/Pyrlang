@@ -86,7 +86,7 @@ def main():
 
     event_engine.create_task(send_task)
     event_engine.call_later(sleep_sec, stop_task)
-    # event_engine.call_later(3 * sleep_sec, destroy_task)
+    event_engine.call_later(2 * sleep_sec, destroy_task)
     event_engine.run_forever()
 
 
