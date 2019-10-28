@@ -25,6 +25,7 @@ import asyncio
 from pyrlang2.util import as_str
 from pyrlang2.node_db import NodeDB
 from pyrlang2.process import Process
+from pyrlang2.match import Match
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
@@ -185,12 +186,23 @@ class GenServerInterface(object):
     async def _do_call(self, label, request, timeout=5):
         m_ref = self._node.monitor_process(self._calling_process.pid_,
                                            self._destination_pid)
-        print("\n\njso do call {}\n\n".format(m_ref))
         calling_pid = self._calling_process.pid_
-        msg = (label, {calling_pid, m_ref}, request)
+        msg = (label, (calling_pid, m_ref), request)
         await self._node.send(calling_pid,
                               self._destination_pid,
                               msg)
+
+        def pattern(in_msg):
+            if type(in_msg) != tuple:
+                return False
+            if len(in_msg) == 0:
+                return False
+            if in_msg[0] != m_ref:
+                return False
+            return True
+
+        match = Match([(pattern, lambda x: x[1:])])
+        return await self._calling_process.receive(match, timeout)
 
     async def call(self, request, timeout=None):
         return await self._do_call(Atom('$gen_call'), request, timeout)

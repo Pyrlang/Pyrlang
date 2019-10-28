@@ -54,6 +54,7 @@ class Process:
                 inbox and call ``self.handle_one_inbox_message`` for every
                 incoming message.
         """
+        self.state='init'
         self.passive_ = passive  # type: bool
         """ Having ``passive=True`` will only wake up this
             ``Process`` when a message arrives, to handle it, otherwise it will

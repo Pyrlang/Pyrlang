@@ -467,6 +467,7 @@ class Node:
         assert origin_pid.is_local_to(self)
         origin_p = self.where_is_process(origin_pid)
         origin_p.add_monitor(pid=target_pid, ref=ref)
+        return ref
 
     def _monitor_local_process(self, origin_pid: Pid, target_pid: Pid,
                                ref: Reference):
@@ -485,6 +486,7 @@ class Node:
         if origin_pid.is_local_to(self):
             origin_p = self.where_is_process(origin_pid)
             origin_p.add_monitor(pid=target_proc.pid_, ref=ref)
+        return ref
 
     def demonitor_process(self, origin_pid, target, ref):
         """ Locate the process ``target`` and remove the ``origin`` from its
