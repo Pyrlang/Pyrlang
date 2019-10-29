@@ -49,6 +49,19 @@ example7a: $(ROOT)/examples/e07_py_monitor_erlang.beam
 example7b:
 	$(PY) examples/e07_py_monitor_erlang.py
 
+# Run `make example8a` to run Erlang node
+# Run `make example8b` to run Python node 1
+# Run `make example8c` to run Python node 2
+# wait and se  how they interact
+.PHONY: example8a example8b example8c
+example8a: $(ROOT)/examples/e08_multiple_py_nodes.beam
+	$(ERL) -s e08_multiple_py_nodes -noshell
+example8b:
+	$(PY) examples/e08_pynode.py 'py1@127.0.0.1'
+example8c:
+	$(PY) examples/e08_pynode.py 'py2@127.0.0.1'
+
+
 # Run `make example10a` to run Python node
 # Run `make example10b` to run Elixir client
 .PHONY: example10a example10b

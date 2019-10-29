@@ -29,4 +29,13 @@ def dist_version_check(max_min: tuple) -> bool:
     """
     return max_min[0] >= DIST_VSN >= max_min[1]
 
+
+def check_valid_dist_version(max_min: tuple) -> bool:
+    """
+    Check that the version is supported
+    :param max_min: tuple(int, int
+    :return: True if ok
+    """
+    return max_min[0] <= DIST_VSN <= max_min[1]
+
 # __all__ = ['DIST_VSN', 'DIST_VSN_PAIR']

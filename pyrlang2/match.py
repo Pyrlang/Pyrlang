@@ -57,6 +57,10 @@ class Pattern(object):
         if not run_fun:
             run_fun = _simple_run
 
+        if not callable(match_fun):
+            raise AttributeError("match fun {} not callable".format(match_fun))
+        if not callable(run_fun):
+            raise AttributeError("run fun {} not callable".format(run_fun))
         self.__match_fun = match_fun
         self.__run_fun = run_fun
 

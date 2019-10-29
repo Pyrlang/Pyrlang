@@ -26,13 +26,15 @@
 
 import logging
 import traceback
+import asyncio
+
 from typing import Union
 
 from pyrlang2.process import Process
 from pyrlang2 import gen
 from pyrlang2.gen import GenIncomingMessage
 from pyrlang2.util import as_str
-from pyrlang2.match import Match
+from pyrlang2.match import Match, Pattern
 from term import Atom
 
 LOG = logging.getLogger("pyrlang.OTP")
@@ -131,6 +133,7 @@ def _atom_match_factory(atom: Atom):
 def async_wrapper_factory(fun):
     async def async_wrapper(*args, **kwargs):
         return fun(*args, **kwargs)
+    return async_wrapper
 
 
 class HandleDecorator(object):
@@ -139,14 +142,55 @@ class HandleDecorator(object):
     """
     handler_type = None
 
-    def __init__(self, pattern):
+    def __init__(self, order, pattern=None):
+        if not pattern:
+            import warnings
+            warnings.warn(DeprecationWarning("you should specify order"))
+            pattern = order
+            # high but not ensured highest this should be
+            # removed soon anyway
+            order = 999
+
+        self.order = order
         self.pattern = pattern
 
     def __call__(self, fun):
-        LOG.debug("function %s is a handle_%s", fun, self.handler_type)
+        if not asyncio.iscoroutinefunction(fun):
+            LOG.debug("function %s is a handle_%s and is not async",
+                      fun,
+                      self.handler_type)
+            fun = async_wrapper_factory(fun)
+
         fun._gen_handler = self.handler_type
-        fun._gen_pattern = self.pattern
+        run_fun = self._pattern_run_fun_factory(fun)
+        fun._gen_pattern = Pattern(self.pattern, run_fun)
+        fun._gen_order = self.order
         return fun
+
+    @staticmethod
+    def _pattern_run_fun_factory(fun):
+        """
+        Factory function for generating the run function of a pattern.
+
+        Used by `HandleDecorator`
+        :param fun: the function that should inject into the return
+        :return: function that take msg in and return (fun, msg)
+        """
+
+        def _simple_pattern_run_fun(msg):
+            return fun, msg
+
+        return _simple_pattern_run_fun
+
+
+def _handle_reply_wrapper(self, msg):
+    """
+    a wrapper function that
+    :param self:
+    :param msg:
+    :return:
+    """
+    pass
 
 
 class call(HandleDecorator):
@@ -156,6 +200,26 @@ class call(HandleDecorator):
     """
     handler_type = 'call'
 
+    @staticmethod
+    def _pattern_run_fun_factory(fun):
+
+        async def _handle_reply_wrapper(gs_instance, msg):
+            """
+            wrapper function to strip a Atom('$gen_call') message to
+            the actual message, then send a reply
+            :param msg: 3 (Atom('$gen_call'), (sender, mref), message)
+            :return: function that takes a message
+            """
+            LOG.critical("jso runfun %s, %s", fun, msg)
+            (sender, mref) = msg[1]
+            res = await fun(gs_instance, msg[2])
+            LOG.critical("jso %s", gs_instance.__dict__)
+            n = gs_instance.get_node()
+            pid = gs_instance.pid_
+            await n.send(pid, sender, (mref, res))
+
+        return lambda msg: (_handle_reply_wrapper, msg)
+
 
 class cast(HandleDecorator):
     """
@@ -163,6 +227,26 @@ class cast(HandleDecorator):
     handle_cast matching
     """
     handler_type = 'cast'
+
+    @staticmethod
+    def _pattern_run_fun_factory(fun):
+        """
+        Factory function for generating the run function of a pattern.
+
+        Used by `HandleDecorator`
+        :param fun: the function that should inject into the return
+        :return: function that take msg in and return (fun, msg)
+        """
+
+        def _simple_pattern_run_fun(msg):
+            """
+            we strip the Atom('gen_cast') from the message
+            :param msg:
+            :return:
+            """
+            return fun, msg[1]
+
+        return _simple_pattern_run_fun
 
 
 class info(HandleDecorator):
@@ -194,8 +278,6 @@ class GSM(type):
             'info': [],
         }
         for attr in nmspc.values():
-            handler_type = getattr(attr, '_gen_handler', 'none')
-            #lookup[handler_type](attr, )
             cls._maybe_add_pattern(attr, patterns)
 
         for handler_type, type_patterns in patterns.items():
@@ -206,10 +288,13 @@ class GSM(type):
             return
 
         attr_name = "_{}_match".format(handler_type)
+        type_patterns.sort(key=lambda tp: tp[0])
+        type_patterns = [tp[1] for tp in type_patterns]
         m = Match(type_patterns)
         setattr(cls, attr_name, m)
 
-    def _maybe_add_pattern(cls, attr, patterns):
+    @staticmethod
+    def _maybe_add_pattern(attr, patterns):
         """
         add functions pattern to res (no return but side effects)
         :param attr: attr that might be added
@@ -223,21 +308,12 @@ class GSM(type):
         if handler_type not in ['call', 'cast', 'info']:
             raise AttributeError("unknown handler type {}".format(handler_type))
 
+        o = attr._gen_order
         p = attr._gen_pattern
         LOG.critical("adding {} {} with pattern {}".format(handler_type,
                                                            attr,
                                                            p))
-        patterns[handler_type].append((p, lambda x: (attr, x)))
-
-    def _cast_pattern(cls, fun):
-        p = fun._gen_pattern
-        LOG.critical("adding cast {} with pattern {}".format(fun, p))
-        cls._cast_match.append((p, lambda x: (fun, x)))
-
-    def _info_pattern(cls, fun):
-        p = fun._gen_pattern
-        LOG.critical("adding info {} with pattern {}".format(fun, p))
-        cls._info_match.append((p, lambda x: (fun, x)))
+        patterns[handler_type].append((o, p))
 
 
 class GS(Process, metaclass=GSM):
@@ -285,20 +361,22 @@ class GS(Process, metaclass=GSM):
 
     def _pre_handle_call(self, msg):
         LOG.critical("\n\n_pre_handle_call: %s\n", msg)
-        p = self._call_match(msg)
+        p = self._call_match(msg[2])
         if not p:
+            LOG.critical("no matched call function found")
             return
         return p.run(msg)
 
     def _pre_handle_cast(self, msg):
         LOG.critical("\n\n_pre_handle_cast: %s\n", msg)
-        p = self._cast_match(msg)
+        p = self._cast_match(msg[1])
         if not p:
             return
         return p.run(msg)
 
     def _pre_handle_info(self, msg):
         LOG.critical("\n\n_pre_handle_info: %s\n", msg)
+        LOG.critical("jso: %s", self._info_match.__dict__)
         p = self._info_match(msg)
         if not p:
             return

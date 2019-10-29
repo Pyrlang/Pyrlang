@@ -65,7 +65,8 @@ class DistServerProtocol(BaseDistProtocol):
 
         # Read peer dist_proto version and compare to ours
         peer_max_min = (data[1], data[2])
-        if version.dist_version_check(peer_max_min):
+        #if version.dist_version_check(peer_max_min):
+        if not version.check_valid_dist_version(peer_max_min):
             self.protocol_error(
                 "Dist protocol version have: %s got: %s"
                 % (str(version.DIST_VSN_PAIR), str(peer_max_min))
