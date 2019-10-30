@@ -17,6 +17,7 @@
 import asyncio
 import logging
 import struct
+import time
 from hashlib import md5
 from typing import Union, Tuple
 
@@ -118,8 +119,7 @@ class BaseDistProtocol(asyncio.Protocol):
         self.transport_ = None  # type: [None, asyncio.Transport]
         self.unconsumed_data_ = b''
 
-        # Ping the remote periodically if our state is CONNECTED
-        self._schedule_periodic_ping_remote()
+        self._last_interaction = time.time()
 
     def destroy(self):
         if self.transport_ is not None:
@@ -129,12 +129,17 @@ class BaseDistProtocol(asyncio.Protocol):
     def connection_made(self, transport: asyncio.Transport):
         """ Connection has been accepted and established (callback).
         """
+        # Ping the remote periodically if our state is CONNECTED
+        self._schedule_periodic_ping_remote()
+        # Check that there's been some activity between the nodes
+        self._schedule_periodic_alive_check()
         sock = transport.get_extra_info('socket')
         self.transport_ = transport
         self.addr_ = sock.getpeername()
         self.state_ = self.RECV_NAME
 
     def data_received(self, data: bytes) -> None:
+        self._last_interaction = time.time()
         self.unconsumed_data_ += data
         while self._data_received_inner():
             pass  # rerun inner until we have nothing more to do
@@ -279,6 +284,8 @@ class BaseDistProtocol(asyncio.Protocol):
             self.inbox_.task_done()
 
     def _periodic_ping_remote(self):
+        if not self.transport_ or self.transport_.is_closing():
+            return
         self._schedule_periodic_ping_remote()
 
         if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
@@ -287,6 +294,20 @@ class BaseDistProtocol(asyncio.Protocol):
 
     def _schedule_periodic_ping_remote(self):
         asyncio.get_event_loop().call_later(15.0, self._periodic_ping_remote)
+
+    def _periodic_alive_check(self):
+        if not self.transport_ or self.transport_.is_closing():
+            return
+        self._schedule_periodic_alive_check()
+        t = time.time() - self._last_interaction
+        LOG.debug("last interaction for dist com with %s was %ss ago",
+                  self.peer_name_,
+                  t)
+        if t > 30:
+            self.destroy()
+
+    def _schedule_periodic_alive_check(self):
+        asyncio.get_event_loop().call_later(20, self._periodic_alive_check)
 
     def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
@@ -371,9 +392,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
     def on_packet_connected(self, data: bytes) -> bytes:
         """ Handle incoming dist packets in the connected state. """
-        # TODO: Update timeout timer, that we have connectivity still
         if data == b'':
-            self._send_packet4(b'')
             return b''  # this was a keepalive
 
         msg_type = chr(data[0])
