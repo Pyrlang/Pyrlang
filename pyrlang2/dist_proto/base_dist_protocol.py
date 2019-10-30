@@ -289,7 +289,7 @@ class BaseDistProtocol(asyncio.Protocol):
         self._schedule_periodic_ping_remote()
 
         if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
-            LOG.debug("sending periodic ping")
+            LOG.debug("sending periodic ping for %s", self)
             self._send_packet4(b'')
 
     def _schedule_periodic_ping_remote(self):

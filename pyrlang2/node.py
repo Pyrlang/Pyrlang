@@ -303,7 +303,7 @@ class Node:
 
     async def _send_remote(self, sender, dst_node: str, receiver,
                            message) -> None:
-        # LOG.debug("send_remote to %s <- %s" % (receiver, message))
+        LOG.debug("send_remote to %s <- %s" % (receiver, message))
         m = ('send', sender, receiver, message)
         return await self.dist_command(receiver_node=dst_node,
                                        message=m)
@@ -347,7 +347,7 @@ class Node:
                 if self.is_exiting_:
                     return
 
-            LOG.info("Connected")
+            LOG.info("Connected to %s", receiver_node)
 
         conn = self.dist_nodes_.get(receiver_node, None)
         if conn is None:

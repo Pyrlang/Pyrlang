@@ -25,6 +25,7 @@ class Server(GS):
         n = self.get_node()
         n.register_name(self, Atom('pysrv'))
         n.send_nowait(mypid, mypid, "register")
+        self.other_pid = None
 
     @call(100, lambda msg: True)
     def handle_call(self, msg):
@@ -36,13 +37,20 @@ class Server(GS):
         LOG.info("got who are you question")
         return self.get_node().node_name_
 
-    @cast(1, lambda msg: type(msg) == tuple and msg[0] == Atom("other_py_node"))
-    async def call_other_py_node(self, msg):
-        other = msg[1]
-        LOG.info("got the other py nodes pid %s", other)
-        gsi = GenServerInterface(self, other)
+    @call(2, lambda msg: msg == Atom('who_is_the_other_one'))
+    async def names_do_not_matter(self, msg):
+        if not self.other_pid:
+            return "don't know yet"
+        gsi = GenServerInterface(self, self.other_pid)
         res = await gsi.call(Atom('who_are_you'))
         LOG.info("got response for who are you %s", res)
+        return "The other one is", res
+
+    @cast(1, lambda msg: type(msg) == tuple and msg[0] == Atom("other_py_node"))
+    def call_other_py_node(self, msg):
+        other = msg[1]
+        LOG.info("got the other py nodes pid %s", other)
+        self.other_pid = other
 
     @cast(100, lambda msg: True)
     def handle_cast(self, msg):
@@ -68,6 +76,7 @@ def init_server():
 def init(name):
     ee = asyncio.get_event_loop()
     n = Node(node_name=name, cookie="COOKIE")
+    ee.call_soon(init_server)
     return ee, n
 
 
@@ -75,7 +84,6 @@ def main():
     import sys
     name = sys.argv[1]
     e, n = init(name)
-    e.call_soon(init_server)
     e.run_forever()
 
 

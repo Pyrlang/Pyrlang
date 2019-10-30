@@ -27,17 +27,16 @@ test_loop(Py1, Py2) when is_pid(Py1), is_pid(Py2) ->
     io:format("both py nodes registered, time for next step~n"),
     io:format("casting py server pids to one another~n"),
     gen_server:cast(Py1, {other_py_node, Py2}),
-    % it doesn't work if we try to connect both at the same time
-    % probably need to implement the backof of node 2 as the handshake
-    % is being done
-    % gen_server:cast(Py2, {other_py_node, Py1}),
+    gen_server:cast(Py2, {other_py_node, Py1}),
     io:format("calling the 2 pynodes to get response"),
     R1 = gen_server:call(Py1, who_are_you),
     io:format("response from py1 ~p~n", [R1]),
     R2 = gen_server:call(Py2, who_are_you),
     io:format("response from py2 ~p~n", [R2]),
-    % This one works though
-    gen_server:cast(Py2, {other_py_node, Py1}),
+    R11 = gen_server:call(Py1, who_is_the_other_one),
+    io:format("response from py1 ~p~n", [R11]),
+    R12 = gen_server:call(Py2, who_is_the_other_one),
+    io:format("response from py2 ~p~n", [R12]),
     ok;
 test_loop(Py1, Py2) ->
     receive
