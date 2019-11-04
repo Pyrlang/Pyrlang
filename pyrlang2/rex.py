@@ -14,71 +14,53 @@
 import logging
 import traceback
 
-from pyrlang2 import gen
-from pyrlang2.process import Process
+from pyrlang2.gen_server import GS, call, cast, info
 from term.atom import Atom
 
 LOG = logging.getLogger(__name__)
 
 
-class Rex(Process):
-    """ Remote executor for RPC calls. Registers itself under the name ``rex``
-        and accepts RPC call messages.
-        Erlang ``rpc:call`` sends a ``$gen_call`` styled message to the
-        registered name ``rex`` on the remote node which we parse and attempt
-        to execute.
+class Rex(GS):
+    def __init__(self):
+        super().__init__()
+        self.get_node().register_name(self, Atom('rex'))
 
-        .. seealso::
-            :py:mod:`~Pyrlang.gen` module documentation and
-            :py:func:`~Pyrlang.gen.parse_gen_call` function
-    """
-
-    def __init__(self) -> None:
-        """ :param node: pyrlang2.node.Node
-        """
-        Process.__init__(self)
-        self.node_db.get(self.node_name_).register_name(self, Atom('rex'))
-
-        self.traceback_depth_ = 5
-        """ This being non-zero enables formatting exception tracebacks with the
-            given depth. Traceback is attached as a 'traceback' field in the
-            exception, that is sent to the caller. Default: 5
-        """
-
-    def handle_one_inbox_message(self, msg) -> None:
-        """ Function overrides
-            :py:meth:`~Pyrlang.process.Process.handle_one_inbox_message`
-            and expects a ``$gen_call`` styled message.
-            The result or exception are delivered back to the sender via
-            message passing.
-
-            :param msg: A tuple with Atom ``$gen_call`` as the first element
-            :rtype: None
-        """
-        gencall = gen.parse_gen_call(msg, node_name=self.node_name_)
-        if isinstance(gencall, str):
-            LOG.debug("REX: %s", gencall)
+    @call(1, lambda msg: True)
+    def handle_call(self, msg):
+        if type(msg) != tuple or len(msg) != 5 or msg[0] != Atom('call'):
+            LOG.error("rex unknown call msg: %s", msg)
             return
+        return act_on_msg(msg)
 
-        # Find and run the thing
-        try:
-            pmod = __import__(gencall.mod_, fromlist=[''])
-            pfun = getattr(pmod, gencall.fun_)
-            args = gencall.args_
-            # Call the thing
-            val = pfun(*args)
+    @cast(1, lambda msg: True)
+    def handle_cast(self, msg):
+        if type(msg) != tuple or len(msg) != 5 or msg[0] != Atom('cast'):
+            LOG.error("rex unknown cast msg: %s", msg)
+            return
+        act_on_msg(msg)
 
-            # Send a reply
-            gencall.reply(local_pid=self.pid_,
-                          result=val)
+    @info(1, lambda msg: True)
+    def handle_info(self, msg):
+        LOG.error("rex unhandled info msg: %s", msg)
 
-        except Exception as excpt:
-            # Send an error
-            if self.traceback_depth_ > 0:
-                excpt.traceback = traceback.format_exc(self.traceback_depth_)
 
-            gencall.reply_exit(local_pid=self.pid_,
-                               reason=excpt)
+def act_on_msg(msg):
+    mod = msg[1]
+    fun = msg[2]
+    args = msg[3]
+    return execute(mod, fun, args)
 
+
+def execute(mod, fun, args, traceback_depth=5):
+    try:
+        pmod = __import__(mod)
+        pfun = getattr(pmod, fun)
+        return pfun(*args)
+    except Exception as e:
+        if traceback_depth > 0:
+            e.traceback = traceback.format_exc(traceback_depth)
+        LOG.exception("got and exception when executing RPC call %s.%s(*%s)",
+                      mod, fun, args)
+        return e
 
 __all__ = ['Rex']

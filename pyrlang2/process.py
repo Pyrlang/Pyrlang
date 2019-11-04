@@ -109,6 +109,10 @@ class Process:
             event_loop.create_task(self.process_loop())
             event_loop.create_task(self.handle_signals())
 
+    def __etf__(self):
+        """allow process objects to be put into messages to erlang"""
+        return self.pid_
+
     async def process_loop(self):
         """ Polls inbox in an endless loop.
             .. note::
@@ -147,7 +151,7 @@ class Process:
             raise ValueError("temporary inbox not empty")
         while True:
             msg = await self.inbox_.get()
-            LOG.critical("\n\ngot inbox {}, {}".format(self, match))
+            LOG.debug("\n\ngot inbox {}, {}, {}".format(self, match, msg))
             matched_pattern = match(msg)
             if not matched_pattern:
                 self.__tmp_inbox.put_nowait(msg)
@@ -256,9 +260,9 @@ class Process:
                         Atom("process"),
                         self.pid_,
                         reason)
-            node.send(sender=self.pid_,
-                      receiver=monitor_owner,
-                      message=down_msg)
+            node.send_nowait(sender=self.pid_,
+                             receiver=monitor_owner,
+                             message=down_msg)
 
     def _trigger_links(self, reason):
         """ Pass any exit reason other than 'normal' to linked processes.

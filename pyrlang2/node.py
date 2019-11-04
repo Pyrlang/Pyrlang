@@ -355,7 +355,7 @@ class Node:
         else:
             conn.inbox_.put_nowait(message)
 
-    def link_cast(self, pid1, pid2, local_only=False):
+    def link_nowait(self, pid1, pid2, local_only=False):
         """ unsafe casting of link
 
             you can't assume it has got effect when this function returns

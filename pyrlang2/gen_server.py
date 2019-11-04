@@ -210,10 +210,8 @@ class call(HandleDecorator):
             :param msg: 3 (Atom('$gen_call'), (sender, mref), message)
             :return: function that takes a message
             """
-            LOG.critical("jso runfun %s, %s", fun, msg)
             (sender, mref) = msg[1]
             res = await fun(gs_instance, msg[2])
-            LOG.critical("jso %s", gs_instance.__dict__)
             n = gs_instance.get_node()
             pid = gs_instance.pid_
             await n.send(pid, sender, (mref, res))
@@ -266,8 +264,6 @@ class GSM(type):
     """
     def __init__(cls, name, bases, nmspc):
         super().__init__(name, bases, nmspc)
-        LOG.critical("cls = %s", cls)
-        LOG.critical("\n\n\n")
         p_list = [(lambda x: False, lambda x: None)]
         cls._call_match = Match(p_list)
         cls._cast_match = Match(p_list)
@@ -310,9 +306,9 @@ class GSM(type):
 
         o = attr._gen_order
         p = attr._gen_pattern
-        LOG.critical("adding {} {} with pattern {}".format(handler_type,
-                                                           attr,
-                                                           p))
+        LOG.debug("adding {} {} with pattern {}".format(handler_type,
+                                                        attr,
+                                                        p))
         patterns[handler_type].append((o, p))
 
 
@@ -321,11 +317,30 @@ class GS(Process, metaclass=GSM):
         self.state = 'init'
         super().__init__()
 
+        self.__timeout_coro = None
+
         call_match = _atom_match_factory(Atom('$gen_call'))
         cast_match = _atom_match_factory(Atom('$gen_cast'))
         self._match = Match([(call_match, self._pre_handle_call),
                              (cast_match, self._pre_handle_cast),
                              (lambda x: True, self._pre_handle_info)])
+
+    def _timeout(self):
+        """Internal function see `timeout`"""
+        self.inbox_.put_nowait(Atom('timeout'))
+
+    def timeout(self, seconds=None):
+        """
+        set the gen_server timeout, will generate inbox `Atom('timeout')`
+        :param seconds:
+        :return:
+        """
+        if self.__timeout_coro:
+            self.__timeout_coro.cancel()
+        if seconds is None:
+            return
+        e = asyncio.get_running_loop()
+        self.__timeout_coro = e.call_later(seconds, self._timeout)
 
     async def process_loop(self):
         """ Polls inbox in an endless loop.
@@ -338,10 +353,10 @@ class GS(Process, metaclass=GSM):
         while not self.is_exiting_:
             # If any messages have been handled recently, do not sleep
             # Else if no messages, sleep for some short time
-            LOG.critical("jso: waiting for inbox data")
+            LOG.debug("jso: waiting for inbox data")
             msg = await self.receive()
             if type(msg) != tuple or len(msg) != 2:
-                LOG.critical("Got unhandled msg: %s", msg)
+                LOG.debug("Got unhandled msg: %s", msg)
                 continue
             LOG.debug("got msg =  %s", msg)
             fun, args = msg
@@ -360,23 +375,19 @@ class GS(Process, metaclass=GSM):
         self.state = 'exiting'
 
     def _pre_handle_call(self, msg):
-        LOG.critical("\n\n_pre_handle_call: %s\n", msg)
         p = self._call_match(msg[2])
         if not p:
-            LOG.critical("no matched call function found")
+            LOG.debug("no matched call function found for %s", self)
             return
         return p.run(msg)
 
     def _pre_handle_cast(self, msg):
-        LOG.critical("\n\n_pre_handle_cast: %s\n", msg)
         p = self._cast_match(msg[1])
         if not p:
             return
         return p.run(msg)
 
     def _pre_handle_info(self, msg):
-        LOG.critical("\n\n_pre_handle_info: %s\n", msg)
-        LOG.critical("jso: %s", self._info_match.__dict__)
         p = self._info_match(msg)
         if not p:
             return

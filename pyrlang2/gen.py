@@ -184,9 +184,9 @@ class GenServerInterface(object):
         self._node = calling_process.get_node()
 
     async def _do_call(self, label, request, timeout=5):
-        m_ref = self._node.monitor_process(self._calling_process.pid_,
-                                           self._destination_pid)
         calling_pid = self._calling_process.pid_
+        m_ref = self._node.monitor_process(calling_pid,
+                                           self._destination_pid)
         msg = (label, (calling_pid, m_ref), request)
         await self._node.send(calling_pid,
                               self._destination_pid,
@@ -195,17 +195,27 @@ class GenServerInterface(object):
         def pattern(in_msg):
             if type(in_msg) != tuple:
                 return False
-            if len(in_msg) == 0:
+            if len(in_msg) != 2:
                 return False
             if in_msg[0] != m_ref:
                 return False
             return True
 
-        match = Match([(pattern, lambda x: x[1:])])
-        return await self._calling_process.receive(match, timeout)
+        match = Match([(pattern, lambda x: x[1])])
+        res = await self._calling_process.receive(match, timeout)
+        self._node.demonitor_process(calling_pid, self._destination_pid, m_ref)
+        return res
 
     async def call(self, request, timeout=None):
         return await self._do_call(Atom('$gen_call'), request, timeout)
+
+    async def cast(self, request):
+        calling_pid = self._calling_process.pid_
+        msg = (Atom('$gen_cast'), request)
+        await self._node.send(calling_pid, self._destination_pid, msg)
+
+    def cast_nowait(self, request):
+        asyncio.get_running_loop().create_task(self.cast(request))
 
 
 __all__ = ['GenIncomingCall', 'GenIncomingMessage',
