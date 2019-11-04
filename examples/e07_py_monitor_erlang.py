@@ -21,8 +21,8 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class MonitorExample7(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
+    def __init__(self) -> None:
+        Process.__init__(self)
 
     def handle_one_inbox_message(self, msg):
         #
@@ -58,7 +58,7 @@ def main():
     #   command. This will spawn an Erlang process and tell us the pid.
     #   Reply from Erlang node will trigger next steps above in ExampleProcess6
     #
-    proc = MonitorExample7(node)
+    proc = MonitorExample7()
 
     LOG.info("Sending {example7, test_monitor, %s} to remote 'example7'" % proc.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example7"))

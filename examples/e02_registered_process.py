@@ -26,9 +26,9 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class MyProcess(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
-        node.register_name(self, Atom('my_process'))  # optional
+    def __init__(self) -> None:
+        Process.__init__(self)
+        self.get_node().register_name(self, Atom('my_process'))  # optional
         LOG.info("Registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
@@ -37,8 +37,8 @@ class MyProcess(Process):
 
 def main():
     event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
-    MyProcess(node)
+    Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    MyProcess()
     event_engine.run_forever()
 
 

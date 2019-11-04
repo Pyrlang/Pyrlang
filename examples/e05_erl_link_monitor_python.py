@@ -21,8 +21,8 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 
 class TestLinkProcess(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
+    def __init__(self) -> None:
+        Process.__init__(self)
 
     def handle_one_inbox_message(self, msg):
         LOG.info("TestLinkProcess: Incoming %s", msg)
@@ -36,7 +36,7 @@ class TestLinkProcess(Process):
         #   Send pid of P2 to remote process example5 and it will monitor P3 and
         #   then will send an exit signal.
         #
-        p2 = TestMonitorProcess(node)
+        p2 = TestMonitorProcess()
         LOG.info("Sending {example5, test_monitor, %s} to remote 'example5'" % p2.pid_)
         node.send(sender=p2.pid_, receiver=remote_receiver_name(),
                   message=(Atom("example5"), Atom("test_monitor"), p2.pid_))
@@ -45,8 +45,8 @@ class TestLinkProcess(Process):
 
 
 class TestMonitorProcess(Process):
-    def __init__(self, node) -> None:
-        Process.__init__(self, node_name=node.node_name_)
+    def __init__(self) -> None:
+        Process.__init__(self)
 
     def handle_one_inbox_message(self, msg):
         LOG.info("TestMonitorProcess: Incoming %s", msg)
@@ -78,7 +78,7 @@ def main():
     #   command, it will link remotely and try to kill us and observe the
     #   results (exit signal will be returned to Erlang).
     #
-    p1 = TestLinkProcess(node)
+    p1 = TestLinkProcess()
     LOG.info("Sending {example5, test_link, %s} to remote 'example5'" % p1.pid_)
     node.send(sender=p1.pid_, receiver=remote_receiver_name(),
               message=(Atom("example5"), Atom("test_link"), p1.pid_))
