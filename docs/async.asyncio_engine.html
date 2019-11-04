@@ -4,26 +4,16 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>async.asyncio_engine module &#8212; Pyrlang 1.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="async.gevent_engine module" href="async.gevent_engine.html" />
@@ -31,18 +21,14 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="module-pyrlang.async_support.asyncio_engine">
@@ -50,21 +36,22 @@
 <dl class="class">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine">
 <em class="property">class </em><code class="descclassname">pyrlang.async_support.asyncio_engine.</code><code class="descname">AsyncioEngine</code><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseEngine" title="pyrlang.async_support.base_engine.BaseEngine"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async_support.base_engine.BaseEngine</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseEngine" title="pyrlang.async_support.base_engine.BaseEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.async_support.base_engine.BaseEngine</span></code></a></p>
 <p>Compatibility driver for Asyncio.
 Create it before creating Node and pass as argument 'engine' like so:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">e</span> <span class="o">=</span> <span class="n">AsyncioEngine</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">e</span> <span class="o">=</span> <span class="n">AsyncioEngine</span><span class="p">()</span>
 <span class="n">node</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;py@127.0.0.1&quot;</span><span class="p">,</span> <span class="n">cookie</span><span class="o">=</span><span class="s2">&quot;COOKIE&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.call_later">
 <code class="descname">call_later</code><span class="sig-paren">(</span><em>t: float</em>, <em>fn</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.call_later" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Schedules fn to be called after sleep(t).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.connect_with">
-<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'pyrlang.async_support.base_protocol.BaseProtocol'&gt;, &lt;class 'socket.socket'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.connect_with" title="Permalink to this definition">¶</a></dt>
+<code class="descname">connect_with</code><span class="sig-paren">(</span><em>protocol_class: Type[pyrlang.async_support.base_protocol.BaseProtocol], host_port: tuple, protocol_args: list, protocol_kwargs: dict) -&gt; (&lt;class 'pyrlang.async_support.base_protocol.BaseProtocol'&gt;, &lt;class 'socket.socket'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.connect_with" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper which creates a new connection and feeds the data stream into
 a protocol handler class.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -94,8 +81,10 @@ on_connected, consume, and on_connection_lost</li>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.listen_with">
-<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: typing.Type[pyrlang.async_support.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.listen_with" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">listen_with</code><span class="sig-paren">(</span><em>protocol_class: Type[pyrlang.async_support.base_protocol.BaseProtocol], protocol_args: list, protocol_kwargs: dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.listen_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawns a task which would listen on a random port with a given
+BaseProtocol handler</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.queue_new">
@@ -106,17 +95,24 @@ on_connected, consume, and on_connection_lost</li>
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.run_forever">
 <code class="descname">run_forever</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.run_forever" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Continues running event loop forever.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.sleep">
 <code class="descname">sleep</code><span class="sig-paren">(</span><em>seconds: float</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.sleep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Sleeps given amount of seconds in a nice compatible way.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.socket_module">
 <code class="descname">socket_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioEngine.socket_module" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns current socket module (modified to be compatible with the
+current async library). Used functions are:
+*   socket.create_connection
+*   socket.error (Exception class)
+*   socket.gethostbyname</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioEngine.spawn">
@@ -130,7 +126,7 @@ returns False, else will stop.</p>
 <dl class="class">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioQueue">
 <em class="property">class </em><code class="descclassname">pyrlang.async_support.asyncio_engine.</code><code class="descname">AsyncioQueue</code><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioQueue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseQueue" title="pyrlang.async_support.base_engine.BaseQueue"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.async_support.base_engine.BaseQueue</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="async.base_engine.html#pyrlang.async_support.base_engine.BaseQueue" title="pyrlang.async_support.base_engine.BaseQueue"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.async_support.base_engine.BaseQueue</span></code></a></p>
 <dl class="method">
 <dt id="pyrlang.async_support.asyncio_engine.AsyncioQueue.get">
 <code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.async_support.asyncio_engine.AsyncioQueue.get" title="Permalink to this definition">¶</a></dt>
@@ -153,7 +149,6 @@ returns False, else will stop.</p>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -162,6 +157,49 @@ returns False, else will stop.</p>
     <a class="toc-return"
        href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
 </div>
+
+
+<h1 class="logo"><a href="index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">process module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen_server.html">gen_server module - Handling gen:calls nicely</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.util.html">util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_engine.html">async.base_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_protocol.html">async.base_protocol module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">async.asyncio_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.gevent_engine.html">async.gevent_engine module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dist.distribution.html">dist.distribution module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.epmd.html">dist.epmd module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.distflags.html">dist.distflags module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.in_dist_protocol.html">dist.in_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.out_dist_protocol.html">dist.out_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.base_dist_protocol.html">dist.base_dist_protocol module</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
@@ -172,21 +210,16 @@ returns False, else will stop.</p>
   </ul></li>
 </ul>
 </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/async.asyncio_engine.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -197,8 +230,8 @@ returns False, else will stop.</p>
       &copy;2017, Erlang Solutions Ltd..
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/async.asyncio_engine.rst.txt"

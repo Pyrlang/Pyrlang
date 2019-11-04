@@ -181,8 +181,8 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 .. code-block:: python
 
     class MyProcess(Process):
-        def __init__(self, node) -> None:
-            Process.__init__(self, node)
+        def __init__(self) -> None:
+            Process.__init__(self)
             node.register_name(self, Atom('my_process'))  # optional
 
         def handle_one_inbox_message(self, msg):
@@ -255,8 +255,8 @@ and their result will be transparently 'replied' back to the caller.
 .. code-block:: python
 
     class MyProcess(GenServer):
-        def __init__(self, node) -> None:
-            GenServer.__init__(self, node, accepted_calls=['hello'])
+        def __init__(self) -> None:
+            GenServer.__init__(self, accepted_calls=['hello'])
 
         def hello(self):
             return self.pid_
