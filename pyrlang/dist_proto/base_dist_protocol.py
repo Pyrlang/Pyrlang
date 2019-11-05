@@ -21,8 +21,8 @@ import time
 from hashlib import md5
 from typing import Union, Tuple
 
-from pyrlang2.node_db import NodeDB
-from pyrlang2.errors import DistributionError
+from pyrlang.node_db import NodeDB
+from pyrlang.errors import DistributionError
 from term import codec
 from term import util
 from term.atom import Atom
@@ -244,7 +244,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
-            from pyrlang2.errors import ProcessNotFoundError
+            from pyrlang.errors import ProcessNotFoundError
             try:
                 return n.monitor_process(origin_pid=sender,
                                          target=target,
@@ -254,7 +254,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         elif ctrl_msg_type == CONTROL_TERM_DEMONITOR_P:
             (_, sender, target, ref) = control_term
-            from pyrlang2.errors import ProcessNotFoundError
+            from pyrlang.errors import ProcessNotFoundError
             try:
                 return n.demonitor_process(origin_pid=sender, target=target,
                                            ref=ref)

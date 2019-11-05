@@ -17,8 +17,8 @@ import asyncio
 import logging
 
 from term import Atom
-from pyrlang2.node import Node
-from pyrlang2.process import Process
+from pyrlang.node import Node
+from pyrlang.process import Process
 # from pyrlang import GeventEngine as Engine
 from pyrlang import AsyncioEngine as Engine
 from colors import color

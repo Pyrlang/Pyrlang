@@ -14,7 +14,7 @@ import logging
 
 from colors import color
 
-from pyrlang2.node import Node
+from pyrlang.node import Node
 from term import Atom
 
 LOG = logging.getLogger(color("EXAMPLE1", fg='lime'))

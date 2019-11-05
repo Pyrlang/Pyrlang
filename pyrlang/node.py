@@ -15,13 +15,13 @@ import asyncio
 import logging
 from typing import Dict, Set
 
-from pyrlang2.dist_proto import DistributionFlags, ErlangDistribution
-from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
-from pyrlang2.net_kernel import NetKernel
-from pyrlang2.errors import BadArgError, NodeException, ProcessNotFoundError
-from pyrlang2.node_db import NodeDB
-from pyrlang2.process import Process
-from pyrlang2.rex import Rex
+from pyrlang.dist_proto import DistributionFlags, ErlangDistribution
+from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol
+from pyrlang.net_kernel import NetKernel
+from pyrlang.errors import BadArgError, NodeException, ProcessNotFoundError
+from pyrlang.node_db import NodeDB
+from pyrlang.process import Process
+from pyrlang.rex import Rex
 from term import Pid, Atom, Reference
 
 LOG = logging.getLogger(__name__)

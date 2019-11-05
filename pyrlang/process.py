@@ -15,9 +15,9 @@ import asyncio
 import logging
 from typing import Set, Dict, List, Tuple, Any
 
-from pyrlang2.node_db import NodeDB
-from pyrlang2.match import Match
-from pyrlang2 import errors
+from pyrlang.node_db import NodeDB
+from pyrlang.match import Match
+from pyrlang import errors
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference
@@ -210,14 +210,14 @@ class Process:
 
     def add_link(self, pid):
         """ Links pid to this process.
-            Please use Node method :py:meth:`~pyrlang2.node.Node.link` for proper
+            Please use Node method :py:meth:`~pyrlang.node.Node.link` for proper
             linking.
         """
         self._links.add(pid)
 
     def remove_link(self, pid):
         """ Unlinks pid from this process.
-            Please use Node method :py:meth:`~pyrlang2.node.Node.unlink` for
+            Please use Node method :py:meth:`~pyrlang.node.Node.unlink` for
             proper unlinking.
         """
         self._links.remove(pid)
@@ -284,19 +284,19 @@ class Process:
 
     def add_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's
-            :py:meth:`~pyrlang2.node.Node.monitor_process`.
+            :py:meth:`~pyrlang.node.Node.monitor_process`.
         """
         self._monitors[ref] = pid
 
     def add_monitored_by(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's
-            :py:meth:`~pyrlang2.node.Node.monitor_process`.
+            :py:meth:`~pyrlang.node.Node.monitor_process`.
         """
         self._monitored_by[ref] = pid
 
     def remove_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To demonitor a process please use Node's
-            :py:meth:`~pyrlang2.node.Node.demonitor_process`.
+            :py:meth:`~pyrlang.node.Node.demonitor_process`.
         """
         existing = self._monitors.get(ref, None)
         if existing == pid:
@@ -304,7 +304,7 @@ class Process:
 
     def remove_monitored_by(self, pid: Pid, ref: Reference):
         """ Helper function. To demonitor a process please use Node's
-            :py:meth:`~pyrlang2.node.Node.demonitor_process`.
+            :py:meth:`~pyrlang.node.Node.demonitor_process`.
         """
         existing = self._monitored_by.get(ref, None)
         if existing == pid:

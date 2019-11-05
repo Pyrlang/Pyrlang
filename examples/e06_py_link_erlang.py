@@ -11,8 +11,8 @@ import logging
 import asyncio
 
 from term import Atom
-from pyrlang2.node import Node
-from pyrlang2.process import Process
+from pyrlang.node import Node
+from pyrlang.process import Process
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE6", fg='lime'))

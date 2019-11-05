@@ -14,7 +14,7 @@
 import logging
 import traceback
 
-from pyrlang2.gen_server import GS, call, cast, info
+from pyrlang.gen_server import GS, call, cast, info
 from term.atom import Atom
 
 LOG = logging.getLogger(__name__)

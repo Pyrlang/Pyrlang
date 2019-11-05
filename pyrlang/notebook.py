@@ -14,8 +14,8 @@
 import logging
 from typing import Callable, List, Tuple, Dict
 
-from pyrlang2.gen_server import GenServer
-from pyrlang2.util import as_str
+from pyrlang.gen_server import GenServer
+from pyrlang.util import as_str
 from term.atom import Atom
 from term.pid import Pid
 

@@ -14,7 +14,7 @@
 
 import logging
 
-from pyrlang2.gen_server import GenServer
+from pyrlang.gen_server import GenServer
 from term.atom import Atom
 
 LOG = logging.getLogger("pyrlang")
@@ -26,7 +26,7 @@ class NetKernel(GenServer):
     """
 
     def __init__(self) -> None:
-        """ :param node: pyrlang2.node.Node
+        """ :param node: pyrlang.node.Node
         """
         GenServer.__init__(self,
                            accepted_calls=['is_auth'])

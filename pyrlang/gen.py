@@ -22,10 +22,10 @@
 """
 import asyncio
 
-from pyrlang2.util import as_str
-from pyrlang2.node_db import NodeDB
-from pyrlang2.process import Process
-from pyrlang2.match import Match
+from pyrlang.util import as_str
+from pyrlang.node_db import NodeDB
+from pyrlang.process import Process
+from pyrlang.match import Match
 from term.atom import Atom
 from term.pid import Pid
 from term.reference import Reference

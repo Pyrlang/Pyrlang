@@ -17,9 +17,9 @@
 import asyncio
 import logging
 
-import pyrlang2
-from pyrlang2.dist_proto import DistClientProtocol
-from pyrlang2.dist_proto.epmd_client import EPMDClient
+import pyrlang
+from pyrlang.dist_proto import DistClientProtocol
+from pyrlang.dist_proto.epmd_client import EPMDClient
 
 LOG = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class ErlangDistribution:
         # Create handler using make_handler_in helper
         # proto_kwargs = {"node_name": node_name}
 
-        from pyrlang2.dist_proto.server import DistServerProtocol
+        from pyrlang.dist_proto.server import DistServerProtocol
         self.in_srv_ = await asyncio.get_event_loop().create_server(
             host='0.0.0.0',
             port=0,

@@ -30,11 +30,11 @@ import asyncio
 
 from typing import Union
 
-from pyrlang2.process import Process
-from pyrlang2 import gen
-from pyrlang2.gen import GenIncomingMessage
-from pyrlang2.util import as_str
-from pyrlang2.match import Match, Pattern
+from pyrlang.process import Process
+from pyrlang import gen
+from pyrlang.gen import GenIncomingMessage
+from pyrlang.util import as_str
+from pyrlang.match import Match, Pattern
 from term import Atom
 
 LOG = logging.getLogger("pyrlang.OTP")

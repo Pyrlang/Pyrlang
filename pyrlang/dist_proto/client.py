@@ -19,8 +19,8 @@ import asyncio
 import logging
 import random
 
-from pyrlang2.dist_proto import version
-from pyrlang2.dist_proto.base_dist_protocol import BaseDistProtocol
+from pyrlang.dist_proto import version
+from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol
 from term import util
 
 LOG = logging.getLogger(__name__)

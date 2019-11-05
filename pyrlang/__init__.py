@@ -11,12 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pyrlang.util import start_pyrlang
+from pyrlang.node import Node
 
-from pyrlang2.dist_proto.client import DistClientProtocol
-from pyrlang2.dist_proto.distribution import ErlangDistribution
-# from pyrlang2.dist_proto.epmd_client import EPMDClient
-from pyrlang2.dist_proto.flags import DistributionFlags
-from pyrlang2.dist_proto.server import DistServerProtocol
-
-__all__ = ['ErlangDistribution', 'DistServerProtocol',
-           'DistClientProtocol', 'DistributionFlags']
+start_pyrlang()

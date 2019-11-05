@@ -2,9 +2,9 @@
 # then wait and let the erlang part do it's job
 
 import asyncio
-from pyrlang2.node import Node
-from pyrlang2.gen import GenServerInterface
-from pyrlang2.gen_server import GS, call, cast, info
+from pyrlang.node import Node
+from pyrlang.gen import GenServerInterface
+from pyrlang.gen_server import GS, call, cast, info
 
 from term import Atom
 

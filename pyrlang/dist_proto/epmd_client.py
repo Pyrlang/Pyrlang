@@ -23,8 +23,8 @@ import struct
 import sys
 from typing import Tuple
 
-from pyrlang2.dist_proto import version
-from pyrlang2.errors import EPMDClientError, EPMDConnectionError
+from pyrlang.dist_proto import version
+from pyrlang.errors import EPMDClientError, EPMDConnectionError
 from term import util
 
 LOG = logging.getLogger(__name__)
