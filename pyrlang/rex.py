@@ -14,13 +14,14 @@
 import logging
 import traceback
 
-from pyrlang.gen_server import GS, call, cast, info
+from pyrlang.gen.server import GenServer
+from pyrlang.gen.decorators import call, cast, info
 from term.atom import Atom
 
 LOG = logging.getLogger(__name__)
 
 
-class Rex(GS):
+class Rex(GenServer):
     def __init__(self):
         super().__init__()
         self.get_node().register_name(self, Atom('rex'))
@@ -53,13 +54,14 @@ def act_on_msg(msg):
 
 def execute(mod, fun, args, traceback_depth=5):
     try:
-        pmod = __import__(mod)
+        # we use fromlist so we get the deepest module back
+        pmod = __import__(mod, fromlist=['no_use'])
         pfun = getattr(pmod, fun)
         return pfun(*args)
     except Exception as e:
         if traceback_depth > 0:
             e.traceback = traceback.format_exc(traceback_depth)
-        LOG.exception("got and exception when executing RPC call %s.%s(*%s)",
+        LOG.exception("got an exception when executing RPC call %s.%s(*%s)",
                       mod, fun, args)
         return e
 

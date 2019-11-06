@@ -30,7 +30,7 @@ class LinkExample6(Process):
         if isinstance(msg, tuple) and msg[0] == Atom("test_link"):
             LOG.info("LinkExample6: Linking to %s and killing", msg)
             n = self.get_node()
-            n.link_cast(self.pid_, msg[1])
+            n.link_nowait(self.pid_, msg[1])
 
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
@@ -46,6 +46,7 @@ class LinkExample6(Process):
         LOG.info("LinkExample6: Received EXIT(%s)" % reason)
         Process.exit(self, reason)
 
+
 def main():
     event_engine = asyncio.get_event_loop()
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
@@ -60,11 +61,11 @@ def main():
 
     LOG.info("Sending {example6, test_link, %s} to remote 'example6'" % p1.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example6"))
-    send_task = lambda: node.send(sender=p1.pid_,
-                                  receiver=remote_receiver_name,
-                                  message=(Atom("example6"),
-                                           Atom("test_link"),
-                                           p1.pid_))
+
+    def send_task():
+        node.send_nowait(sender=p1.pid_,
+                         receiver=remote_receiver_name,
+                         message=(Atom("example6"), Atom("test_link"), p1.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)
@@ -74,9 +75,9 @@ def main():
     #
     def task_sleep1():
         LOG.info(color("Stopping remote loop", fg="red"))
-        node.send(sender=p1.pid_,
-                  receiver=remote_receiver_name,
-                  message=(Atom("example6"), Atom("stop")))
+        node.send_nowait(sender=p1.pid_,
+                         receiver=remote_receiver_name,
+                         message=(Atom("example6"), Atom("stop")))
 
     def task_sleep2():
         node.destroy()

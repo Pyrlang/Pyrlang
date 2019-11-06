@@ -60,7 +60,7 @@ new_context(Node) -> new_context(Node, #{}).
 %%          Default history size: 50
 -spec new_context(node(), map()) -> #pyrlang_ctx{}.
 new_context(Node, Options) ->
-    RemotePid = rpc:call(Node, 'pyrlang2.notebook', new_context, [Options]),
+    RemotePid = rpc:call(Node, 'pyrlang.notebook', new_context, [Options]),
     #pyrlang_ctx{
         node = Node,
         remote_pid = RemotePid
@@ -68,7 +68,7 @@ new_context(Node, Options) ->
 
 
 destroy(#pyrlang_ctx{remote_pid = Pid}) ->
-    undefined = gen_server:call(Pid, {exit, normal}),
+    ok = gen_server:call(Pid, {exit, normal}),
     ok.
 
 

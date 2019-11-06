@@ -38,15 +38,16 @@ class TestLinkProcess(Process):
         #
         p2 = TestMonitorProcess()
         LOG.info("Sending {example5, test_monitor, %s} to remote 'example5'" % p2.pid_)
-        node.send(sender=p2.pid_, receiver=remote_receiver_name(),
-                  message=(Atom("example5"), Atom("test_monitor"), p2.pid_))
+        msg = (Atom("example5"), Atom("test_monitor"), p2.pid_)
+        node.send_nowait(sender=p2.pid_, receiver=remote_receiver_name(),
+                         message=msg)
 
         Process.exit(self, reason)
 
 
 class TestMonitorProcess(Process):
     def __init__(self) -> None:
-        Process.__init__(self)
+        super().__init__()
 
     def handle_one_inbox_message(self, msg):
         LOG.info("TestMonitorProcess: Incoming %s", msg)
@@ -57,12 +58,11 @@ class TestMonitorProcess(Process):
         #
         # 3. End, sending a stop message
         #
-        LOG.info(color("Stopping remote loop", fg="red"))
-        task = node.send(sender=self.pid_, receiver=remote_receiver_name(),
+        LOG.info(color("Stopping erlang node", fg="red"))
+        node.send_nowait(sender=self.pid_, receiver=remote_receiver_name(),
                          message=(Atom("example5"), Atom("stop")))
-        #asyncio.run(task)
         LOG.error("Done")
-        Process.exit(self, reason)
+        super().exit(reason)
 
 
 def remote_receiver_name():
@@ -81,9 +81,14 @@ def main():
     #
     p1 = TestLinkProcess()
     LOG.info("Sending {example5, test_link, %s} to remote 'example5'" % p1.pid_)
-    task = lambda: node.send(sender=p1.pid_, receiver=remote_receiver_name(),
-                             message=(Atom("example5"), Atom("test_link"),
-                                      p1.pid_))
+
+    def task():
+        node.send_nowait(sender=p1.pid_,
+                         receiver=remote_receiver_name(),
+                         message=(Atom("example5"),
+                                  Atom("test_link"),
+                                  p1.pid_))
+
     event_engine.call_soon(task)
 
     event_engine.run_forever()

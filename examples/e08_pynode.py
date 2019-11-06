@@ -3,8 +3,8 @@
 
 import asyncio
 from pyrlang.node import Node
-from pyrlang.gen import GenServerInterface
-from pyrlang.gen_server import GS, call, cast, info
+from pyrlang.gen.server import GenServer, GenServerInterface
+from pyrlang.gen.decorators import call, cast, info
 
 from term import Atom
 
@@ -15,7 +15,7 @@ LOG = logging.getLogger(color("EXAMPLE1", fg='lime'))
 logging.getLogger("").setLevel(logging.DEBUG)
 
 
-class Server(GS):
+class Server(GenServer):
     """
     Simple GenServer class that handles some data
     """

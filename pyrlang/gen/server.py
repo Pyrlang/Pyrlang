@@ -23,16 +23,15 @@
         def hello(self):
             return self.pid_
 """
-
-import logging
 import asyncio
 
 
 from pyrlang.process import Process
-from pyrlang.match import Match, Pattern
+from pyrlang.match import Match
 from term import Atom
 
-LOG = logging.getLogger("pyrlang.OTP")
+import logging
+LOG = logging.getLogger(__name__)
 
 
 def _atom_match_factory(atom: Atom):
@@ -43,121 +42,6 @@ def _atom_match_factory(atom: Atom):
             return False
 
     return simple_match
-
-
-def async_wrapper_factory(fun):
-    async def async_wrapper(*args, **kwargs):
-        return fun(*args, **kwargs)
-    return async_wrapper
-
-
-class HandleDecorator(object):
-    """
-    Base class for hadler functions decorator, don't use directly
-    """
-    handler_type = None
-
-    def __init__(self, order, pattern=None):
-        if not pattern:
-            import warnings
-            warnings.warn(DeprecationWarning("you should specify order"))
-            pattern = order
-            # high but not ensured highest this should be
-            # removed soon anyway
-            order = 999
-
-        self.order = order
-        self.pattern = pattern
-
-    def __call__(self, fun):
-        if not asyncio.iscoroutinefunction(fun):
-            LOG.debug("function %s is a handle_%s and is not async",
-                      fun,
-                      self.handler_type)
-            fun = async_wrapper_factory(fun)
-
-        fun._gen_handler = self.handler_type
-        run_fun = self._pattern_run_fun_factory(fun)
-        fun._gen_pattern = Pattern(self.pattern, run_fun)
-        fun._gen_order = self.order
-        return fun
-
-    @staticmethod
-    def _pattern_run_fun_factory(fun):
-        """
-        Factory function for generating the run function of a pattern.
-
-        Used by `HandleDecorator`
-        :param fun: the function that should inject into the return
-        :return: function that take msg in and return (fun, msg)
-        """
-
-        def _simple_pattern_run_fun(msg):
-            return fun, msg
-
-        return _simple_pattern_run_fun
-
-
-class call(HandleDecorator):
-    """
-    handle_call decorator, decorate functions that should be part of the
-    handle_call matching
-    """
-    handler_type = 'call'
-
-    @staticmethod
-    def _pattern_run_fun_factory(fun):
-
-        async def _handle_reply_wrapper(gs_instance, msg):
-            """
-            wrapper function to strip a Atom('$gen_call') message to
-            the actual message, then send a reply
-            :param msg: 3 (Atom('$gen_call'), (sender, mref), message)
-            :return: function that takes a message
-            """
-            (sender, mref) = msg[1]
-            res = await fun(gs_instance, msg[2])
-            n = gs_instance.get_node()
-            pid = gs_instance.pid_
-            await n.send(pid, sender, (mref, res))
-
-        return lambda msg: (_handle_reply_wrapper, msg)
-
-
-class cast(HandleDecorator):
-    """
-    handle_cast decorator, decorate functions that should be part of the
-    handle_cast matching
-    """
-    handler_type = 'cast'
-
-    @staticmethod
-    def _pattern_run_fun_factory(fun):
-        """
-        Factory function for generating the run function of a pattern.
-
-        Used by `HandleDecorator`
-        :param fun: the function that should inject into the return
-        :return: function that take msg in and return (fun, msg)
-        """
-
-        def _simple_pattern_run_fun(msg):
-            """
-            we strip the Atom('gen_cast') from the message
-            :param msg:
-            :return:
-            """
-            return fun, msg[1]
-
-        return _simple_pattern_run_fun
-
-
-class info(HandleDecorator):
-    """
-    handle_info decorator, decorate functions that should be part of the
-    handle_info matching
-    """
-    handler_type = 'info'
 
 
 class GSM(type):
@@ -217,7 +101,7 @@ class GSM(type):
         patterns[handler_type].append((o, p))
 
 
-class GS(Process, metaclass=GSM):
+class GenServer(Process, metaclass=GSM):
     def __init__(self):
         self.state = 'init'
         super().__init__()
@@ -297,3 +181,62 @@ class GS(Process, metaclass=GSM):
         if not p:
             return
         return p.run(msg)
+
+
+class GenServerInterface(object):
+    """
+    Class that implements an interface for gen_servers
+
+    This class is intended to be used in `Process` instances where
+    gen_server behaviour interaction is necessary.
+
+    in a raw form this class is initiated with the calling process instance and
+    the pid of the destination process, then you can make calls and cast:
+
+        gsi = GenServerInterface(some_process, remote_pid)
+        await gsi.call(call_request)
+        await gsi.cast(cast_request)
+        gsi.cast_nowait(other_cast_request)
+
+    If you want to create an interface you override this class and implement
+    the functions, hiding the gen_server methods, just like in erlang
+    """
+    def __init__(self, calling_process: Process, destination_pid):
+        self._calling_process = calling_process
+        self._destination_pid = destination_pid
+        self._node = calling_process.get_node()
+
+    async def _do_call(self, label, request, timeout=5):
+        calling_pid = self._calling_process.pid_
+        m_ref = self._node.monitor_process(calling_pid,
+                                           self._destination_pid)
+        msg = (label, (calling_pid, m_ref), request)
+        await self._node.send(calling_pid,
+                              self._destination_pid,
+                              msg)
+
+        def pattern(in_msg):
+            if type(in_msg) != tuple:
+                return False
+            if len(in_msg) != 2:
+                return False
+            if in_msg[0] != m_ref:
+                return False
+            return True
+
+        match = Match([(pattern, lambda x: x[1])])
+        res = await self._calling_process.receive(match, timeout)
+        self._node.demonitor_process(calling_pid, self._destination_pid, m_ref)
+        return res
+
+    async def call(self, request, timeout=None):
+        return await self._do_call(Atom('$gen_call'), request, timeout)
+
+    async def cast(self, request):
+        calling_pid = self._calling_process.pid_
+        msg = (Atom('$gen_cast'), request)
+        await self._node.send(calling_pid, self._destination_pid, msg)
+
+    def cast_nowait(self, request):
+        asyncio.get_running_loop().create_task(self.cast(request))
+
