@@ -4,26 +4,16 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>node module (begin code exploration from here!) &#8212; Pyrlang 1.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="process module" href="process.html" />
@@ -31,27 +21,23 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="module-pyrlang.node">
 <span id="node-module-begin-code-exploration-from-here"></span><h1>node module (begin code exploration from here!)<a class="headerlink" href="#module-pyrlang.node" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="pyrlang.node.Node">
-<em class="property">class </em><code class="descclassname">pyrlang.node.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>node_name: str</em>, <em>cookie: str</em>, <em>engine: pyrlang.async_support.base_engine.BaseEngine</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyrlang.bases.BaseNode</span></code></p>
-<p>Implements an Erlang node which has a network name, a dictionary of 
+<em class="property">class </em><code class="descclassname">pyrlang.node.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>node_name: str</em>, <em>cookie: str</em>, <em>engine: pyrlang.async_support.base_engine.BaseEngine</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.bases.BaseNode</span></code></p>
+<p>Implements an Erlang node which has a network name, a dictionary of
 processes and registers itself via EPMD.
 Node handles the networking asynchronously.</p>
 <p>This is the root object of an Erlang node, it must be created first and
@@ -66,28 +52,22 @@ over the network.</p>
 </li>
 <li><dl class="first docutils">
 <dt>Create a node class with a name and a cookie</dt>
-<dd><code class="docutils literal"><span class="pre">node</span> <span class="pre">=</span> <span class="pre">Pyrlang.Node(&quot;py&#64;127.0.0.1&quot;,</span> <span class="pre">&quot;COOKIE&quot;,</span> <span class="pre">engine=e)</span></code></dd>
+<dd><code class="docutils literal notranslate"><span class="pre">node</span> <span class="pre">=</span> <span class="pre">Pyrlang.Node(&quot;py&#64;127.0.0.1&quot;,</span> <span class="pre">&quot;COOKIE&quot;,</span> <span class="pre">engine=e)</span></code></dd>
 </dl>
 </li>
-<li>Start it via the engine adapter <code class="docutils literal"><span class="pre">e.start(node)</span></code></li>
+<li>Start it via the engine adapter <code class="docutils literal notranslate"><span class="pre">e.start(node)</span></code></li>
 <li><dl class="first docutils">
 <dt>Now anything that you do (for example an infinite loop with</dt>
-<dd><code class="docutils literal"><span class="pre">e.sleep(1)</span></code> in it, will give CPU time to the node.</dd>
+<dd><code class="docutils literal notranslate"><span class="pre">e.sleep(1)</span></code> in it, will give CPU time to the node.</dd>
 </dl>
 </li>
 </ol>
-<dl class="attribute">
-<dt id="pyrlang.node.Node.all_nodes">
-<code class="descname">all_nodes</code><em class="property"> = {}</em><a class="headerlink" href="#pyrlang.node.Node.all_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>All existing Node objects indexed by node_name: str</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="pyrlang.node.Node.demonitor_process">
 <code class="descname">demonitor_process</code><span class="sig-paren">(</span><em>origin_pid</em>, <em>target</em>, <em>ref</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Locate the process <code class="docutils literal"><span class="pre">target</span></code> and remove the <code class="docutils literal"><span class="pre">origin</span></code> from its
-<code class="docutils literal"><span class="pre">monitors_</span></code> collection. This does not trigger any notifications
-or signals to the <code class="docutils literal"><span class="pre">origin</span></code>.</p>
+<dd><p>Locate the process <code class="docutils literal notranslate"><span class="pre">target</span></code> and remove the <code class="docutils literal notranslate"><span class="pre">origin</span></code> from its
+<code class="docutils literal notranslate"><span class="pre">monitors_</span></code> collection. This does not trigger any notifications
+or signals to the <code class="docutils literal notranslate"><span class="pre">origin</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -137,8 +117,8 @@ TODO: Cookie per connection?</p>
 <dl class="attribute">
 <dt id="pyrlang.node.Node.inbox_">
 <code class="descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.inbox_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Message queue based on <code class="docutils literal"><span class="pre">gevent.Queue</span></code>. It is periodically checked
-in the <code class="docutils literal"><span class="pre">_run</span></code> method and the receive handler is called.</p>
+<dd><p>Message queue based on <code class="docutils literal notranslate"><span class="pre">gevent.Queue</span></code>. It is periodically checked
+in the <code class="docutils literal notranslate"><span class="pre">_run</span></code> method and the receive handler is called.</p>
 </dd></dl>
 
 <dl class="method">
@@ -166,8 +146,8 @@ LINK message over distribution protocol</li>
 <dt id="pyrlang.node.Node.monitor_process">
 <code class="descname">monitor_process</code><span class="sig-paren">(</span><em>origin_pid: term.pid.Pid</em>, <em>target</em>, <em>ref=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.monitor_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locate the process referenced by the target and place the origin
-pid into its <code class="docutils literal"><span class="pre">monitors_</span></code> collection. When something happens to the
-<code class="docutils literal"><span class="pre">target</span></code>, a special message will be sent to the <code class="docutils literal"><span class="pre">origin</span></code>.
+pid into its <code class="docutils literal notranslate"><span class="pre">monitors_</span></code> collection. When something happens to the
+<code class="docutils literal notranslate"><span class="pre">target</span></code>, a special message will be sent to the <code class="docutils literal notranslate"><span class="pre">origin</span></code>.
 Remote targets are supported.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -191,6 +171,11 @@ the target from now and wants to know when we exit.</li>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.node_db">
+<code class="descname">node_db</code><em class="property"> = &lt;pyrlang.bases.NodeDB object&gt;</em><a class="headerlink" href="#pyrlang.node.Node.node_db" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="pyrlang.node.Node.on_exit_process">
@@ -332,20 +317,19 @@ UNLINK message over distribution protocol</li>
 <dl class="exception">
 <dt id="pyrlang.node.NodeException">
 <em class="property">exception </em><code class="descclassname">pyrlang.node.</code><code class="descname">NodeException</code><span class="sig-paren">(</span><em>msg</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.NodeException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="pyrlang.node.ProcessNotFoundError">
 <em class="property">exception </em><code class="descclassname">pyrlang.node.</code><code class="descname">ProcessNotFoundError</code><span class="sig-paren">(</span><em>msg</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.ProcessNotFoundError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pyrlang.node.NodeException" title="pyrlang.node.NodeException"><code class="xref py py-class docutils literal"><span class="pre">pyrlang.node.NodeException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pyrlang.node.NodeException" title="pyrlang.node.NodeException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.node.NodeException</span></code></a></p>
 </dd></dl>
 
 </div>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -354,6 +338,49 @@ UNLINK message over distribution protocol</li>
     <a class="toc-return"
        href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
 </div>
+
+
+<h1 class="logo"><a href="index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="process.html">process module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gen_server.html">gen_server module - Handling gen:calls nicely</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyrlang.util.html">util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_engine.html">async.base_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.base_protocol.html">async.base_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.asyncio_engine.html">async.asyncio_engine module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async.gevent_engine.html">async.gevent_engine module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dist.distribution.html">dist.distribution module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.epmd.html">dist.epmd module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.distflags.html">dist.distflags module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.in_dist_protocol.html">dist.in_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.out_dist_protocol.html">dist.out_dist_protocol module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist.base_dist_protocol.html">dist.base_dist_protocol module</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
@@ -364,21 +391,16 @@ UNLINK message over distribution protocol</li>
   </ul></li>
 </ul>
 </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/node.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -389,8 +411,8 @@ UNLINK message over distribution protocol</li>
       &copy;2017, Erlang Solutions Ltd..
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/node.rst.txt"

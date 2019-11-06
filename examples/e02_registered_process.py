@@ -28,7 +28,7 @@ logging.getLogger("").setLevel(logging.DEBUG)
 class MyProcess(Process):
     def __init__(self) -> None:
         Process.__init__(self)
-        self.node_db.get().register_name(self, Atom('my_process'))  # optional
+        self.get_node().register_name(self, Atom('my_process'))  # optional
         LOG.info("Registering process - 'my_process'")
 
     def handle_one_inbox_message(self, msg):
