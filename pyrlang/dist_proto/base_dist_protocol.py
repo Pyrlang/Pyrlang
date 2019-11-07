@@ -264,7 +264,7 @@ class BaseDistProtocol(asyncio.Protocol):
         elif ctrl_msg_type in [CONTROL_TERM_EXIT, CONTROL_TERM_EXIT2]:
             (_, from_pid, to_pid, reason) = control_term
             if to_pid.is_local_to(n):
-                n.  exit_process(from_pid, to_pid, reason)
+                n.exit_process(from_pid, to_pid, reason)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P_EXIT:
             (_, from_pid, to_pid, ref, reason) = control_term

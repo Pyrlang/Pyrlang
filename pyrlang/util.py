@@ -29,7 +29,7 @@ def start_pyrlang():
         the_logger = logging.getLogger("pyrlang")
         the_logger.setLevel(getattr(logging, level))
 
-    if os.getenv("PYRLANG_ENABLE_LOG_FORMAT", "no").upper() in ["1", "yes",
+    if os.getenv("PYRLANG_ENABLE_LOG_FORMAT", "no").lower() in ["1", "yes",
                                                                 "true", "on"]:
         log_fmt = '%(asctime)-15s [%(name)s] %(module)s:%(lineno)i: %(message)s'
         logging.basicConfig(format=log_fmt)
