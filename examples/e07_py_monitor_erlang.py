@@ -9,11 +9,11 @@
 #
 
 import logging
+import asyncio
 
 from term import Atom
-from pyrlang import Node, Process
-# from pyrlang import GeventEngine as Engine
-from pyrlang import AsyncioEngine as Engine
+from pyrlang.node import Node
+from pyrlang.process import Process
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE7", fg='lime'))
@@ -36,7 +36,7 @@ class MonitorExample7(Process):
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
                                reason=Atom("example7_monitor_exit"))
-            self.engine_.call_later(0.5, exit_fn)
+            asyncio.get_running_loop().call_later(0.5, exit_fn)
         else:
             LOG.info("MonitorExample7: Incoming %s", msg)
 
@@ -49,8 +49,8 @@ class MonitorExample7(Process):
 
 
 def main():
-    event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    event_engine = asyncio.get_event_loop()
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
 
     #
     # 1. At the same time as P1 (they should not interfere) create a process P2
@@ -62,24 +62,32 @@ def main():
 
     LOG.info("Sending {example7, test_monitor, %s} to remote 'example7'" % proc.pid_)
     remote_receiver_name = (Atom('erl@127.0.0.1'), Atom("example7"))
-    node.send(sender=proc.pid_,
-              receiver=remote_receiver_name,
-              message=(Atom("example7"), Atom("test_monitor"), proc.pid_))
+    send_task = node.send(sender=proc.pid_,
+                          receiver=remote_receiver_name,
+                          message=(Atom("example7"),
+                                   Atom("test_monitor"),
+                                   proc.pid_))
 
     sleep_sec = 5
     LOG.info("Sleep %d sec" % sleep_sec)
-    event_engine.sleep(sleep_sec)
 
     #
     # 3. End, sending a stop message
     #
-    LOG.info(color("Stopping remote loop", fg="red"))
-    node.send(sender=proc.pid_, receiver=remote_receiver_name,
-              message=(Atom("example7"), Atom("stop")))
+    def stop_task():
+        LOG.info(color("Stopping remote loop", fg="red"))
+        node.send_nowait(sender=proc.pid_, receiver=remote_receiver_name,
+                         message=(Atom("example7"), Atom("stop")))
 
-    event_engine.sleep(sleep_sec)
-    node.destroy()
-    LOG.error("Done")
+    def destroy_task():
+        LOG.error("Destroying")
+        node.destroy()
+        LOG.error("Done")
+
+    event_engine.create_task(send_task)
+    event_engine.call_later(sleep_sec, stop_task)
+    event_engine.call_later(2 * sleep_sec, destroy_task)
+    event_engine.run_forever()
 
 
 if __name__ == "__main__":

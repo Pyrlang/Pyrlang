@@ -1,4 +1,4 @@
-# Copyright 2018, Erlang Solutions Ltd, and S2HC Sweden AB
+# Copyright 2018-2019, Erlang Solutions Ltd, and S2HC Sweden AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -10,10 +10,7 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Compatibility adapters for Gevent and for Python3 asyncio
-from .asyncio_engine import AsyncioEngine
-from .gevent_engine import  GeventEngine
-
-__all__ = ('AsyncioEngine', 'GeventEngine')
+# limitations under the License.o
+"""
+Implementation of Erlangs OTP Gen behaviours (gen_server for starters)
+"""

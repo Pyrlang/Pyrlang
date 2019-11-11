@@ -14,12 +14,14 @@
 import logging
 from typing import Union
 
-from term.atom import Atom
+from term import Atom
 
 
 def start_pyrlang():
-    """ This is invoked on ``import Pyrlang``. Function checks OS environment
-        variables documented at :doc:`configuration`. """
+    """
+    This is invoked on ``import Pyrlang``. Function checks OS environment
+    variables documented at :doc:`configuration`.
+    """
     import os
     level = os.getenv("PYRLANG_LOG_LEVEL", "")
     if level and level in ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG',
@@ -27,8 +29,8 @@ def start_pyrlang():
         the_logger = logging.getLogger("pyrlang")
         the_logger.setLevel(getattr(logging, level))
 
-    if os.getenv("PYRLANG_ENABLE_LOG_FORMAT", "no").upper() \
-            in ["1", "yes", "true", "on"]:
+    if os.getenv("PYRLANG_ENABLE_LOG_FORMAT", "no").lower() in ["1", "yes",
+                                                                "true", "on"]:
         log_fmt = '%(asctime)-15s [%(name)s] %(module)s:%(lineno)i: %(message)s'
         logging.basicConfig(format=log_fmt)
 

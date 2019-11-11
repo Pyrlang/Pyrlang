@@ -14,11 +14,11 @@
 
 import logging
 
-from pyrlang.gen_server import GenServer
-from pyrlang.node import Node
+from pyrlang.gen.server import GenServer
+from pyrlang.gen.decorators import call
 from term.atom import Atom
 
-LOG = logging.getLogger("pyrlang")
+LOG = logging.getLogger(__name__)
 
 
 class NetKernel(GenServer):
@@ -26,14 +26,16 @@ class NetKernel(GenServer):
         one specific ``is_auth`` message, which is used by ``net_adm:ping``.
     """
 
-    def __init__(self, node) -> None:
+    def __init__(self) -> None:
         """ :param node: pyrlang.node.Node
         """
-        GenServer.__init__(self, accepted_calls=['is_auth'])
-        node.register_name(self, Atom('net_kernel'))
+        super().__init__()
+        self.node_db.get().register_name(self, Atom('net_kernel'))
 
-    @staticmethod
-    def is_auth():
+    @call(lambda msg: type(msg) == tuple and
+                      len(msg) == 2 and
+                      msg[0] == Atom('is_auth'))
+    def is_auth(self, msg):
         return Atom('yes')
 
 

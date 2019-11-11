@@ -13,12 +13,12 @@
 # 3. In Erlang shell send a message `{my_process, 'py@127.0.0.1'} ! hello`
 #
 
+import asyncio
 import logging
 
 from term import Atom
-from pyrlang import Node, Process
-# from pyrlang import GeventEngine as Engine
-from pyrlang import AsyncioEngine as Engine
+from pyrlang.node import Node
+from pyrlang.process import Process
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE2", fg='lime'))
@@ -36,9 +36,9 @@ class MyProcess(Process):
 
 
 def main():
-    event_engine = Engine()
-    Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    Node(node_name="py@127.0.0.1", cookie="COOKIE")
     MyProcess()
+    event_engine = asyncio.get_event_loop()
     event_engine.run_forever()
 
 

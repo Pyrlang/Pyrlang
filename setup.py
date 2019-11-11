@@ -9,5 +9,5 @@ setup(name='pyrlang',
       packages=find_packages(),
     # The library requires either asyncio or Gevent, you can relax this
     # dependency if Gevent is not desired
-      install_requires=['gevent == 1.3.7']
+      install_requires=[]
       )

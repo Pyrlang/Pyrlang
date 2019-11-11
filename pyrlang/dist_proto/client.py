@@ -12,39 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" The module implements outgoing TCP distribution connection (i.e. initiated
+""" The module implements outgoing TCP dist_proto connection (i.e. initiated
     by our node to another node with the help of EPMD).
 """
-
-import random
+import asyncio
 import logging
+import random
 
-from pyrlang.async_support.base_engine import BaseEngine
-from pyrlang.dist import dist_protocol
-from pyrlang.dist.base_dist_protocol import *
+from pyrlang.dist_proto import version
+from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol
 from term import util
 
-LOG = logging.getLogger("pyrlang.dist")
+LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
 
 
-class OutDistProtocol(BaseDistProtocol):
+class DistClientProtocol(BaseDistProtocol):
     """ Handles outgoing connections from our to other nodes. """
 
-    def __init__(self, node_name: str, engine: BaseEngine):
-        BaseDistProtocol.__init__(self, node_name=node_name, engine=engine)
+    def __init__(self, node_name: str):
+        super().__init__(node_name=node_name)
 
-    def on_connected(self, host_port):
-        BaseDistProtocol.on_connected(self, host_port=host_port)
+    def connection_made(self, transport: asyncio.Transport):
+        super().connection_made(transport)
         self._send_name()
         self.state_ = self.RECV_STATUS
 
-    def on_packet(self, data) -> bool:
-        """ Handle incoming distribution packet
+    def on_packet(self, data: bytes) -> bytes:
+        """ Handle incoming dist_proto packet
 
             :param data: The packet after the header had been removed
         """
-        # LOG("Dist-out[%s]: recv %s" % (self.state_, data))
 
         if self.state_ == self.CONNECTED:
             return self.on_packet_connected(data)
@@ -61,39 +59,47 @@ class OutDistProtocol(BaseDistProtocol):
         elif self.state_ == self.ALIVE:
             return self.on_packet_alive(data)
 
-        raise DistributionError("Unknown state for on_packet: %s" % self.state_)
+        self.protocol_error("Unknown state for on_packet: %s" % self.state_)
 
     def _send_name(self):
         """ Create and send first welcome packet. """
         pkt = b'n' + \
-              bytes([dist_protocol.DIST_VSN, dist_protocol.DIST_VSN]) + \
+              bytes([version.DIST_VSN, version.DIST_VSN]) + \
               util.to_u32(self.get_node().node_opts_.dflags_) + \
               bytes(self.node_name_, "latin-1")
         LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
         self._send_packet2(pkt)
 
-    def on_packet_recvstatus(self, data):
+    def on_packet_recvstatus(self, data: bytes) -> bytes:
         if chr(data[0]) != 's':
-            return self.protocol_error("Handshake 's' packet expected")
+            self.protocol_error("Handshake 's' packet expected")
+            # raise
 
-        if data == b'salive':  # a duplicate connection detected
+        # a duplicate connection detected
+        if data.startswith(b'salive'):
             self.state_ = self.ALIVE
-            return True
+            return data[6:]  # cut after b'salive'
 
-        if data != b'sok' and data != b'ok_simultaneous':
-            return self.protocol_error("Handshake bad status: %s" % data)
+        if data.startswith(b'sok_simultaneous'):
+            self.state_ = self.RECV_CHALLENGE
+            return data[16:]  # cut after b'sok_simultaneous'
 
-        self.state_ = self.RECV_CHALLENGE
-        return True
+        if data.startswith(b'sok'):
+            self.state_ = self.RECV_CHALLENGE
+            return data[3:]  # cut after b'sok'
 
-    def on_packet_alive(self, data):
-        if data == b'true':
+        self.protocol_error("Handshake bad status: %s" % data)
+        # raise
+
+    def on_packet_alive(self, data: bytes) -> bytes:
+        if data.startswith(b'true'):
             self.state_ = self.CONNECTED  # not sure if we have to challenge
-            return True
+            return data[4:]
 
-        return self.protocol_error("Duplicate connection denied")
+        self.protocol_error("Duplicate connection denied")
+        # raise
 
-    def on_packet_recvchallenge(self, data):
+    def on_packet_recvchallenge(self, data: bytes) -> bytes:
         if chr(data[0]) != 'n':
             return self.protocol_error("Handshake 'n' packet expected")
 
@@ -105,7 +111,7 @@ class OutDistProtocol(BaseDistProtocol):
         self._send_challenge_reply(challenge)
 
         self.state_ = self.RECV_CHALLENGE_ACK
-        return True
+        return b''  # assume everything is consumed?
 
     def _send_challenge_reply(self, challenge: int):
         digest = self.make_digest(challenge, self.get_node().get_cookie())
@@ -114,15 +120,17 @@ class OutDistProtocol(BaseDistProtocol):
         pkt = b'r' + util.to_u32(self.my_challenge_) + digest
         return self._send_packet2(pkt)
 
-    def on_packet_recvchallenge_ack(self, data):
+    def on_packet_recvchallenge_ack(self, data: bytes) -> bytes:
         if chr(data[0]) != 'a':
-            return self.protocol_error("Handshake 'r' packet expected")
+            self.protocol_error("Handshake 'r' packet expected")
+            # raise
 
         digest = data[1:]
         if not self.check_digest(digest=digest,
                                  challenge=self.my_challenge_,
                                  cookie=self.get_node().get_cookie()):
-            return self.protocol_error("Handshake digest verification failed")
+            self.protocol_error("Handshake digest verification failed")
+            # raise
 
         self.packet_len_size_ = 4
         self.state_ = self.CONNECTED
@@ -130,5 +138,6 @@ class OutDistProtocol(BaseDistProtocol):
 
         # TODO: start timer with node_opts_.network_tick_time_
 
-        LOG.info("Outgoing: established with %s" % self.peer_name_)
-        return True
+        LOG.info("Outgoing dist connection: established with %s",
+                 self.peer_name_)
+        return b''  # assume everything is consumed?

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Implement shared pieces of Erlang node negotiation and distribution
+""" Implement shared pieces of Erlang node negotiation and dist_proto
     protocol
 """
 
 DIST_VSN = 5
 DIST_VSN_PAIR = (DIST_VSN, DIST_VSN)
-" Supported distribution protocol version (MAX,MIN). "
+" Supported dist_proto protocol version (MAX,MIN). "
 
 
 def dist_version_check(max_min: tuple) -> bool:
@@ -28,5 +28,14 @@ def dist_version_check(max_min: tuple) -> bool:
         :param max_min: (Max, Min) version pair for peer-supported dist version
     """
     return max_min[0] >= DIST_VSN >= max_min[1]
+
+
+def check_valid_dist_version(max_min: tuple) -> bool:
+    """
+    Check that the version is supported
+    :param max_min: tuple(int, int
+    :return: True if ok
+    """
+    return max_min[0] <= DIST_VSN <= max_min[1]
 
 # __all__ = ['DIST_VSN', 'DIST_VSN_PAIR']
