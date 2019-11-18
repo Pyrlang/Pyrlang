@@ -50,8 +50,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Pyrlang'
-copyright = '2017, Erlang Solutions Ltd.'
-author = 'Dmytro Lytovchenko'
+copyright = '2017-2019, Erlang Solutions Ltd. S2HC Sweden AB'
+author = 'Dmytro Lytovchenko, Johan Sommerfeld'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

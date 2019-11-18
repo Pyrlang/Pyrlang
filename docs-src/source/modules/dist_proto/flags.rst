@@ -1,7 +1,7 @@
-pyrlang.notebook module
+dist_proto.flags module
 =======================
 
-.. automodule:: pyrlang.notebook.notebook
+.. automodule:: pyrlang.dist_proto.flags
     :members:
     :undoc-members:
     :show-inheritance:

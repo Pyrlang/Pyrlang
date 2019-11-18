@@ -1,7 +1,7 @@
-dist.base_dist_protocol module
+dist_proto.distribution module
 ==============================
 
-.. automodule:: pyrlang.dist.base_dist_protocol
+.. automodule:: pyrlang.dist_proto.distribution
     :members:
     :undoc-members:
     :show-inheritance:
