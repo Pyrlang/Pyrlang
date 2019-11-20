@@ -9,7 +9,6 @@
 #
 
 import logging
-import asyncio
 
 from term import Atom
 from pyrlang.node import Node
@@ -42,7 +41,7 @@ class TestLinkProcess(Process):
         node.send_nowait(sender=p2.pid_, receiver=remote_receiver_name(),
                          message=msg)
 
-        Process.exit(self, reason)
+        super().exit(reason)
 
 
 class TestMonitorProcess(Process):
@@ -70,8 +69,8 @@ def remote_receiver_name():
 
 
 def main():
-    event_engine = asyncio.get_event_loop()
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    event_loop = node.get_loop()
 
     #
     # 1. Create a process P1
@@ -89,9 +88,9 @@ def main():
                                   Atom("test_link"),
                                   p1.pid_))
 
-    event_engine.call_soon(task)
+    event_loop.call_soon(task)
 
-    event_engine.run_forever()
+    node.run()
 
 
 if __name__ == "__main__":

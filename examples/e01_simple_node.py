@@ -9,7 +9,6 @@
 #
 # Shell process will receive 'hello' (type `flush().` to see)
 #
-import asyncio
 import logging
 
 from colors import color
@@ -34,9 +33,9 @@ async def example_main(node):
 
 def main():
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
-    ev = asyncio.get_event_loop()
+    ev = node.get_loop()
     ev.create_task(example_main(node))
-    ev.run_forever()
+    node.run()
 
 
 if __name__ == "__main__":

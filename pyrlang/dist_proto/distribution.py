@@ -20,8 +20,12 @@ import logging
 import pyrlang
 from pyrlang.dist_proto import DistClientProtocol
 from pyrlang.dist_proto.epmd_client import EPMDClient
+from pyrlang.node_db import NodeDB
 
 LOG = logging.getLogger(__name__)
+
+
+node_db = NodeDB()
 
 
 class ErlangDistribution:
@@ -68,7 +72,8 @@ class ErlangDistribution:
             return False
 
         res = await self.epmd_.alive2(self)
-        asyncio.get_running_loop().create_task(self.run_dist_server())
+        e = node_db.get_loop()
+        e.create_task(self.run_dist_server())
         return res
 
     async def run_dist_server(self):

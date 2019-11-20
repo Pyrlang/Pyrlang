@@ -49,8 +49,8 @@ class MonitorExample7(Process):
 
 
 def main():
-    event_engine = asyncio.get_event_loop()
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    event_loop = node.get_loop()
 
     #
     # 1. At the same time as P1 (they should not interfere) create a process P2
@@ -84,10 +84,10 @@ def main():
         node.destroy()
         LOG.error("Done")
 
-    event_engine.create_task(send_task)
-    event_engine.call_later(sleep_sec, stop_task)
-    event_engine.call_later(2 * sleep_sec, destroy_task)
-    event_engine.run_forever()
+    event_loop.create_task(send_task)
+    event_loop.call_later(sleep_sec, stop_task)
+    event_loop.call_later(2 * sleep_sec, destroy_task)
+    node.run()
 
 
 if __name__ == "__main__":
