@@ -36,7 +36,7 @@ class MonitorExample7(Process):
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
                                reason=Atom("example7_monitor_exit"))
-            asyncio.get_running_loop().call_later(0.5, exit_fn)
+            self.node_db.get_loop().call_later(0.5, exit_fn)
         else:
             LOG.info("MonitorExample7: Incoming %s", msg)
 
