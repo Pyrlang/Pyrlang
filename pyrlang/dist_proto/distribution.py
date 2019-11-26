@@ -16,6 +16,7 @@
 """
 import asyncio
 import logging
+import sys
 
 import pyrlang
 from pyrlang.dist_proto import DistClientProtocol
@@ -77,6 +78,12 @@ class ErlangDistribution:
         return res
 
     async def run_dist_server(self):
+        if sys.version_info.minor < 7:
+            # pre 3.7 the server starts accepting calls directly
+            # so this step can be ignored.
+            # TODO: investigate if this could cause errors, since we're
+            #  accepting connections before registering with epmd
+            return
         async with self.in_srv_:
             await self.in_srv_.serve_forever()
 
