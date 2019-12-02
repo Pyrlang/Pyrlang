@@ -1,7 +1,6 @@
 # Starts a pynode and registers a pyrlang gen_serevr process
 # then wait and let the erlang part do it's job
 
-import asyncio
 from pyrlang.node import Node
 from pyrlang.gen.server import GenServer, GenServerInterface
 from pyrlang.gen.decorators import call, cast, info
@@ -74,17 +73,16 @@ def init_server():
 
 
 def init(name):
-    ee = asyncio.get_event_loop()
     n = Node(node_name=name, cookie="COOKIE")
-    ee.call_soon(init_server)
-    return ee, n
+    n.get_loop().call_soon(init_server)
+    return n
 
 
 def main():
     import sys
     name = sys.argv[1]
-    e, n = init(name)
-    e.run_forever()
+    n = init(name)
+    n.run()
 
 
 if __name__ == '__main__':

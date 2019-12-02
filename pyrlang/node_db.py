@@ -45,6 +45,12 @@ class NodeDB:
             raise AttributeError(msg)
         return self.__db[node_name]
 
+    def get_loop(self, node_name=None):
+        """
+        Get the event loop for the active node, or the one specified
+        """
+        return self.get(node_name).get_loop()
+
     def register(self, node):
         """
         registers and sets the node as the active one
