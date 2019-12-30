@@ -13,6 +13,7 @@
 # limitations under the License.
 import asyncio
 import logging
+import sys
 from typing import Dict, Set
 
 from pyrlang.dist_proto import DistributionFlags, ErlangDistribution
@@ -111,7 +112,10 @@ class Node:
         # handles special ping messages
         self.net_kernel_ = NetKernel()
 
-        asyncio.get_event_loop().create_task(self._async_loop())
+        self._event_loop = asyncio.get_event_loop()
+        self._event_loop.create_task(self._async_loop())
+        # future object we're awaiting when running the loop for the node
+        self.__completed_future = self._event_loop.create_future()
 
     async def _async_loop(self):
         # This is important before we can begin spawning processes
@@ -133,7 +137,7 @@ class Node:
 
     def signal_wake_up(self, pid):
         self._signal_wakeups.add(pid)
-        asyncio.get_running_loop().create_task(self.handle_signals())
+        self._event_loop.create_task(self.handle_signals())
 
     def on_exit_process(self, exiting_pid, reason):
         LOG.info("Process %s exited with %s", exiting_pid, reason)
@@ -202,7 +206,7 @@ class Node:
         """ Create task that sends the message
         """
         send_task = self.send(sender, receiver, message)
-        asyncio.get_running_loop().create_task(send_task)
+        self._event_loop.create_task(send_task)
 
     async def send(self, sender, receiver, message) -> None:
         """ Deliver a message to a pid or to a registered name. The pid may be
@@ -363,7 +367,7 @@ class Node:
             function
          """
         link_task = self.link(pid1, pid2, local_only)
-        asyncio.get_running_loop().create_task(link_task)
+        self._event_loop.create_task(link_task)
 
     async def link(self, pid1, pid2, local_only=False):
         """ Check each of processes pid1 and pid2 if they are local, mutually
@@ -460,7 +464,7 @@ class Node:
         monitor_msg = ('monitor_p', origin_pid, target_pid, ref)
         dc_task = self.dist_command(receiver_node=target_pid.node_name_,
                                     message=monitor_msg)
-        asyncio.get_running_loop().create_task(dc_task)
+        self._event_loop.create_task(dc_task)
 
         # if the origin is local, register monitor in it. Remote pids are
         # handled by the remote
@@ -563,6 +567,7 @@ class Node:
 
         self.dist_.destroy()
         self.node_db.remove(self.node_name_)
+        self.__completed_future.set_result(True)
         del self
 
     def exit_process(self, sender, receiver, reason):
@@ -572,13 +577,13 @@ class Node:
                                            receiver=receiver,
                                            reason=reason,
                                            dist_protocol_message='exit2')
-        asyncio.get_running_loop().create_task(exit_task)
+        self._event_loop.create_task(exit_task)
 
     def send_link_exit_notification(self, sender, receiver, reason):
         link_exit_task = self._send_link_exit_notification(sender,
                                                            receiver,
                                                            reason)
-        asyncio.get_running_loop().create_task(link_exit_task)
+        self._event_loop.create_task(link_exit_task)
 
     async def _send_link_exit_notification(self, sender, receiver, reason):
         """ Delivers exit message due to a linked process dead to a local
@@ -607,3 +612,9 @@ class Node:
             distm = (dist_protocol_message, sender, receiver, reason)
             await self.dist_command(receiver_node=receiver.node_name_,
                                     message=distm)
+
+    def get_loop(self):
+        return self._event_loop
+
+    def run(self):
+        self._event_loop.run_until_complete(self.__completed_future)

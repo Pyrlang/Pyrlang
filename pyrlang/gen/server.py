@@ -128,7 +128,7 @@ class GenServer(Process, metaclass=GSM):
             self.__timeout_coro.cancel()
         if seconds is None:
             return
-        e = asyncio.get_running_loop()
+        e = self.get_node().get_loop()
         self.__timeout_coro = e.call_later(seconds, self._timeout)
 
     async def process_loop(self):
@@ -238,5 +238,5 @@ class GenServerInterface(object):
         await self._node.send(calling_pid, self._destination_pid, msg)
 
     def cast_nowait(self, request):
-        asyncio.get_running_loop().create_task(self.cast(request))
+        self._node.get_loop().create_task(self.cast(request))
 

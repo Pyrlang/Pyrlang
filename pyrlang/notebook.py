@@ -100,8 +100,8 @@ class Notebook(GenServer):
     @call('nb_batch', 3)
     def nb_batch(self, msg):
         """ Take a remote call from Erlang to execute batch of Python calls. """
-        batch: List[tuple] = msg[1]
-        param: Dict[Atom, any] = msg[2]
+        batch = msg[1]
+        param = msg[2]
         if not batch:
             return Atom("error"), Atom("batch_empty")
 

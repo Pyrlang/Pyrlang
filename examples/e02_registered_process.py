@@ -13,7 +13,6 @@
 # 3. In Erlang shell send a message `{my_process, 'py@127.0.0.1'} ! hello`
 #
 
-import asyncio
 import logging
 
 from term import Atom
@@ -36,10 +35,9 @@ class MyProcess(Process):
 
 
 def main():
-    Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    n = Node(node_name="py@127.0.0.1", cookie="COOKIE")
     MyProcess()
-    event_engine = asyncio.get_event_loop()
-    event_engine.run_forever()
+    n.run()
 
 
 if __name__ == "__main__":

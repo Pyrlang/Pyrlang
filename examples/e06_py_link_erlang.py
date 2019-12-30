@@ -8,7 +8,6 @@
 #
 
 import logging
-import asyncio
 
 from term import Atom
 from pyrlang.node import Node
@@ -35,7 +34,8 @@ class LinkExample6(Process):
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
                                reason=Atom("example6_link_exit"))
-            asyncio.get_running_loop().call_later(0.5, exit_fn)
+            loop = self.get_node().get_loop()
+            loop.call_later(0.5, exit_fn)
         else:
             LOG.info("LinkExample6: Incoming %s", msg)
 
@@ -48,8 +48,8 @@ class LinkExample6(Process):
 
 
 def main():
-    event_engine = asyncio.get_event_loop()
     node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
+    event_loop = node.get_loop()
 
     #
     # 1. Create a process P1
@@ -83,10 +83,10 @@ def main():
         node.destroy()
         LOG.error("Done")
 
-    event_engine.call_soon(send_task)
-    event_engine.call_later(sleep_sec, task_sleep1)
-    event_engine.call_later(2 * sleep_sec, task_sleep2)
-    event_engine.run_forever()
+    event_loop.call_soon(send_task)
+    event_loop.call_later(sleep_sec, task_sleep1)
+    event_loop.call_later(2 * sleep_sec, task_sleep2)
+    node.run()
 
 
 if __name__ == "__main__":

@@ -424,7 +424,7 @@ class BaseDistProtocol(asyncio.Protocol):
         # self._inform_local_node(('node_connected', self.peer_name_, self))
         n = self.node_db.get(self.node_name_)
         n.register_dist_node(self.peer_name_, self)
-        asyncio.get_running_loop().create_task(self.listen_on_inbox())
+        n.get_loop().create_task(self.listen_on_inbox())
 
 
 __all__ = ['BaseDistProtocol']
