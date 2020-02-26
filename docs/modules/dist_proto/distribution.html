@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>dist_proto.distribution module &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="dist_proto.epmd_client module" href="epmd_client.html" />
+    <link rel="prev" title="dist_proto.server module" href="server.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist_proto.distribution">
+<span id="dist-proto-distribution-module"></span><h1>dist_proto.distribution module<a class="headerlink" href="#module-pyrlang.dist_proto.distribution" title="Permalink to this headline">¶</a></h1>
+<p>Distribution class is a separate running Task which owns its TCP connection.</p>
+<dl class="class">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.dist_proto.distribution.</code><code class="sig-name descname">ErlangDistribution</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements network part of the EPMD registration and Erlang dist_proto
+protocol.</p>
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.connect_to_node">
+<em class="property">async </em><code class="sig-name descname">connect_to_node</code><span class="sig-paren">(</span><em class="sig-param">local_node: str</em>, <em class="sig-param">remote_node: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.connect_to_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query EPMD where is the node, and initiate dist connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local_node</strong> -- name of the local Erlang Node object</p></li>
+<li><p><strong>remote_node</strong> -- String with node <a class="reference external" href="mailto:'name&#37;&#52;&#48;ip">'name<span>&#64;</span>ip</a>'</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>boolean whether the connection succeeded</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.creation_">
+<code class="sig-name descname">creation_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.creation_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creation id used in pid generation. EPMD gives creation id to 
+newly connected nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.destroy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.disconnect_epmd">
+<code class="sig-name descname">disconnect_epmd</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.disconnect_epmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finish EPMD connection, this will remove the node from the list of
+available nodes on EPMD</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.node_name_">
+<code class="sig-name descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.node_name_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node name, a string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.run_dist_server">
+<em class="property">async </em><code class="sig-name descname">run_dist_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.run_dist_server" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.start_distribution">
+<em class="property">async </em><code class="sig-name descname">start_distribution</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.start_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><ol class="arabic simple">
+<li><p>Starts local Erlang distribution server on a random port</p></li>
+<li><dl class="simple">
+<dt>Looks up EPMD daemon and connects to it trying to discover other</dt><dd><p>Erlang nodes.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.distribution.ErlangDistribution.start_server">
+<em class="property">async </em><code class="sig-name descname">start_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.distribution.ErlangDistribution.start_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start listening for incoming connections.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">dist_proto module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="base_dist_protocol.html">dist_proto.base_dist_protocol module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="client.html">dist_proto.client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.html">dist_proto.server module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dist_proto.distribution module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epmd_client.html">dist_proto.epmd_client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flags.html">dist_proto.flags module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="version.html">dist_proto.version module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../gen/index.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Pyrlang modules</a><ul>
+  <li><a href="index.html">dist_proto module</a><ul>
+      <li>Previous: <a href="server.html" title="previous chapter">dist_proto.server module</a></li>
+      <li>Next: <a href="epmd_client.html" title="next chapter">dist_proto.epmd_client module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/modules/dist_proto/distribution.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

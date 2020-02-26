@@ -134,6 +134,7 @@ class GenServer(Process, metaclass=GSM):
     async def process_loop(self):
         """ Polls inbox in an endless loop.
             .. note::
+
                 This will not be executed if the process was constructed with
                 ``passive=True`` (the default). Passive processes should read
                 their inbox directly from ``self.inbox_``.

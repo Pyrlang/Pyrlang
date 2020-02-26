@@ -1,13 +1,15 @@
 Remote Calling Python from Erlang
 =================================
 
-There is the regular ordinary way to call remote functions from Erlang, using
-``rpc:call`` which is handled by :py:class:`~pyrlang.rex.Rex` process in Pyrlang
-or by ``rex`` (named process) in Erlang.
+There default way of calling remote functions is using``rpc:call`` which is
+handled by :py:class:`~pyrlang.rex.Rex` process in Pyrlang or by
+``rex`` (named process) in Erlang.
 
-These calls return the result immediately and do not allow multiple
-calls without transferring unnecessary amounts of data forth and back.
-
+These calls return the result immediately, unless you do ``rpc:cast`` but that
+will lead to a blocking state which you don't have control over. The issue
+with RPC calls is that if you want the data it has to be serializable into
+some Erlang type, since everything in python is an object, many functions
+don't return an object representable by erlang types.
 
 Notebook-style Calls
 --------------------
@@ -16,8 +18,8 @@ Pyrlang implements notebook-style calls in :py:mod:`~pyrlang.Notebook.notebook`
 where results of your calls from Erlang to Python are stored on Python side
 until they are needed. You can substitute stored values into following calls.
 
-Enter the ``py.erl`` helper module, which you can drop into your Erlang project
-and use as a library.
+To facilitate this we have the ``py.erl`` helper module, which you can drop
+into your Erlang project and use as a library (pending hex package).
 
 .. code-block:: shell
 
@@ -79,7 +81,7 @@ whether first element of a ``Path`` is a value from previous calculation or
 a module name, and then find the function by following remaining items in
 the ``Path``.
 
-``Options`` is a dict which can contain keys:
+``Options`` is a map which can contain keys:
 
 *   ``timeout``: ``int`` (default 5000)
 *   ``immediate``: ``bool`` (default false) - setting this to ``true`` will not

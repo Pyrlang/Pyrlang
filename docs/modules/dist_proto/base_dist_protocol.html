@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>dist_proto.base_dist_protocol module &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="dist_proto.client module" href="client.html" />
+    <link rel="prev" title="dist_proto module" href="index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist_proto.base_dist_protocol">
+<span id="dist-proto-base-dist-protocol-module"></span><h1>dist_proto.base_dist_protocol module<a class="headerlink" href="#module-pyrlang.dist_proto.base_dist_protocol" title="Permalink to this headline">¶</a></h1>
+<p>Base abstract Distribution connection class</p>
+<dl class="class">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.dist_proto.base_dist_protocol.</code><code class="sig-name descname">BaseDistProtocol</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.protocols.Protocol</span></code></p>
+<p>Defines Erlang distribution protocol (shared parts).
+Concrete implementations for incoming (DistServerProtocol) and outgoing
+(DistClientProtocol) are located in the corresponding modules.</p>
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.ALIVE">
+<code class="sig-name descname">ALIVE</code><em class="property"> = 'alive'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.ALIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.CONNECTED">
+<code class="sig-name descname">CONNECTED</code><em class="property"> = 'conn'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.CONNECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.DISCONNECTED">
+<code class="sig-name descname">DISCONNECTED</code><em class="property"> = 'disconn'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.DISCONNECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_CHALLENGE">
+<code class="sig-name descname">RECV_CHALLENGE</code><em class="property"> = 'recv_challenge'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_CHALLENGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_CHALLENGE_ACK">
+<code class="sig-name descname">RECV_CHALLENGE_ACK</code><em class="property"> = 'recv_challenge_ack'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_CHALLENGE_ACK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_NAME">
+<code class="sig-name descname">RECV_NAME</code><em class="property"> = 'recvname'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_STATUS">
+<code class="sig-name descname">RECV_STATUS</code><em class="property"> = 'recv_status'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.RECV_STATUS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.WAIT_CHALLENGE_REPLY">
+<code class="sig-name descname">WAIT_CHALLENGE_REPLY</code><em class="property"> = 'wait_ch_reply'</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.WAIT_CHALLENGE_REPLY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.check_digest">
+<em class="property">static </em><code class="sig-name descname">check_digest</code><span class="sig-paren">(</span><em class="sig-param">digest: bytes</em>, <em class="sig-param">challenge: int</em>, <em class="sig-param">cookie: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.check_digest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hash cookie + the challenge together producing a verification hash
+and return if they match against the offered 'digest'.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.connection_lost">
+<code class="sig-name descname">connection_lost</code><span class="sig-paren">(</span><em class="sig-param">_exc</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.connection_lost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler is called when the client has disconnected</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.connection_made">
+<code class="sig-name descname">connection_made</code><span class="sig-paren">(</span><em class="sig-param">transport: asyncio.transports.Transport</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.connection_made" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connection has been accepted and established (callback).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.data_received">
+<code class="sig-name descname">data_received</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.data_received" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when some data is received.</p>
+<p>The argument is a bytes object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.destroy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.get_node">
+<code class="sig-name descname">get_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.get_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this to get access to the Pyrlang node which owns this protocol.
+:rtype: pyrlang2.node.Node</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.inbox_">
+<code class="sig-name descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.inbox_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inbox is used to ask the connection to do something.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.listen_on_inbox">
+<em class="property">async </em><code class="sig-name descname">listen_on_inbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.listen_on_inbox" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.make_digest">
+<em class="property">static </em><code class="sig-name descname">make_digest</code><span class="sig-paren">(</span><em class="sig-param">challenge: int</em>, <em class="sig-param">cookie: str</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.make_digest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.node_db">
+<code class="sig-name descname">node_db</code><em class="property"> = &lt;pyrlang.node_db.NodeDB object&gt;</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.node_db" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.node_name_">
+<code class="sig-name descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.node_name_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the running Erlang node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_packet">
+<code class="sig-name descname">on_packet</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_packet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_packet_connected">
+<code class="sig-name descname">on_packet_connected</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_packet_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle incoming dist packets in the connected state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_passthrough_message">
+<em class="property">async </em><code class="sig-name descname">on_passthrough_message</code><span class="sig-paren">(</span><em class="sig-param">control_term</em>, <em class="sig-param">msg_term</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.on_passthrough_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>On incoming 'p' message with control and data, handle it.
+:raises DistributionError: when 'p' message is not a tuple</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.packet_len_size_">
+<code class="sig-name descname">packet_len_size_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.packet_len_size_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Packet size header is variable, 2 bytes before handshake is finished
+and 4 bytes afterwards.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.peer_distr_version_">
+<code class="sig-name descname">peer_distr_version_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.peer_distr_version_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol version range supported by the remote peer. Erlang/OTP 
+versions 19-20 supports protocol version 7, older Erlangs down to 
+R6B support version 5.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.protocol_error">
+<code class="sig-name descname">protocol_error</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.protocol_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.report_dist_connected">
+<code class="sig-name descname">report_dist_connected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.report_dist_connected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.state_">
+<code class="sig-name descname">state_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol.state_" title="Permalink to this definition">¶</a></dt>
+<dd><p>FSM state for the protocol state-machine.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">dist_proto module</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dist_proto.base_dist_protocol module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="client.html">dist_proto.client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.html">dist_proto.server module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="distribution.html">dist_proto.distribution module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epmd_client.html">dist_proto.epmd_client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flags.html">dist_proto.flags module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="version.html">dist_proto.version module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../gen/index.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Pyrlang modules</a><ul>
+  <li><a href="index.html">dist_proto module</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">dist_proto module</a></li>
+      <li>Next: <a href="client.html" title="next chapter">dist_proto.client module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/modules/dist_proto/base_dist_protocol.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

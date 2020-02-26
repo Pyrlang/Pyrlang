@@ -1,0 +1,479 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>node module (begin code exploration from here!) &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyrlang.notebook module" href="notebook.html" />
+    <link rel="prev" title="net_kernel module" href="net_kernel.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.node">
+<span id="node-module-begin-code-exploration-from-here"></span><h1>node module (begin code exploration from here!)<a class="headerlink" href="#module-pyrlang.node" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyrlang.node.Node">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.node.</code><code class="sig-name descname">Node</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em>, <em class="sig-param">cookie: str</em>, <em class="sig-param">hidden: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements an Erlang node which has a network name, a dictionary of
+processes and registers itself via EPMD.
+Node handles the networking asynchronously.</p>
+<p>This is the root object of an Erlang node, it must be created first and
+must outlive all other objects it manages, for them to be accessible
+over the network.</p>
+<p>Example:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Create an async engine adapter:</dt><dd><p>e = GeventEngine()  # located in <cite>import Pyrlang</cite></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Create a node class with a name and a cookie</dt><dd><p><code class="docutils literal notranslate"><span class="pre">node</span> <span class="pre">=</span> <span class="pre">Pyrlang.Node(&quot;py&#64;127.0.0.1&quot;,</span> <span class="pre">&quot;COOKIE&quot;,</span> <span class="pre">engine=e)</span></code></p>
+</dd>
+</dl>
+</li>
+<li><p>Start it via the engine adapter <code class="docutils literal notranslate"><span class="pre">e.start(node)</span></code></p></li>
+<li><dl class="simple">
+<dt>Now anything that you do (for example an infinite loop with</dt><dd><p><code class="docutils literal notranslate"><span class="pre">e.sleep(1)</span></code> in it, will give CPU time to the node.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<dl class="method">
+<dt id="pyrlang.node.Node.demonitor_process">
+<code class="sig-name descname">demonitor_process</code><span class="sig-paren">(</span><em class="sig-param">origin_pid</em>, <em class="sig-param">target</em>, <em class="sig-param">ref</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.demonitor_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locate the process <code class="docutils literal notranslate"><span class="pre">target</span></code> and remove the <code class="docutils literal notranslate"><span class="pre">origin</span></code> from its
+<code class="docutils literal notranslate"><span class="pre">monitors_</span></code> collection. This does not trigger any notifications
+or signals to the <code class="docutils literal notranslate"><span class="pre">origin</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> (<em>term.reference.Reference</em>) -- Reference which you received when setting up a monitor.</p></li>
+<li><p><strong>origin_pid</strong> (<em>Pid</em>) -- The process who was monitoring the target before</p></li>
+<li><p><strong>target</strong> (<em>Pid</em><em> or </em><em>Atom</em>) -- Name or pid of a monitor target process, possibly
+it does not exist</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ProcessNotFound</strong> -- if target does not exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes incoming and outgoing connections and destroys the local
+node. This is Python, so some refs from running async handlers
+may remain.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.dist_command">
+<em class="property">async </em><code class="sig-name descname">dist_command</code><span class="sig-paren">(</span><em class="sig-param">receiver_node: str</em>, <em class="sig-param">message: tuple</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node.dist_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locate the connection to the given node (a string).
+Place a tuple crafted by the caller into message box for Erlang
+dist_proto socket. It will pick up and handle the message whenever
+possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>receiver_node</strong> -- Name of a remote node</p></li>
+<li><p><strong>message</strong> -- A crafted tuple with command name and some more
+values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>NodeException</strong> -- if unable to find or connect to the node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.exit_process">
+<code class="sig-name descname">exit_process</code><span class="sig-paren">(</span><em class="sig-param">sender</em>, <em class="sig-param">receiver</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.exit_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivers exit message to a local or remote process.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.get_cookie">
+<code class="sig-name descname">get_cookie</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.get_cookie" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get string cookie value for this node.
+TODO: Cookie per connection?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.get_loop">
+<code class="sig-name descname">get_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.get_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.handle_signals">
+<em class="property">async </em><code class="sig-name descname">handle_signals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.handle_signals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.inbox_">
+<code class="sig-name descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.inbox_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains Pyrlang's own messages to the local node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.link">
+<em class="property">async </em><code class="sig-name descname">link</code><span class="sig-paren">(</span><em class="sig-param">pid1</em>, <em class="sig-param">pid2</em>, <em class="sig-param">local_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check each of processes pid1 and pid2 if they are local, mutually
+link them. Assume remote process handles its own linking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pid1</strong> (<em>term.pid.Pid</em>) -- First pid</p></li>
+<li><p><strong>pid2</strong> (<em>term.pid.Pid</em>) -- Second pid</p></li>
+<li><p><strong>local_only</strong> -- If set to True, linking to remote pids will send
+LINK message over dist_proto protocol</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.link_nowait">
+<code class="sig-name descname">link_nowait</code><span class="sig-paren">(</span><em class="sig-param">pid1</em>, <em class="sig-param">pid2</em>, <em class="sig-param">local_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.link_nowait" title="Permalink to this definition">¶</a></dt>
+<dd><p>unsafe casting of link</p>
+<p>you can't assume it has got effect when this function returns
+Convinience methot for being able to call it outside a async
+function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.monitor_process">
+<code class="sig-name descname">monitor_process</code><span class="sig-paren">(</span><em class="sig-param">origin_pid: term.pid.Pid</em>, <em class="sig-param">target</em>, <em class="sig-param">ref=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.monitor_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locate the process referenced by the target and place the origin
+pid into its <code class="docutils literal notranslate"><span class="pre">monitors_</span></code> collection. When something happens to the
+<code class="docutils literal notranslate"><span class="pre">target</span></code>, a special message will be sent to the <code class="docutils literal notranslate"><span class="pre">origin</span></code>.
+Remote targets are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> (<em>None</em><em> or </em><em>term.reference.Reference</em>) -- If not None, will be reused, else a new random ref will
+be generated.</p></li>
+<li><p><strong>origin_pid</strong> (<em>term.pid.Pid</em>) -- The (possibly remote) process who will be
+monitoring the target from now and wants to know when we exit.</p></li>
+<li><p><strong>target</strong> (<em>term.pid.Pid</em><em> or </em><em>term.atom.Atom</em>) -- Name or pid of a monitor target process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>term.reference.Reference</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>pyrlang.node.ProcessNotFoundError</strong> -- if target does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.node_db">
+<code class="sig-name descname">node_db</code><em class="property"> = &lt;pyrlang.node_db.NodeDB object&gt;</em><a class="headerlink" href="#pyrlang.node.Node.node_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>All existing local Node objects indexed by node_name: str</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.node_name_">
+<code class="sig-name descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.node_name_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node name as seen on the network. Use full node names here:
+<code class="docutils literal notranslate"><span class="pre">name&#64;hostname</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.node_opts_">
+<code class="sig-name descname">node_opts_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.node_opts_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distribution options object with feature support flags packed into 
+an integer. The remote node will receive these flags to know what
+features we can support.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.on_exit_process">
+<code class="sig-name descname">on_exit_process</code><span class="sig-paren">(</span><em class="sig-param">exiting_pid</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.on_exit_process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.pid_counter_">
+<code class="sig-name descname">pid_counter_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.pid_counter_" title="Permalink to this definition">¶</a></dt>
+<dd><p>An internal counter used to generate unique process ids</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.processes_">
+<code class="sig-name descname">processes_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.processes_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process dictionary which stores all the existing <code class="docutils literal notranslate"><span class="pre">Process</span></code> objects
+adressable by a pid.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This creates a python reference to an
+object preventing its automatic garbage collection.
+In the end of its lifetime an object must be explicitly removed
+from this dictionary using <code class="docutils literal notranslate"><span class="pre">Process.exit</span></code> method on the
+process.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyrlang.node.Node.reg_names_">
+<code class="sig-name descname">reg_names_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.node.Node.reg_names_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registered objects dictionary, which maps atoms to pids</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.register_dist_node">
+<code class="sig-name descname">register_dist_node</code><span class="sig-paren">(</span><em class="sig-param">addr</em>, <em class="sig-param">proto</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.register_dist_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>add the protocol to dist nodes so that we can use it
+:param addr:
+:param proto:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.register_name">
+<code class="sig-name descname">register_name</code><span class="sig-paren">(</span><em class="sig-param">proc</em>, <em class="sig-param">name</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node.register_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a name into registrations table (automatically removed when the
+referenced process is removed)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proc</strong> (<a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><em>Process</em></a>) -- The process to register</p></li>
+<li><p><strong>name</strong> (<em>Atom</em>) -- The name to register with</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.register_new_process">
+<code class="sig-name descname">register_new_process</code><span class="sig-paren">(</span><em class="sig-param">proc=None</em><span class="sig-paren">)</span> &#x2192; term.pid.Pid<a class="headerlink" href="#pyrlang.node.Node.register_new_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new pid and add the process to the process dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>proc</strong> (<a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process"><em>Process</em></a><em> or </em><em>None</em>) -- A new process which needs a pid, or None if you only
+need a fake pid</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new pid (does not modify the process in place, so please
+store the pid!)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.send">
+<em class="property">async </em><code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param">sender</em>, <em class="sig-param">receiver</em>, <em class="sig-param">message</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deliver a message to a pid or to a registered name. The pid may be
+located on another Erlang node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>term.pid.Pid</em><em> or </em><em>None</em>) -- Message sender</p></li>
+<li><p><strong>receiver</strong> (<em>term.pid.Pid</em><em> or </em><em>term.atom.Atom</em><em> or </em><em>Tuple</em><em>[</em><em>Atom</em><em>, </em><em>Pid</em><em> or
+</em><em>Atom</em><em>]</em>) -- Message receiver, a pid, or a name, or a tuple with
+node name and a receiver on the remote node.</p></li>
+<li><p><strong>message</strong> -- Any value which will be placed into the receiver
+inbox. Pyrlang processes use tuples but that is not enforced
+for your own processes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.send_link_exit_notification">
+<code class="sig-name descname">send_link_exit_notification</code><span class="sig-paren">(</span><em class="sig-param">sender</em>, <em class="sig-param">receiver</em>, <em class="sig-param">reason</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.send_link_exit_notification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.send_nowait">
+<code class="sig-name descname">send_nowait</code><span class="sig-paren">(</span><em class="sig-param">sender</em>, <em class="sig-param">receiver</em>, <em class="sig-param">message</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#pyrlang.node.Node.send_nowait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create task that sends the message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.signal_wake_up">
+<code class="sig-name descname">signal_wake_up</code><span class="sig-paren">(</span><em class="sig-param">pid</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.signal_wake_up" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.unlink">
+<em class="property">async </em><code class="sig-name descname">unlink</code><span class="sig-paren">(</span><em class="sig-param">pid1</em>, <em class="sig-param">pid2</em>, <em class="sig-param">local_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.unlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mutually unlink two processes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pid1</strong> (<em>term.pid.Pid</em>) -- First pid</p></li>
+<li><p><strong>pid2</strong> (<em>term.pid.Pid</em>) -- Second pid</p></li>
+<li><p><strong>local_only</strong> -- If set to True, linking to remote pids will send
+UNLINK message over dist_proto protocol</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.unregister_dist_node">
+<code class="sig-name descname">unregister_dist_node</code><span class="sig-paren">(</span><em class="sig-param">addr</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.unregister_dist_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>remove dist node (disconnected most likley)
+:param addr:
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.where_is">
+<code class="sig-name descname">where_is</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.where_is" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a registered name or pid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ident</strong> (<em>term.atom.Atom</em><em> or </em><em>term.pid.Pid</em>) -- an Atom or a Pid to convert to a Pid</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>term.pid.Pid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.node.Node.where_is_process">
+<code class="sig-name descname">where_is_process</code><span class="sig-paren">(</span><em class="sig-param">ident</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.node.Node.where_is_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a registered name or pid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="process.html#pyrlang.process.Process" title="pyrlang.process.Process">pyrlang.process.Process</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dist_proto/index.html">dist_proto module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gen/index.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Pyrlang modules</a><ul>
+      <li>Previous: <a href="net_kernel.html" title="previous chapter">net_kernel module</a></li>
+      <li>Next: <a href="notebook.html" title="next chapter">pyrlang.notebook module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/modules/node.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
