@@ -20,7 +20,7 @@ from term import Atom
 def start_pyrlang():
     """
     This is invoked on ``import Pyrlang``. Function checks OS environment
-    variables documented at :doc:`configuration`.
+    variables documented at :doc:`../configuration`.
     """
     import os
     level = os.getenv("PYRLANG_LOG_LEVEL", "")

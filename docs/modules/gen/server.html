@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>gen.server module &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="net_kernel module" href="../net_kernel.html" />
+    <link rel="prev" title="gen module - Generic OTP-style calls" href="index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.gen.server">
+<span id="gen-server-module"></span><h1>gen.server module<a class="headerlink" href="#module-pyrlang.gen.server" title="Permalink to this headline">¶</a></h1>
+<p>Example of how to inherit from GenServer:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyProcess</span><span class="p">(</span><span class="n">GenServer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">GenServer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">accepted_calls</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pid_</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="pyrlang.gen.server.GSM">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.gen.server.</code><code class="sig-name descname">GSM</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">bases</em>, <em class="sig-param">nmspc</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GSM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
+<p>Meta class for GenServer</p>
+<p>Looks for functions that have been decorated and adds them to
+match functions</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyrlang.gen.server.GenServer">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.gen.server.</code><code class="sig-name descname">GenServer</code><a class="headerlink" href="#pyrlang.gen.server.GenServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../process.html#pyrlang.process.Process" title="pyrlang.process.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.process.Process</span></code></a></p>
+<dl class="method">
+<dt id="pyrlang.gen.server.GenServer.process_loop">
+<em class="property">async </em><code class="sig-name descname">process_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServer.process_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Polls inbox in an endless loop.
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>This will not be executed if the process was constructed with
+``passive=True`` (the default). Passive processes should read
+their inbox directly from ``self.inbox_``.
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.gen.server.GenServer.timeout">
+<code class="sig-name descname">timeout</code><span class="sig-paren">(</span><em class="sig-param">seconds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServer.timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the gen_server timeout, will generate inbox <cite>Atom('timeout')</cite>
+:param seconds:
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyrlang.gen.server.GenServerInterface">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.gen.server.</code><code class="sig-name descname">GenServerInterface</code><span class="sig-paren">(</span><em class="sig-param">calling_process: pyrlang.process.Process</em>, <em class="sig-param">destination_pid</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServerInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that implements an interface for gen_servers</p>
+<p>This class is intended to be used in <cite>Process</cite> instances where
+gen_server behaviour interaction is necessary.</p>
+<p>in a raw form this class is initiated with the calling process instance and
+the pid of the destination process, then you can make calls and cast:</p>
+<blockquote>
+<div><p>gsi = GenServerInterface(some_process, remote_pid)
+await gsi.call(call_request)
+await gsi.cast(cast_request)
+gsi.cast_nowait(other_cast_request)</p>
+</div></blockquote>
+<p>If you want to create an interface you override this class and implement
+the functions, hiding the gen_server methods, just like in erlang</p>
+<dl class="method">
+<dt id="pyrlang.gen.server.GenServerInterface.call">
+<em class="property">async </em><code class="sig-name descname">call</code><span class="sig-paren">(</span><em class="sig-param">request</em>, <em class="sig-param">timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServerInterface.call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.gen.server.GenServerInterface.cast">
+<em class="property">async </em><code class="sig-name descname">cast</code><span class="sig-paren">(</span><em class="sig-param">request</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServerInterface.cast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyrlang.gen.server.GenServerInterface.cast_nowait">
+<code class="sig-name descname">cast_nowait</code><span class="sig-paren">(</span><em class="sig-param">request</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.gen.server.GenServerInterface.cast_nowait" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dist_proto/index.html">dist_proto module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">gen module - Generic OTP-style calls</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gen.server module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Pyrlang modules</a><ul>
+  <li><a href="index.html">gen module - Generic OTP-style calls</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">gen module - Generic OTP-style calls</a></li>
+      <li>Next: <a href="../net_kernel.html" title="next chapter">net_kernel module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/modules/gen/server.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

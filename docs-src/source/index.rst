@@ -29,34 +29,9 @@ Pyrlang Modules
 ---------------
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 3
 
-    node
-    process
-    rex
-    gen
-    net_kernel
-    gen_server
-    pyrlang.notebook
-    pyrlang.util
-    async.base_engine
-    async.base_protocol
-    async.asyncio_engine
-    async.gevent_engine
-
-
-Distribution Protocol Implementation
-------------------------------------
-
-.. toctree::
-    :maxdepth: 1
-
-    dist.distribution
-    dist.epmd
-    dist.distflags
-    dist.in_dist_protocol
-    dist.out_dist_protocol
-    dist.base_dist_protocol
+    modules/index
 
 
 Indices and tables

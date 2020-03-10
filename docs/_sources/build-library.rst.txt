@@ -1,14 +1,37 @@
 Building the Library
 ====================
 
-Install requirements via: `pip3 install -r requirements.txt`, this will also
+To run pyrlang you need to have term installed. Term is an external package
+that pyrlang uses to encode / decode Erlangs `external term fomrat
+<http://erlang
+.org/doc/apps/erts/erl_ext_dist.html>`__. Install it with:
+
+.. code-block:: console
+
+  pip3 install pyrlang-term
+
+To install Pyrlang you checkout the project and install it:
+
+.. code-block:: console
+
+  git clone git@github.com:Pyrlang/Pyrlang.git
+  cd Pyrlang
+  pip install .
+
+
+Install requirements via: :code:`pip3 install -r requirements.txt`, this will
+also
 pull requirements for Sphinx documentation generator (not needed if you only
 use the library).
 
-To operate Pyrlang requires its own Term library (located at
-``https://github.com/Pyrlang/Term`` and a couple other libraries:
-``gevent`` and ``greenlet`` (dependency of ``gevent``) OR ``asyncio``.
+To build the docs you need to install Sphinx and some other pacakges you can
+do that with the requirements file:
 
-Source for the documentation is in the ``docs-src/`` directory. It uses Sphinx
-documentation generator. To generate HTML: run ``make docs`` and the ``docs``
-directory will be deleted and recreated..
+.. code-block:: console
+
+  pip install -r requirements.txt
+
+Source for the documentation is in the ``docs-src/`` directory. To generate
+HTML, run :code:`make docs` and the ``docs`` directory will be deleted and
+recreated.
+

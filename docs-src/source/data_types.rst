@@ -1,6 +1,36 @@
 Data Types in Pyrlang
 =====================
 
+Things to be aware about
+------------------------
+
+As we started this we've seen that there are some things that doesn't map
+that good between python and erlang, and that the best solution for it could
+be different pending on the problem you're currently trying to solve.
+
+Erlang strings is more of syntactic sugar, but it is infact a list of
+integers with a value of less than 256. Since this interpretation is what is
+sometime used when writing erlang code
+
+.. code-block:: erlang
+
+    some_module:with_function("this is a list of integers really").
+
+one could be tempted to make this a unicode object which is the default for
+python
+
+.. code-block:: python
+
+    some_module.with_function("this is a unicode object")
+
+this however gives you some issues sine another time you might actually have
+a list of integers you want to send to python but instead get a unicode
+object. In python you generally don't handle list and unicode objects the same.
+
+We have a pending state where we're testing around what would be the best
+solution. Expect changes going forward and keep an eye out for changes in
+default behaviour.
+
 Decoding
 --------
 

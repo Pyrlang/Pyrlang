@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>dist_proto.version module &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="gen module - Generic OTP-style calls" href="../gen/index.html" />
+    <link rel="prev" title="dist_proto.flags module" href="flags.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist_proto.version">
+<span id="dist-proto-version-module"></span><h1>dist_proto.version module<a class="headerlink" href="#module-pyrlang.dist_proto.version" title="Permalink to this headline">¶</a></h1>
+<p>Implement shared pieces of Erlang node negotiation and dist_proto
+protocol</p>
+<dl class="data">
+<dt id="pyrlang.dist_proto.version.DIST_VSN_PAIR">
+<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">DIST_VSN_PAIR</code><em class="property"> = (5, 5)</em><a class="headerlink" href="#pyrlang.dist_proto.version.DIST_VSN_PAIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supported dist_proto protocol version (MAX,MIN).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrlang.dist_proto.version.check_valid_dist_version">
+<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">check_valid_dist_version</code><span class="sig-paren">(</span><em class="sig-param">max_min: tuple</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.version.check_valid_dist_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the version is supported
+:param max_min: tuple(int, int
+:return: True if ok</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrlang.dist_proto.version.dist_version_check">
+<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">dist_version_check</code><span class="sig-paren">(</span><em class="sig-param">max_min: tuple</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.version.dist_version_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check pair of versions against version which is supported by us</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_min</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) -- (Max, Min) version pair for peer-supported dist version</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">dist_proto module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="base_dist_protocol.html">dist_proto.base_dist_protocol module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="client.html">dist_proto.client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.html">dist_proto.server module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="distribution.html">dist_proto.distribution module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epmd_client.html">dist_proto.epmd_client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flags.html">dist_proto.flags module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dist_proto.version module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../gen/index.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Pyrlang modules</a><ul>
+  <li><a href="index.html">dist_proto module</a><ul>
+      <li>Previous: <a href="flags.html" title="previous chapter">dist_proto.flags module</a></li>
+      <li>Next: <a href="../gen/index.html" title="next chapter">gen module - Generic OTP-style calls</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/modules/dist_proto/version.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

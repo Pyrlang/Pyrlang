@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <title>dist_proto.flags module &#8212; Pyrlang 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="dist_proto.version module" href="version.html" />
+    <link rel="prev" title="dist_proto.epmd_client module" href="epmd_client.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pyrlang.dist_proto.flags">
+<span id="dist-proto-flags-module"></span><h1>dist_proto.flags module<a class="headerlink" href="#module-pyrlang.dist_proto.flags" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DEFAULT_DFLAGS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DEFAULT_DFLAGS</code><em class="property"> = 217020</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DEFAULT_DFLAGS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default flags value represents current Pyrlang library features
+as a combination of feature bits.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_ATOM_CACHE">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_ATOM_CACHE</code><em class="property"> = 2</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_ATOM_CACHE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supports atoms sent in batches.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_BIT_BINARIES">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_BIT_BINARIES</code><em class="property"> = 1024</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_BIT_BINARIES" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports incomplete trailing byte in binaries.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_DIST_MONITOR">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_DIST_MONITOR</code><em class="property"> = 8</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_DIST_MONITOR" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports remote monitoring for processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_DIST_MONITOR_NAME">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_DIST_MONITOR_NAME</code><em class="property"> = 32</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_DIST_MONITOR_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports remote monitoring for named processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_EXIT_PAYLOAD">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_EXIT_PAYLOAD</code><em class="property"> = 4194304</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_EXIT_PAYLOAD" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports additional payload for exit messages,
+DOP_PAYLOAD_MONITOR_P_EXIT, DOP_PAYLOAD_EXIT_TT, DOP_PAYLOAD_EXIT
+otherwise DOP_MONITOR_P_EXIT, DOP_EXIT_TT, DOP_EXIT are used.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_EXT_PIDS_PORTS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_EXT_PIDS_PORTS</code><em class="property"> = 256</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_EXT_PIDS_PORTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports encoding/decoding of external pids and ports.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_EXT_REFS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_EXT_REFS</code><em class="property"> = 4</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_EXT_REFS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports encoding/decoding of external references.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_FRAGMENTS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_FRAGMENTS</code><em class="property"> = 8388608</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_FRAGMENTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports fragmentation for large packets.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_INTERNAL_TAGS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_INTERNAL_TAGS</code><em class="property"> = 32768</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_INTERNAL_TAGS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used internally by ETS compressed option in Erlang/OTP.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_MAP_TAG">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_MAP_TAG</code><em class="property"> = 131072</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_MAP_TAG" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node can handle map encoding.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_NEW_FLOATS">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_NEW_FLOATS</code><em class="property"> = 2048</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_NEW_FLOATS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node supports 8-byte double encoding as IEEE-double.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_NO_MAGIC">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_NO_MAGIC</code><em class="property"> = 2097152</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_NO_MAGIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal for pending connection (BEAM VM internal).</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="pyrlang.dist_proto.flags.DFLAG_PUBLISHED">
+<code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DFLAG_PUBLISHED</code><em class="property"> = 1</em><a class="headerlink" href="#pyrlang.dist_proto.flags.DFLAG_PUBLISHED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visible or hidden node.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyrlang.dist_proto.flags.DistributionFlags">
+<em class="property">class </em><code class="sig-prename descclassname">pyrlang.dist_proto.flags.</code><code class="sig-name descname">DistributionFlags</code><span class="sig-paren">(</span><em class="sig-param">cookie: str</em>, <em class="sig-param">dflags: int = 217020</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.flags.DistributionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class holding an integer with features that are supported
+by this node, and the network cookie.</p>
+<dl class="method">
+<dt id="pyrlang.dist_proto.flags.DistributionFlags.set_node_published">
+<code class="sig-name descname">set_node_published</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.flags.DistributionFlags.set_node_published" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div style="margin-bottom:16px;">
+    <a class="toc-return"
+       href="index.html" alt="Return to Start"><strong>Return to Start</strong></a>
+</div>
+
+
+<h1 class="logo"><a href="../../index.html">Pyrlang</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuring Pyrlang in Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook.html">Cookbook - How to Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_types.html">Data Types in Pyrlang</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../calling_python.html">Remote Calling Python from Erlang</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Pyrlang modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">dist_proto module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="base_dist_protocol.html">dist_proto.base_dist_protocol module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="client.html">dist_proto.client module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.html">dist_proto.server module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="distribution.html">dist_proto.distribution module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epmd_client.html">dist_proto.epmd_client module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dist_proto.flags module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="version.html">dist_proto.version module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../gen/index.html">gen module - Generic OTP-style calls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../net_kernel.html">net_kernel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../node.html">node module (begin code exploration from here!)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebook.html">pyrlang.notebook module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../process.html">process module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rex.html">rex module - Remote Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../util.html">util module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Pyrlang modules</a><ul>
+  <li><a href="index.html">dist_proto module</a><ul>
+      <li>Previous: <a href="epmd_client.html" title="previous chapter">dist_proto.epmd_client module</a></li>
+      <li>Next: <a href="version.html" title="next chapter">dist_proto.version module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/modules/dist_proto/flags.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
