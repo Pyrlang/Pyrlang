@@ -10,10 +10,9 @@
 import logging
 
 from term import Atom
-from pyrlang.gen_server import GenServer
+from pyrlang.gen.server import GenServer
+from pyrlang.gen.decorators import call, cast, info
 from pyrlang import Node
-from pyrlang import GeventEngine as Engine
-# from pyrlang import AsyncioEngine as async
 
 LOG = logging.getLogger("+++EXAMPLE10+++")
 logging.getLogger("").setLevel(logging.DEBUG)
@@ -21,28 +20,31 @@ logging.getLogger("").setLevel(logging.DEBUG)
 
 class MyProcess(GenServer):
     def __init__(self, node) -> None:
-        GenServer.__init__(self, node.node_name_,
-                           accepted_calls=['hello', 'hello_again'])
+        super().__init__()
         node.register_name(self, Atom('my_process'))
         LOG.info("registering process - 'my_process'")
 
-    def hello(self):
+    @call(1, lambda msg: msg == b'hello')
+    def hello(self, msg):
         """ This is called via ``gen_server:call`` """
         return self.pid_
 
-    @staticmethod
-    def hello_again():
+    @call(2, lambda msg: msg == b'hello_again')
+    def hello_again(self, msg):
         """ This is called from Elixir test after ``hello`` returned success. """
         return b'Approved!'
 
+    @call(3, lambda msg: True)
+    def hello_catch_all(self, msg):
+        """Catch all handler"""
+        return b'I\'m unsure how to respond!'
 
 def main():
-    event_engine = Engine()
-    node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=event_engine)
+    node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
 
     MyProcess(node)
 
-    event_engine.run_forever()
+    node.run()
 
 
 if __name__ == "__main__":

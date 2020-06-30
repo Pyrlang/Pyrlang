@@ -10,7 +10,7 @@ IO.puts "Test10 trying to connect to py@127.0.0.1 and send some hellos"
 
 # First we don't know destination Pid, but it registers self as 'my_process'
 # It will return its own pid as val1
-my_process = {:"my_process", :"py@127.0.0.1"}
+my_process = {:my_process, :"py@127.0.0.1"}
 IO.puts "Calling my_process via a tuple with hello"
 val1 = GenServer.call(my_process, "hello")
 :io.format "Result of calling by name ~p~n", [val1]
@@ -21,4 +21,3 @@ val2 = GenServer.call(val1, "hello_again")
 :io.format "Result of calling again by pid ~p~n", [val2]
 
 send(val1, "some_random_message")
-
