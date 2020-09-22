@@ -14,6 +14,7 @@ import asyncio
 from term import Atom
 from pyrlang.node import Node
 from pyrlang.process import Process
+from pyrlang import node_db
 from colors import color
 
 LOG = logging.getLogger(color("EXAMPLE7", fg='lime'))
@@ -36,7 +37,7 @@ class MonitorExample7(Process):
             def exit_fn():
                 n.exit_process(sender=self.pid_, receiver=msg[1],
                                reason=Atom("example7_monitor_exit"))
-            self.node_db.get_loop().call_later(0.5, exit_fn)
+            node_db.get_loop().call_later(0.5, exit_fn)
         else:
             LOG.info("MonitorExample7: Incoming %s", msg)
 

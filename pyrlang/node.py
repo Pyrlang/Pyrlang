@@ -20,7 +20,7 @@ from pyrlang.dist_proto import DistributionFlags, ErlangDistribution
 from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol
 from pyrlang.net_kernel import NetKernel
 from pyrlang.errors import BadArgError, NodeException, ProcessNotFoundError
-from pyrlang.node_db import NodeDB
+from pyrlang import node_db
 from pyrlang.process import Process
 from pyrlang.rex import Rex
 from term import Pid, Atom, Reference
@@ -51,7 +51,6 @@ class Node:
             ``e.sleep(1)`` in it, will give CPU time to the node.
     """
 
-    node_db = NodeDB()
     """ All existing local Node objects indexed by node_name: str """
 
     def __init__(self, node_name: str, cookie: str,
@@ -66,7 +65,7 @@ class Node:
         """ Node name as seen on the network. Use full node names here:
             ``name@hostname`` """
 
-        self.node_db.register(self)
+        node_db.register(self)
 
         self.inbox_ = asyncio.Queue()
         """ Contains Pyrlang's own messages to the local node. """
@@ -566,7 +565,7 @@ class Node:
         self.dist_nodes_.clear()
 
         self.dist_.destroy()
-        self.node_db.remove(self.node_name_)
+        node_db.remove(self.node_name_)
         self.__completed_future.set_result(True)
         del self
 
@@ -616,5 +615,14 @@ class Node:
     def get_loop(self):
         return self._event_loop
 
-    def run(self):
-        self._event_loop.run_until_complete(self.__completed_future)
+    def run(self, run_until=None):
+        """ the event loop for the node
+
+            :param run_until: a future object, if provided we run until that
+                              future is complete, otherwise until the node is
+                              done and has shut down. This is typically for
+                              test and not normal usage
+        """
+        if not run_until:
+            run_until = self.__completed_future
+        self._event_loop.run_until_complete(run_until)

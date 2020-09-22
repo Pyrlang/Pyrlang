@@ -21,7 +21,7 @@ import time
 from hashlib import md5
 from typing import Union, Tuple
 
-from pyrlang.node_db import NodeDB
+from pyrlang import node_db
 from pyrlang.errors import DistributionError
 from term import codec
 from term import util
@@ -85,8 +85,6 @@ class BaseDistProtocol(asyncio.Protocol):
     ALIVE = 'alive'
     RECV_CHALLENGE = 'recv_challenge'
     RECV_CHALLENGE_ACK = 'recv_challenge_ack'
-
-    node_db = NodeDB()
 
     def __init__(self, node_name: str):
         """ Create connection handler object. """
@@ -181,7 +179,7 @@ class BaseDistProtocol(asyncio.Protocol):
         """ Use this to get access to the Pyrlang node which owns this protocol.
             :rtype: pyrlang2.node.Node
         """
-        return self.node_db.get(self.node_name_)
+        return node_db.get(self.node_name_)
 
     def connection_lost(self, _exc):
         """ Handler is called when the client has disconnected """
@@ -189,7 +187,7 @@ class BaseDistProtocol(asyncio.Protocol):
 
         if self.peer_name_ is not None:
             #self._inform_local_node(("node_disconnected", self.peer_name_))
-            n = self.node_db.get(self.node_name_)
+            n = node_db.get(self.node_name_)
             n.unregister_dist_node(self.addr_)
 
     def _inform_local_node(self, msg):
@@ -398,6 +396,7 @@ class BaseDistProtocol(asyncio.Protocol):
         msg_type = chr(data[0])
 
         if msg_type == "p":
+            LOG.critical("jso: {}".format(data))
             (control_term, tail) = codec.binary_to_term(data[1:])
 
             if tail != b'':
@@ -422,7 +421,7 @@ class BaseDistProtocol(asyncio.Protocol):
         assert (self.peer_name_ is not None)
         LOG.info("Connected to %s", self.peer_name_)
         # self._inform_local_node(('node_connected', self.peer_name_, self))
-        n = self.node_db.get(self.node_name_)
+        n = node_db.get(self.node_name_)
         n.register_dist_node(self.peer_name_, self)
         n.get_loop().create_task(self.listen_on_inbox())
 

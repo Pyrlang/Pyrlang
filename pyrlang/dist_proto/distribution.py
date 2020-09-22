@@ -21,12 +21,11 @@ import sys
 import pyrlang
 from pyrlang.dist_proto import DistClientProtocol
 from pyrlang.dist_proto.epmd_client import EPMDClient
-from pyrlang.node_db import NodeDB
+from pyrlang import node_db
 
 LOG = logging.getLogger(__name__)
 
 
-node_db = NodeDB()
 
 
 class ErlangDistribution:

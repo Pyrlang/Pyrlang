@@ -15,7 +15,7 @@ import asyncio
 import logging
 from typing import Set, Dict, List, Tuple, Any
 
-from pyrlang.node_db import NodeDB
+from pyrlang import node_db
 from pyrlang.match import Match
 from pyrlang import errors
 from term.atom import Atom
@@ -41,7 +41,6 @@ class Process:
             one-way interactions with remote Erlang nodes.
     """
 
-    node_db = NodeDB()
     # if we want receive to always match and route in a specific way,
     # we can put it here (should be list of `pyrlang.match.Match` object
     _match = None
@@ -64,7 +63,7 @@ class Process:
             polling inbox.
         """
 
-        node_obj = self.node_db.get()
+        node_obj = node_db.get()
 
         self.node_name_ = node_obj.node_name_  # type: str
         """ Convenience field to see the Node  """
@@ -239,7 +238,7 @@ class Process:
         self._trigger_monitors(reason)
         self._trigger_links(reason)
 
-        n = self.node_db.get(self.node_name_)
+        n = node_db.get(self.node_name_)
         n.on_exit_process(self.pid_, reason)
 
     def get_node(self):
@@ -247,7 +246,7 @@ class Process:
             A convenient way to access the node which holds the current process.
             :rtype: pyrlang2.node.Node
         """
-        return self.node_db.get(self.node_name_)
+        return node_db.get(self.node_name_)
 
     def _trigger_monitors(self, reason):
         """ On process exit inform all monitor owners that monitor us about the

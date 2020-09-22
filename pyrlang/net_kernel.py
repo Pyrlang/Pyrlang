@@ -16,6 +16,7 @@ import logging
 
 from pyrlang.gen.server import GenServer
 from pyrlang.gen.decorators import call
+from pyrlang import node_db
 from term.atom import Atom
 
 LOG = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class NetKernel(GenServer):
         """ :param node: pyrlang.node.Node
         """
         super().__init__()
-        self.node_db.get().register_name(self, Atom('net_kernel'))
+        node_db.get().register_name(self, Atom('net_kernel'))
 
     @call(lambda msg: type(msg) == tuple and
                       len(msg) == 2 and
