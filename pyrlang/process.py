@@ -105,12 +105,42 @@ class Process:
         LOG.debug("Spawned process %s", self.pid_)
         if not self.passive_:
             event_loop = asyncio.get_event_loop()
-            event_loop.create_task(self.process_loop())
-            event_loop.create_task(self.handle_signals())
+            self._run_task = event_loop.create_task(self.process_loop())
+            #self._signal_task = event_loop.create_task(self.handle_signals())
+            event_loop.create_task(self.run_wrapper())
+
+    def __repr__(self):
+        return "pyrlang.Process: {}".format(self.pid_)
 
     def __etf__(self):
         """allow process objects to be put into messages to erlang"""
         return self.pid_
+
+    async def run_wrapper(self):
+        """
+        The outer task that awaits and supervise the run and signal tasks
+        :return:
+        """
+        try:
+            # await asyncio.gather(self._run_task, self._signal_task)
+            await self._run_task
+        except asyncio.CancelledError as e:
+            if self.is_exiting_:
+                # this is expected when exiting
+                return
+            else:
+                raise e
+        except Exception as e:
+            LOG.exception("%s got an exception in runtime", self)
+            print("caught exception {}".format(e))
+        else:
+            LOG.debug("%s finished without any issues", self)
+            return
+
+        # understand what happened and cleanup as good as possible
+        self._run_task.cancel()
+        # self._signal_task.cancel()
+        self._on_exit_signal(Atom("unhandledexception"))
 
     async def process_loop(self):
         """ Polls inbox in an endless loop.
@@ -174,10 +204,10 @@ class Process:
     async def handle_signals(self):
         """ Called from Node if the Node knows that there's a signal waiting
             to be handled. """
-        while True:
-            # Signals defer exiting a process while doing something important
-            (_exit, reason) = await self._signals.get()
-            self._on_exit_signal(reason)
+        # Signals defer exiting a process while doing something important
+        (_exit, reason) = await self._signals.get()
+        self._on_exit_signal(reason)
+
 
     def handle_inbox(self) -> int:
         """ Do not override `handle_inbox`, instead go for
@@ -226,14 +256,25 @@ class Process:
             monitors and unregisters the object from the node process
             dictionary.
         """
+        LOG.info("%s got exit call, sending signal", self)
         self._signals.put_nowait(('exit', reason))
         self.get_node().signal_wake_up(self.pid_)
+
+    def destroy(self):
+        """
+        kills tasks running
+        :return:
+        """
+        LOG.warning("destroying %s", self)
+        self._run_task.cancel()
+        # self._signal_task.cancel()
 
     def _on_exit_signal(self, reason):
         """ Internal function triggered between message handling. """
         if reason is None:
             reason = Atom('normal')
 
+        self._run_task.cancel()
         self.is_exiting_ = True
         self._trigger_monitors(reason)
         self._trigger_links(reason)
@@ -267,12 +308,14 @@ class Process:
         """ Pass any exit reason other than 'normal' to linked processes.
             If Reason is 'kill' it will be converted to 'killed'.
         """
-        if isinstance(reason, Atom):
-            if reason == 'normal':
-                return
+        if not isinstance(reason, Atom):
+            msg = "reason must be Atom, got {}".format(type(reason))
+            raise AttributeError(msg)
 
-            elif reason == 'kill':
-                reason = Atom('killed')
+        if reason == 'normal':
+            return
+        elif reason == 'kill':
+            reason = Atom('killed')
 
         node = self.get_node()
         for link in self._links:

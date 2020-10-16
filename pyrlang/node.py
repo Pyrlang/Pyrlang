@@ -116,6 +116,20 @@ class Node:
         # future object we're awaiting when running the loop for the node
         self.__completed_future = self._event_loop.create_future()
 
+        # setup own exception handling
+        self._event_loop.set_exception_handler(self.exception_handler)
+
+    def exception_handler(self, loop, context):
+        """
+        Catch unhandled exceptions in tasks
+        :param loop:
+        :param context:
+        :return:
+        """
+        LOG.critical("got unhandled exception, %s, %s", loop, context)
+        # TODO: add config to choose how to handle this, should default be
+        #       to shut down the node
+
     async def _async_loop(self):
         # This is important before we can begin spawning processes
         # to get the correct node creation
@@ -199,7 +213,7 @@ class Node:
             return ident
 
         raise BadArgError(
-            "where_is argument must be a pid or an atom (%s)" % ident)
+            "where_is argument must be a pid or an atom (%s)" % (ident,))
 
     def send_nowait(self, sender, receiver, message) -> None:
         """ Create task that sends the message
@@ -546,28 +560,59 @@ class Node:
             origin_p = self.where_is_process(origin_pid)
             origin_p.remove_monitor(ref=ref, pid=target_pid)
 
+    def _destroy_processes(self):
+        """
+        cancel all tasks in processes
+        :return:
+        """
+        for p in self.processes_.values():
+            p.destroy()
+
     def destroy(self):
+        """
+        this is hard and will for other nodes look like something just disapeard
+        for a more humane exit, use shut_down instead
+        :return:
+        """
+        for p in self.processes_.values():
+            p.destroy()
+        for dproto in self.dist_nodes_.values():
+            dproto.destroy()
+        self.dist_.destroy()
+        node_db.remove(self.node_name_)
+        if self._event_loop.is_running():
+            # we're done and let's just call it a day
+            self.__completed_future.set_result(True)
+            return
+
+        # if destroy is called when the event loop isn't running, we create
+        # task and start the loop up for a short while to give running tasks
+        # a fair chance to exit gracefully
+        async def complete_shutdown():
+            await asyncio.sleep(0.1)
+            self.__completed_future.set_result(True)
+
+        self._event_loop.create_task(complete_shutdown())
+
+    async def shut_down(self):
         """ Closes incoming and outgoing connections and destroys the local
             node. This is Python, so some refs from running async handlers
             may remain.
         """
+        LOG.info("node %s is shutting down", self)
         self.is_exiting_ = True
 
-        import copy
-        all_processes = copy.copy(self.processes_)
-        for p in all_processes.values():
-            p.exit(Atom('killed'))
-        self.processes_.clear()
-        self.reg_names_.clear()
+        ps = self.processes_.values()
+        for p in ps:
+            p.exit()
+        await asyncio.gather(*(p._run_task for p in ps),
+                             return_exceptions=True)
+        LOG.info("all processes for node %s have exited", self)
+        # this should be safe to do know
+        self.destroy()
 
-        for dproto in self.dist_nodes_.values():
-            dproto.destroy()
-        self.dist_nodes_.clear()
-
-        self.dist_.destroy()
-        node_db.remove(self.node_name_)
-        self.__completed_future.set_result(True)
-        del self
+    def shut_down_nowait(self):
+        self._event_loop.create_task(self.shut_down())
 
     def exit_process(self, sender, receiver, reason):
         """ Delivers exit message to a local or remote process. """

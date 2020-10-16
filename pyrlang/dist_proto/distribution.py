@@ -90,8 +90,10 @@ class ErlangDistribution:
         """ Finish EPMD connection, this will remove the node from the list of
             available nodes on EPMD
         """
-        self.in_srv_.close()
-        self.epmd_.close()
+        if self.in_srv_:
+            self.in_srv_.close()
+        if self.epmd_:
+            self.epmd_.close()
 
     def destroy(self):
         LOG.info("Stopping dist service")
