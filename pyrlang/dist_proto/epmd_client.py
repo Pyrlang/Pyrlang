@@ -65,7 +65,8 @@ class EPMDClient(asyncio.Protocol):
             list.
         """
         LOG.info("Closing EPMD socket")
-        self.writer_.close()
+        if self.writer_:
+            self.writer_.close()
 
     async def connect(self) -> bool:
         """ Establish a long running connection to EPMD, will not return until
