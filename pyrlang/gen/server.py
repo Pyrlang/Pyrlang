@@ -107,6 +107,7 @@ class GenServer(Process, metaclass=GSM):
         super().__init__()
 
         self.__timeout_coro = None
+        self._last_msg = None
 
         call_match = _atom_match_factory(Atom('$gen_call'))
         cast_match = _atom_match_factory(Atom('$gen_cast'))
@@ -145,6 +146,7 @@ class GenServer(Process, metaclass=GSM):
             # Else if no messages, sleep for some short time
             LOG.debug("jso: waiting for inbox data")
             msg = await self.receive()
+            self._last_msg = msg
             if type(msg) != tuple or len(msg) != 2:
                 LOG.debug("Got unhandled msg: %s", msg)
                 continue
@@ -182,6 +184,11 @@ class GenServer(Process, metaclass=GSM):
         if not p:
             return
         return p.run(msg)
+
+    def process_info(self):
+        ret = super().process_info()
+        ret['last_msg'] = self._last_msg
+        return ret
 
 
 class GenServerInterface(object):

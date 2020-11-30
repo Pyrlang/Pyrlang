@@ -72,7 +72,7 @@ class Process:
         """ Message queue. Messages are detected by the ``_run``
             loop and handled one by one in ``handle_one_inbox_message()``. 
         """
-        self.__tmp_inbox = asyncio.Queue() # used for selective receives
+        self.__tmp_inbox = asyncio.Queue()  # used for selective receives
 
         self.pid_ = node_obj.register_new_process(self)
         """ Process identifier for this object. Remember that when creating a 
@@ -184,6 +184,10 @@ class Process:
             matched_pattern = match(msg)
             if not matched_pattern:
                 self.__tmp_inbox.put_nowait(msg)
+                # generally we don't expect join on the queue so we don't
+                # have to report done, but since this will be reinserted on
+                # the queue we report it done so the counter doesn't count
+                # the message multiple times
                 self.inbox_.task_done()  # not sure we can say done this early
                 continue
             self._cleanup_inbox()
@@ -351,3 +355,12 @@ class Process:
         existing = self._monitored_by.get(ref, None)
         if existing == pid:
             del self._monitored_by[ref]
+
+    def process_info(self):
+        return {'pid': self.pid_,
+                'stack': self._run_task.get_stack(),
+                'inbox': self.inbox_,
+                'monitored_by': self._monitored_by,
+                'monitors': self._monitors,
+                'links': self._links
+                }
