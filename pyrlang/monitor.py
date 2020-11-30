@@ -50,13 +50,3 @@ def check_process(pid):
     ret['state'] = p.__dict__
     LOG.info("monitor request, check_process:\n\n%s\n", ret)
     return dict((k, str(v)) for k, v in ret.items())
-
-
-def process_info(self):
-    return {'pid': self.pid_,
-            'stack': self._run_task.get_stack(),
-            'inbox': self.inbox_,
-            'monitored_by': self._monitored_by,
-            'monitors': self._monitors,
-            'links': self._links
-            }
