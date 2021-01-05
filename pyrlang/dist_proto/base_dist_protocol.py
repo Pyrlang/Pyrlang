@@ -398,6 +398,7 @@ class BaseDistProtocol(asyncio.Protocol):
         msg_type = chr(data[0])
 
         if msg_type == "p":
+            LOG.debug("message data: {}".format(data))
             (control_term, tail) = codec.binary_to_term(data[1:])
 
             if tail != b'':
