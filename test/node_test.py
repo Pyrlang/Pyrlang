@@ -7,10 +7,12 @@ from subprocess import Popen, PIPE
 
 # we import the db class because we're going to do nasty stuff
 from pyrlang import node_db
+from pyrlang.process import Process
 from pyrlang.gen.server import GenServer
 from pyrlang.gen.server import GenServerInterface as GSI
 from pyrlang.gen.decorators import call, cast, info
 from pyrlang import Node
+from pyrlang.dist_proto import base_dist_protocol
 from term import Atom
 
 TESTCOOKIE="PYRLANGTESTCOOKIE"
@@ -161,6 +163,47 @@ class TestProcessCrash(NodeTests):
         self.assertRaises(asyncio.CancelledError, s._run_task.exception)
 
 
+class TrackInboxProcess(Process):
+    def __init__(self):
+        super().__init__()
+        self.msgs = []
+
+    def handle_one_inbox_message(self, msg):
+        self.msgs.append(msg)
+
+
+class TestNodeLost(NodeTests):
+    ext_setup = 'node_lost'
+
+    def test_node_idle_remove(self):
+        # force the timeout to happen before we get ping back
+        idle = base_dist_protocol.IDLE_TIMEOUT
+        alive = base_dist_protocol.ALIVE_CHECK_TIME
+        base_dist_protocol.IDLE_TIMEOUT = 1
+        base_dist_protocol.ALIVE_CHECK_TIME = 0.5
+        p = TrackInboxProcess()
+        node = node_db.get()
+        dest = (Atom('py_ext@127.0.0.1'), Atom('namedserver'))
+        msg = (Atom('sendpid'), p.pid_)
+        node.send_nowait(p.pid_, dest, msg)
+        run_loop_for(node, 2)
+        self.assertEqual(node.dist_nodes_,
+                         {},
+                         "make sure the ext node is removed")
+        self.assertEqual(len(p.msgs), 1)
+        node.send_nowait(p.pid_, dest, msg)
+        run_loop_for(node, 0.5)
+        self.assertTrue('py_ext@127.0.0.1' in node.dist_nodes_,
+                        "make sure the ext node is removed")
+        self.assertEqual(len(p.msgs), 2)
+        run_loop_for(node, 3)
+        self.assertEqual(node.dist_nodes_,
+                         {},
+                         "make sure the ext node is removed")
+        base_dist_protocol.IDLE_TIMEOUT = idle
+        base_dist_protocol.ALIVE_CHECK_TIME = alive
+
+
 def set_logger():
     import logging
     import sys
@@ -178,5 +221,5 @@ def set_logger():
 
 if __name__ == '__main__':
     # set logging when you want/need more output
-    #set_logger()
+    # set_logger()
     unittest.main(exit=True)
