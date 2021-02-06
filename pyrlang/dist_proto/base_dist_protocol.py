@@ -55,6 +55,12 @@ CONTROL_TERM_MONITOR_P_EXIT = 21
 CONTROL_TERM_SEND_SENDER = 22
 CONTROL_TERM_SEND_SENDER_TT = 23
 
+# Ping and alive timings. they're not aligned on purpose, idea is to have
+# some offset between ping and alive and having idle timeout around double
+# the ping time
+PING_TIME = 15
+ALIVE_CHECK_TIME = 20
+IDLE_TIMEOUT = 30
 
 class BaseDistProtocol(asyncio.Protocol):
     """ Defines Erlang distribution protocol (shared parts).
@@ -183,12 +189,14 @@ class BaseDistProtocol(asyncio.Protocol):
 
     def connection_lost(self, _exc):
         """ Handler is called when the client has disconnected """
+        LOG.warning("connection lost for  %s", self.peer_name_)
         self.state_ = self.DISCONNECTED
+        self.destroy()
 
         if self.peer_name_ is not None:
             #self._inform_local_node(("node_disconnected", self.peer_name_))
             n = node_db.get(self.node_name_)
-            n.unregister_dist_node(self.addr_)
+            n.unregister_dist_node(self.peer_name_)
 
     def _inform_local_node(self, msg):
         self.get_node().inbox_.put_nowait(msg)
@@ -282,30 +290,34 @@ class BaseDistProtocol(asyncio.Protocol):
             self.inbox_.task_done()
 
     def _periodic_ping_remote(self):
+        self._schedule_periodic_ping_remote()
         if not self.transport_ or self.transport_.is_closing():
             return
-        self._schedule_periodic_ping_remote()
 
         if self.state_ == self.CONNECTED and self.packet_len_size_ == 4:
             LOG.debug("sending periodic ping for %s", self)
             self._send_packet4(b'')
 
     def _schedule_periodic_ping_remote(self):
-        asyncio.get_event_loop().call_later(15.0, self._periodic_ping_remote)
+        asyncio.get_event_loop().call_later(PING_TIME,
+                                            self._periodic_ping_remote)
 
     def _periodic_alive_check(self):
-        if not self.transport_ or self.transport_.is_closing():
-            return
         self._schedule_periodic_alive_check()
+        if not self.transport_:
+            return
         t = time.time() - self._last_interaction
         LOG.debug("last interaction for dist com with %s was %ss ago",
                   self.peer_name_,
                   t)
-        if t > 30:
+        if t > IDLE_TIMEOUT:
+            LOG.warning("got timeout with the connection to %s, removing",
+                        self.peer_name_)
             self.destroy()
 
     def _schedule_periodic_alive_check(self):
-        asyncio.get_event_loop().call_later(20, self._periodic_alive_check)
+        asyncio.get_event_loop().call_later(ALIVE_CHECK_TIME,
+                                            self._periodic_alive_check)
 
     def _handle_one_inbox_message(self, m):
         # Send a ('send', Dst, Msg) to deliver a message to the other side
