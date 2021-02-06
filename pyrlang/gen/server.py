@@ -207,7 +207,7 @@ class GenServerInterface(object):
         self._destination_pid = destination_pid
         self._node = calling_process.get_node()
 
-    async def _do_call(self, label, request, timeout=5):
+    async def _do_call(self, label, request, timeout):
         calling_pid = self._calling_process.pid_
         m_ref = self._node.monitor_process(calling_pid,
                                            self._destination_pid)
@@ -230,7 +230,7 @@ class GenServerInterface(object):
         self._node.demonitor_process(calling_pid, self._destination_pid, m_ref)
         return res
 
-    async def call(self, request, timeout=None):
+    async def call(self, request, timeout=5):
         return await self._do_call(Atom('$gen_call'), request, timeout)
 
     async def cast(self, request):
