@@ -2,11 +2,11 @@ Pyrlang - Erlang node in Python
 ===============================
 
 This is a drop-in Erlang node implementation in Python 3.5, implementing
-a network Erlang node protocol. It was designed to allow interoperation between 
-existing Python projects and BEAM languages: Erlang, Elixir, Alpaca, Luaerl, 
-LFE, Clojerl and such. 
+a network Erlang node protocol. It was designed to allow interoperation between
+existing Python projects and BEAM languages: Erlang, Elixir, Alpaca, Luaerl,
+LFE, Clojerl and such.
 
-With just a few lines of startup code your Python program becomes an Erlang 
+With just a few lines of startup code your Python program becomes an Erlang
 network node, participating in the Erlang cluster.
 
 
@@ -26,14 +26,13 @@ For those times when you absolutely need assistance and email is too slow, here'
 Features
 --------
 
-*   Switchable async engine backends: Gevent and Asyncio.
-*   Erlang distribution protocol for Erlang versions 19, 20, and 21
-*   Registry of Python 'processes', which have an Erlang-compatible process 
+*   Erlang distribution protocol for Erlang versions 20, 21 and 22
+*   Registry of Python 'processes', which have an Erlang-compatible process
     identifier and an optional registered name
 *   Send and receive messages locally and remotely by pid or name
 *   Can link and monitor Erlang from Python and Python from Erlang
 *   `net_adm` pings supported
-*   RPC calls to Python (Erlang `rpc:call`). Exceptions are propagated 
+*   RPC calls to Python (Erlang `rpc:call`). Exceptions are propagated
     from Python back to Erlang;
 *   `Pyrlang.GenServer` descendant from `Pyrlang.Process` allows accepting
     generic calls mapped to Python class members
