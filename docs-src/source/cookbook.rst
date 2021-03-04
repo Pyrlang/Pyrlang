@@ -9,32 +9,25 @@ Start the Node
 
 .. code-block:: python
 
-    from pyrlang import Node, Atom, GeventEngine # or AsyncioEngine
+    from pyrlang import Node
+    from term import Atom
 
     def main():
-        eng = GeventEngine()  # or AsyncioEngine
-        node = Node(node_name="py@127.0.0.1", cookie="COOKIE", engine=eng)
+        node = Node(node_name="py@127.0.0.1", cookie="COOKIE")
 
         fake_pid = node.register_new_process()
 
         # To be able to send to Erlang shell by name first give it a
         # registered name: `erlang:register(shell, self()).`
         # To see an incoming message in shell: `flush().`
-        node.send(sender=fake_pid,
-                  receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
-                  message=Atom('hello'))
+        node.send_nowait(sender=fake_pid,
+                         receiver=(Atom('erl@127.0.0.1'), Atom('shell')),
+                         message=Atom('hello'))
 
         eng.run_forever()
 
     if __name__ == "__main__":
         main()
-
-Here ``event_engine`` is a pluggable adapter which allows Pyrlang to run both
-with gevent (:py:class:`~pyrlang.Engine.gevent_engine.GeventEngine`)
-and asyncio-driven (:py:class:`~pyrlang.Engine.asyncio_engine.AsyncioEngine`)
-event loops. Pyrlang in this case performs mostly
-protocols handling, while event engine will open connections, start tasks
-and sleep asynchronously.
 
 
 Connect nodes
@@ -94,7 +87,7 @@ function which will transparently pass all args to the ``print`` operator.
 
 .. code-block:: erlang
 
-    rpc:call('py@127.0.0.1', 'Pyrlang.logger', 'tty', ["Hello World"]).
+    rpc:call('py@127.0.0.1', time, time, []).
 
 .. note::
     You do not need to import module to perform the call, this will be done by Rex.
@@ -111,7 +104,7 @@ value from Python.
 .. code-block:: erlang
 
     gen_server:call({rex, 'py@127.0.0.1'},
-                    {call, 'Pyrlang.logger', tty, ["Hello"], self()}).
+                    {call, time, time, [], self()}).
 
 
 Send from Python locally
@@ -170,8 +163,8 @@ Send to a Python object
 -----------------------
 
 A python object inherited from :py:class:`~pyrlang.process.Process` will be
-a Greenlet (i.e. running in parallel with the rest of the system).
-A process is able to register itself (optional) with a name and handle
+an async task, which adds to the event loop and can coexists with other
+tasks. A process is able to register itself (optional) with a name and handle
 incoming messages.
 
 Messages sent to a pid or name will be automatically routed to such a
@@ -182,7 +175,8 @@ constantly call ``self.handle_inbox()`` so you can check the messages yourself.
 
     class MyProcess(Process):
         def __init__(self) -> None:
-            Process.__init__(self)
+            super().__init__()
+            node = self.node_db.get()
             node.register_name(self, Atom('my_process'))  # optional
 
         def handle_one_inbox_message(self, msg):
@@ -245,7 +239,7 @@ Gen_server-like Processes
 -------------------------
 
 To have a :py:class:`~pyrlang.process.Process` descendant which responds to
-``gen_server:call``, inherit your class from :py:class:`~pyrlang.gen_server.GenServer`.
+``gen_server:call``, inherit your class from :py:class:`~pyrlang.gen.server.GenServer`.
 When calling ``GenServer`` constructor in your ``__init__`` specify an
 additional parameter ``accepted_calls`` which is a list of strings.
 
@@ -254,35 +248,32 @@ and their result will be transparently 'replied' back to the caller.
 
 .. code-block:: python
 
-    class MyProcess(GenServer):
-        def __init__(self) -> None:
-            GenServer.__init__(self, accepted_calls=['hello'])
+    from pyrlang.gen.decorators import call
+    class MyGenServer(GenServer):
+        def __init__(self):
+            super().__init__()
+            node = self.node_db.get()
+            node.register_name(self, Atom('my_gen_server'))  # optional
 
-        def hello(self):
+        @call(1, lambda msg: msg == 'hello')
+        def hello(self, msg):
             return self.pid_
 
-When you perform a ``gen_server:call`` with an atom, the atom becomes Python
-method name:
+        @call(2, lambda msg: True)
+        def catch_all_call(self, msg):
+            ret = "I don't understand"
+            return ret
 
-.. code-block:: python
+The decorator will be used by the meta class so that when a call comes it matches
+all functions that have ``call`` decorator. The first number is the priority, just
+as in erlang, where the first function clause that matches is the one that gets the
+call.
 
-    # 1> gen_server:call(Pid, my_method)
-    # becomes a call to
-    class MyClass:
-        def my_method(self):
-            pass # return None -> atom 'undefined' in Erlang
+.. code-block:: erlang
 
-When you perform a ``gen_server:call`` with a tuple where first element is an
-atom, the atom becomes Python method name, and following tuple elements become
-python **\*args**.
-
-.. code-block:: python
-
-    # 1> gen_server:call(Pid, {my_method, 1000, "hello"})
-    # becomes a call to
-    class MyClass:
-        def my_method(self, i: int, s: bytes):
-            pass # return None -> atom 'undefined' in Erlang
+    Server = {my_gen_server, 'py@127.0.0.1'}.
+    gen_server:call(Server, hello).
+    gen_server:call(Server, somethingelse).
 
 
 Linking/Monitoring from Erlang to Python
