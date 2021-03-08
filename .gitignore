@@ -66,6 +66,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs-src/source/_build/
 
 # PyBuilder
 target/
@@ -106,6 +107,15 @@ ENV/
 # intelliJ
 /.idea/*
 *.iml
+
+# VSCode
+.vscode
+
+# vim
+*.swp
+
+# osx
+.DS_Store
 
 # Pyre Typecheck
 /.pyre_configuration
