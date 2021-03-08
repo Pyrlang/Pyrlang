@@ -1,6 +1,3 @@
-# Pyrlang Term library
-git+git://github.com/Pyrlang/Term@master#egg=term
-
 # Documentation requirements
 Jinja2>=2.10.1
 MarkupSafe>=1.0
