@@ -14,7 +14,7 @@ To install Pyrlang you checkout the project and install it:
 
 .. code-block:: console
 
-  git clone git@github.com:Pyrlang/Pyrlang.git
+  git clone git@github.com/Pyrlang/Pyrlang.git
   cd Pyrlang
   pip install .
 
