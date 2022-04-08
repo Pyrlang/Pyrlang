@@ -1,7 +1,7 @@
 
 class NodeDB:
     """
-    A singleton class for keeping track of the nodes that created withing
+    A singleton class for keeping track of the nodes that created within
     a python process.
 
     Even though it's considered a bit of an anti pattern to run several nodes

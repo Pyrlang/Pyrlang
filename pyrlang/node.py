@@ -76,7 +76,7 @@ class Node:
 
         self.processes_ = {}  # type: Dict[Pid, Process]
         """ Process dictionary which stores all the existing ``Process`` objects
-            adressable by a pid.
+            addressable by a pid.
     
             .. note:: This creates a python reference to an
                 object preventing its automatic garbage collection.
@@ -363,7 +363,7 @@ class Node:
         """ unsafe casting of link
 
             you can't assume it has got effect when this function returns
-            Convinience methot for being able to call it outside a async
+            Convenience method for being able to call it outside a async
             function
          """
         link_task = self.link(pid1, pid2, local_only)

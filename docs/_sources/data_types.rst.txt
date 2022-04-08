@@ -8,7 +8,7 @@ As we started this we've seen that there are some things that doesn't map
 that good between python and erlang, and that the best solution for it could
 be different pending on the problem you're currently trying to solve.
 
-Erlang strings is more of syntactic sugar, but it is infact a list of
+Erlang strings is more of syntactic sugar, but it is in fact a list of
 integers with a value of less than 256. Since this interpretation is what is
 sometime used when writing erlang code
 

@@ -2,7 +2,7 @@ Building the Library
 ====================
 
 To run pyrlang you need to have term installed. Term is an external package
-that pyrlang uses to encode / decode Erlangs `external term fomrat
+that pyrlang uses to encode / decode Erlangs `external term format
 <http://erlang
 .org/doc/apps/erts/erl_ext_dist.html>`__. Install it with:
 
@@ -24,7 +24,7 @@ also
 pull requirements for Sphinx documentation generator (not needed if you only
 use the library).
 
-To build the docs you need to install Sphinx and some other pacakges you can
+To build the docs you need to install Sphinx and some other packages you can
 do that with the requirements file:
 
 .. code-block:: console
