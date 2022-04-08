@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.o
 """
-Decorator funcitons for building Gen based classes.
+Decorator functions for building Gen based classes.
 
 the functions `call`, `cast`, `info` are function decorators.
 
