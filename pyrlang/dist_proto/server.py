@@ -59,24 +59,33 @@ class DistServerProtocol(BaseDistProtocol):
 
     def on_packet_recvname(self, data: bytes) -> bytes:
         """ Handle RECV_NAME command, the first packet in a new connection. """
-        if not data.startswith(b'n'):
+        if data.startswith(b'n'): # (version 5)
+            # Read peer dist_proto version and compare to ours
+            dist_vsn = util.u16(data[1:3])
+            if not version.check_valid_dist_version(dist_vsn):
+                self.protocol_error(
+                    "Dist protocol version have: %s got: %d"
+                    % (str(version.DIST_VSN_PAIR), dist_vsn)
+                )
+                # raise
+
+            self.dist_vsn_ = dist_vsn
+            self.peer_flags_ = util.u32(data[3:7])
+            self.peer_name_ = data[7:].decode("latin1")
+            LOG.info("RECV_NAME: (version %d) %s", self.dist_vsn_, self.peer_name_)
+
+        elif data.startswith(b'N'): # (version 6)
+            self.dist_vsn_ = 6  # implicit
+            self.peer_flags_ = struct.unpack(">Q", data[1:9])[0]
+            creation = util.u32(data[9:13])
+            nlen = util.u16(data[13:15])
+            self.peer_name_ = data[15:15 + nlen].decode("latin1")
+            LOG.info("RECV_NAME: (version %d) %s (creation %d)",
+                     self.dist_vsn_, self.peer_name_, creation)
+
+        else:
             self.protocol_error("Unexpected packet (expecting RECV_NAME)")
             # raise
-
-        # Read peer dist_proto version and compare to ours
-        peer_max_min = (data[1], data[2])
-        #if version.dist_version_check(peer_max_min):
-        if not version.check_valid_dist_version(peer_max_min):
-            self.protocol_error(
-                "Dist protocol version have: %s got: %s"
-                % (str(version.DIST_VSN_PAIR), str(peer_max_min))
-            )
-            # raise
-
-        self.peer_distr_version_ = peer_max_min
-        self.peer_flags_ = util.u32(data[3:7])
-        self.peer_name_ = data[7:].decode("latin1")
-        LOG.info("RECV_NAME: %s %s", self.peer_distr_version_, self.peer_name_)
 
         # Report
         self._send_packet2(b'sok')
@@ -117,16 +126,31 @@ class DistServerProtocol(BaseDistProtocol):
         return b''  # assume data is consumed
 
     def _send_challenge(self, my_challenge):
-        n = self.get_node()
-        LOG.info("Sending challenge (our number is %d) %s"
-                 % (my_challenge, self.node_name_))
-        msg = b'n' \
-              + struct.pack(">HII",
-                            version.DIST_VSN,
-                            n.node_opts_.dflags_,
-                            my_challenge) \
-              + bytes(self.node_name_, "latin1")
-        self._send_packet2(msg)
+        if self.dist_vsn_ == 5:
+            n = self.get_node()
+            LOG.info("Sending challenge (our number is %d) %s"
+                     % (my_challenge, self.node_name_))
+            msg = b'n' \
+                  + struct.pack(">HII",
+                                self.dist_vsn_,
+                                n.node_opts_.dflags_,
+                                my_challenge) \
+                  + bytes(self.node_name_, "latin1")
+            self._send_packet2(msg)
+
+        elif self.dist_vsn_ == 6:
+            n = self.get_node()
+            LOG.info("Sending challenge (our number is %d) %s"
+                     % (my_challenge, self.node_name_))
+            name = bytes(self.node_name_, "latin1")
+            msg = b'N' \
+                  + struct.pack(">QIIH",
+                                n.node_opts_.dflags_,
+                                my_challenge,
+                                n.dist_.creation_,
+                                len(name)) \
+                  + name
+            self._send_packet2(msg)
 
     def _send_challenge_ack(self, peers_challenge: int, cookie: str):
         """ After cookie has been verified, send the confirmation by digesting
