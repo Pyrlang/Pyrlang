@@ -71,6 +71,11 @@ example10b:
 	elixir --name elixir@127.0.0.1 --cookie COOKIE \
 		examples/elixir/e10.exs
 
+# Run `make iexnode` to run Elixir shell prepared to play with above examples
+.PHONY: iexnode
+iexnode:
+	iex --name erl@127.0.0.1 --cookie COOKIE --dot-iex examples/iexnode.exs
+
 $(ROOT)/examples/%.beam: $(ROOT)/examples/%.erl
 	cd $(ROOT)/examples && erlc $<
 

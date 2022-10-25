@@ -75,6 +75,11 @@ DFLAG_EXIT_PAYLOAD = 0x400000
 DFLAG_FRAGMENTS = 0x800000
 """ The node supports fragmentation for large packets. """
 
+DFLAGS_HANDSHAKE_23 = 0x1000000
+""" The node supports the new connection setup handshake (version 6) introduced in OTP 23.
+    This flag is mandatory (from OTP 25). If not present, the connection is refused.
+"""
+
 DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_EXT_PIDS_PORTS |
                   DFLAG_FUN_TAGS | DFLAG_NEW_FUN_TAGS |
@@ -84,7 +89,8 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_MAP_TAG |
                   DFLAG_BIG_CREATION |
                   DFLAG_UTF8_ATOMS | DFLAG_SMALL_ATOM_TAGS |
-                  DFLAG_DIST_MONITOR_NAME | DFLAG_DIST_MONITOR)
+                  DFLAG_DIST_MONITOR_NAME | DFLAG_DIST_MONITOR |
+                  DFLAGS_HANDSHAKE_23)
 """ Default flags value represents current Pyrlang library features
     as a combination of feature bits.
 """

@@ -16,26 +16,28 @@
     protocol
 """
 
-DIST_VSN = 5
-DIST_VSN_PAIR = (DIST_VSN, DIST_VSN)
+DIST_VSN_MAX = 6  # optional since OTP-23, made mandatory in OTP-25
+DIST_VSN_MIN = 5  # nodes older than OTP-23 down to ancient R6B
+
+DIST_VSN_PAIR = (DIST_VSN_MAX, DIST_VSN_MIN)
 " Supported dist_proto protocol version (MAX,MIN). "
 
 
 def dist_version_check(max_min: tuple) -> bool:
-    """ Check pair of versions against version which is supported by us
+    """ Check pair of versions against versions which are supported by us
 
         :type max_min: tuple(int, int)
         :param max_min: (Max, Min) version pair for peer-supported dist version
     """
-    return max_min[0] >= DIST_VSN >= max_min[1]
+    return DIST_VSN_MIN <= max_min[0] and max_min[1] <= DIST_VSN_MAX # do ranges overlap?
 
 
-def check_valid_dist_version(max_min: tuple) -> bool:
+def check_valid_dist_version(dist_vsn: int) -> bool:
     """
     Check that the version is supported
-    :param max_min: tuple(int, int
+    :param dist_vsn: int
     :return: True if ok
     """
-    return max_min[0] <= DIST_VSN <= max_min[1]
+    return DIST_VSN_MIN <= dist_vsn <= DIST_VSN_MAX
 
-# __all__ = ['DIST_VSN', 'DIST_VSN_PAIR']
+# __all__ = ['DIST_VSN_MAX', 'DIST_VSN_MIN', 'DIST_VSN_PAIR']

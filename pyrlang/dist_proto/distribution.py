@@ -108,15 +108,16 @@ class ErlangDistribution:
             :param remote_node: String with node 'name@ip'
             :return: boolean whether the connection succeeded
         """
-        host_port = await EPMDClient.query_node(remote_node)
-        if host_port is None:
+        host_port_version = await EPMDClient.query_node(remote_node)
+        if host_port_version is None:
             # Connection to node failed, node is not known
             return False
         else:
             await asyncio.get_event_loop().create_connection(
-                lambda: DistClientProtocol(node_name=local_node),
-                host=host_port[0],
-                port=host_port[1]
+                lambda: DistClientProtocol(node_name=local_node,
+                                           dist_vsn=host_port_version[2]),
+                host=host_port_version[0],
+                port=host_port_version[1]
             )
             return True
 

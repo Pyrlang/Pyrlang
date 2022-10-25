@@ -114,7 +114,7 @@ class EPMDClient(asyncio.Protocol):
             dist.creation_ = creation
             return True
 
-        LOG.error("ALIVE2 failed with creation %d", creation)
+        LOG.error("ALIVE2 failed")
         return False
 
     async def _read_alive2_reply(self) -> int:
@@ -123,16 +123,27 @@ class EPMDClient(asyncio.Protocol):
             :return: Creation value if all is well, connection remains on.
                 On error returns -1
         """
-        # Reply will be [121,0,Creation:16] for OK, otherwise [121,Error]
+        # Reply will be one of:
+        # - ALIVE2_RESP [121,0,Creation:16] for OK, otherwise [121,Error]
+        # - ALIVE2_X_RESP [118,0,Creation:32] for OK, otherwise [118,Error]
+        # The latter if both the node and EPMD support distribution version 6.
         reply = await self.reader_.read(2)
         if not reply:
             LOG.error("ALIVE2 Read error. Closed? %s", reply)
             return -1
 
         if reply[1] == 0:
-            cr = await self.reader_.read(2)
-            (creation,) = struct.unpack(">H", cr)
-            return creation
+            if reply[0] == 121: # ALIVE2_RESP
+                cr = await self.reader_.read(2)
+                (creation,) = struct.unpack(">H", cr)
+                return creation
+            elif reply[0] == 118: # ALIVE2_X_RESP
+                cr = await self.reader_.read(4)
+                (creation,) = struct.unpack(">I", cr)
+                return creation
+            else:
+                LOG.error("Expected ALIVE2 response, got (%d)", reply[0])
+                return -1
 
         LOG.error("ALIVE2 returned error %s", reply[1])
         return -1
@@ -168,11 +179,11 @@ class EPMDClient(asyncio.Protocol):
         self.writer_.write(header + req)
 
     @staticmethod
-    async def query_node(node_name: str) -> [Tuple[str, int], None]:
+    async def query_node(node_name: str) -> [Tuple[str, int, int], None]:
         """ Query EPMD about the port to the given node.
 
             :param node_name: String with node "name@ip" or "name@hostname"
-            :return: Host and port where the node is, or None if not found
+            :return: Host, port (where the node is) and distribution version, or None if not found
             :rtype: [tuple(str, int), None]
             :throws EPMDClientError: if something is wrong with input
             :throws EPMDConnectionError: if connection went wrong
@@ -219,11 +230,14 @@ class EPMDClient(asyncio.Protocol):
         if not version.dist_version_check(versions):
             raise EPMDConnectionError(
                 "Remote node %s supports protocol version %s and we "
-                "support %d", node_name, versions, version.DIST_VSN)
+                "support %s", node_name, versions, version.DIST_VSN_PAIR)
+
+        # Select max. distribution version common for both nodes
+        dist_vsn = min(versions[0], version.DIST_VSN_MAX)
 
         # ignore node name and extra
 
-        return r_ip, r_port
+        return r_ip, r_port, dist_vsn
 
     @staticmethod
     async def _fire_forget_query(ip: str, query: bytes) -> bytes:

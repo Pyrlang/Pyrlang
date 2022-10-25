@@ -26,7 +26,7 @@ For those times when you absolutely need assistance and email is too slow, here'
 Features
 --------
 
-*   Erlang distribution protocol for Erlang versions 21, 22 and 23
+*   Erlang distribution protocol for Erlang versions 19 to 25
 *   Registry of Python 'processes', which have an Erlang-compatible process
     identifier and an optional registered name
 *   Send and receive messages locally and remotely by pid or name

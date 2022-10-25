@@ -104,10 +104,11 @@ class BaseDistProtocol(asyncio.Protocol):
         self.inbox_ = asyncio.Queue()
         """ Inbox is used to ask the connection to do something. """
 
-        self.peer_distr_version_ = (None, None)  # type: (int, int)
-        """ Protocol version range supported by the remote peer. Erlang/OTP 
-            versions 19-20 supports protocol version 7, older Erlangs down to 
-            R6B support version 5. """
+        self.dist_vsn_ = None # type: int
+        """ Protocol version range supported by the remote peer and us.
+            Erlang/OTP since R6B supports protocol version 5.
+            In OTP-23 protocol version 6 was added as optional,
+            which became mandatory in OTP-25. """
 
         self.peer_flags_ = 0
         self.peer_name_ = None  # type: Union[None, str]

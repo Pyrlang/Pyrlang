@@ -18,6 +18,7 @@
 import asyncio
 import logging
 import random
+import struct
 
 from pyrlang.dist_proto import version
 from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol
@@ -30,8 +31,9 @@ LOG.setLevel(logging.INFO)
 class DistClientProtocol(BaseDistProtocol):
     """ Handles outgoing connections from our to other nodes. """
 
-    def __init__(self, node_name: str):
+    def __init__(self, node_name: str, dist_vsn: int):
         super().__init__(node_name=node_name)
+        self.dist_vsn_ = dist_vsn
 
     def connection_made(self, transport: asyncio.Transport):
         super().connection_made(transport)
@@ -63,12 +65,25 @@ class DistClientProtocol(BaseDistProtocol):
 
     def _send_name(self):
         """ Create and send first welcome packet. """
-        pkt = b'n' + \
-              bytes([version.DIST_VSN, version.DIST_VSN]) + \
-              util.to_u32(self.get_node().node_opts_.dflags_) + \
-              bytes(self.node_name_, "latin-1")
-        LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
-        self._send_packet2(pkt)
+
+        if self.dist_vsn_ == 5:
+            pkt = b'n' + \
+                  bytes(version.DIST_VSN_PAIR) + \
+                  util.to_u32(self.get_node().node_opts_.dflags_) + \
+                  bytes(self.node_name_, "latin-1")
+            LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
+            self._send_packet2(pkt)
+
+        elif self.dist_vsn_ == 6:
+            n = self.get_node()
+            name = bytes(self.node_name_, "latin-1")
+            pkt = b'N' + \
+                  struct.pack(">Q", self.get_node().node_opts_.dflags_) + \
+                  util.to_u32(n.dist_.creation_) + \
+                  util.to_u16(len(name)) + \
+                  name
+            LOG.info("send_name %s (name=%s)", pkt, self.node_name_)
+            self._send_packet2(pkt)
 
     def on_packet_recvstatus(self, data: bytes) -> bytes:
         if chr(data[0]) != 's':
@@ -100,18 +115,34 @@ class DistClientProtocol(BaseDistProtocol):
         # raise
 
     def on_packet_recvchallenge(self, data: bytes) -> bytes:
-        if chr(data[0]) != 'n':
-            return self.protocol_error("Handshake 'n' packet expected")
+        if chr(data[0]) == 'n':  # (version 5)
+            # It seems that the peer in (data[1], data[2]) sends back our max/min version,
+            # and not its own max/min version (checked with OTP-22).
+            # Not a problem because we already determined what version to use (dist_vsn_),
+            # and moreover in version 6 of the message the versions are not conveyed at all.
+            self.peer_flags_ = util.u32(data, 3)
+            challenge = util.u32(data, 7)
+            self.peer_name_ = data[11:].decode("latin1")
 
-        self.peer_distr_version_ = (data[1], data[2])
-        self.peer_flags_ = util.u32(data, 3)
-        challenge = util.u32(data, 7)
-        self.peer_name_ = data[11:].decode("latin1")
+            self._send_challenge_reply(challenge)
 
-        self._send_challenge_reply(challenge)
+            self.state_ = self.RECV_CHALLENGE_ACK
+            return b''  # assume everything is consumed?
 
-        self.state_ = self.RECV_CHALLENGE_ACK
-        return b''  # assume everything is consumed?
+        elif chr(data[0]) == 'N':  # (version 6)
+            self.peer_flags_ = struct.unpack(">Q", data[1:9])[0]
+            challenge = util.u32(data[9:13])
+            creation = util.u32(data[13:17])
+            nlen = util.u16(data[17:19])
+            self.peer_name_ = data[19:19 + nlen].decode("latin1")
+
+            self._send_challenge_reply(challenge)
+
+            self.state_ = self.RECV_CHALLENGE_ACK
+            return b''  # assume everything is consumed?
+
+        else:
+            return self.protocol_error("Handshake 'n' or 'N' packet expected")
 
     def _send_challenge_reply(self, challenge: int):
         digest = self.make_digest(challenge, self.get_node().get_cookie())
