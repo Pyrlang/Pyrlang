@@ -68,7 +68,7 @@ class Node:
 
         self.node_db.register(self)
 
-        self.inbox_ = asyncio.Queue()
+        self.inbox_ = asyncio.Queue()  # type: asyncio.Queue
         """ Contains Pyrlang's own messages to the local node. """
 
         self.pid_counter_ = 0
@@ -419,14 +419,14 @@ class Node:
         elif not local_only:
             link_m = ('unlink', pid2, pid1)  # (unlink, localpid, remotepid)
             await self.dist_command(receiver_node=pid1.node_name_,
-                                   message=link_m)
+                                    message=link_m)
 
         if pid2.is_local_to(self):
             self.processes_[pid2].remove_link(pid1)
         elif not local_only:
             link_m = ('unlink', pid1, pid2)  # (unlink, localpid, remotepid)
             await self.dist_command(receiver_node=pid2.node_name_,
-                                   message=link_m)
+                                    message=link_m)
 
     def monitor_process(self, origin_pid: Pid, target, ref=None):
         """ Locate the process referenced by the target and place the origin
@@ -492,7 +492,7 @@ class Node:
             origin_p.add_monitor(pid=target_proc.pid_, ref=ref)
         return ref
 
-    def demonitor_process(self, origin_pid, target, ref):
+    async def demonitor_process(self, origin_pid, target, ref):
         """ Locate the process ``target`` and remove the ``origin`` from its
             ``monitors_`` collection. This does not trigger any notifications
             or signals to the ``origin``.
@@ -509,7 +509,7 @@ class Node:
         target_pid = self.where_is(target)
 
         LOG.debug("demonitor orig=%s target=%s ref=%s", origin_pid, target_pid,
-                 ref)
+                  ref)
 
         if not origin_pid.is_local_to(self):
             # Remote node monitored us but now wants to release
@@ -522,11 +522,11 @@ class Node:
         # Target process is remote, and we need to send monitor message
         return self._demonitor_remote_process(origin_pid, target_pid, ref=ref)
 
-    def _demonitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
-                                  ref: Reference):
+    async def _demonitor_remote_process(self, origin_pid: Pid, target_pid: Pid,
+                                        ref: Reference):
         monitor_msg = ('demonitor_p', origin_pid, target_pid, ref)
-        self.dist_command(receiver_node=target_pid.node_name_,
-                          message=monitor_msg)
+        await self.dist_command(receiver_node=target_pid.node_name_,
+                                message=monitor_msg)
 
         origin_p = self.where_is_process(origin_pid)
         origin_p.remove_monitored_by(pid=target_pid, ref=ref)

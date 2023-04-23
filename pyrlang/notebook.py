@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Callable, List, Tuple, Dict
+from types import ModuleType
+from typing import Callable, List, Tuple, Dict, Optional, Union, Sequence
 
 from pyrlang.gen.server import GenServer
 from pyrlang.gen.decorators import call as main_call
 from pyrlang.util import as_str
 from term.atom import Atom
+from term.basetypes import Term
 from term.pid import Pid
 
 LOG = logging.getLogger("pyrlang.notebook")
@@ -54,10 +56,10 @@ class Notebook(GenServer):
     def __init__(self, options: dict):
         super().__init__()
 
-        self.history_ = dict()
+        self.history_ = dict()  # type: Dict[Term, Term]
         """ Recent calculation results indexed by integers or names. """
 
-        self.history_ids_ = []
+        self.history_ids_ = []  # type: List[Term]
         """ Log of recent value ids in their creation order. Values, which were
             deleted because of history size limit, are also deleted here. """
 
@@ -98,12 +100,12 @@ class Notebook(GenServer):
         return Atom('ok'), result.__class__.__name__, index
 
     @call('nb_batch', 3)
-    def nb_batch(self, msg):
+    def nb_batch(self, msg) -> Tuple[Term, Term, Term]:
         """ Take a remote call from Erlang to execute batch of Python calls. """
         batch = msg[1]
         param = msg[2]
         if not batch:
-            return Atom("error"), Atom("batch_empty")
+            return Atom("error"), Atom("batch_empty"), None
 
         call_imm = param[Atom("immediate")]
         for bitem in batch:
@@ -113,12 +115,14 @@ class Notebook(GenServer):
             call_ret = bitem[Atom("ret")]
 
             fn = self._resolve_path(call_path)
-            result = fn(*call_args, **call_kwargs)
-
-            last_result_name = self._store_result_as(result, call_ret)
+            result = fn(*call_args, **call_kwargs) if callable(fn) else None  # type: Term
+            last_result_name = self._store_result_as(result, call_ret)  # type: Term
+        else:
+            result = None
+            last_result_name = None
 
         if call_imm:
-            return Atom("value"), result
+            return Atom("value"), result, None
 
         return Atom("ok"), result.__class__.__name__, last_result_name
 
@@ -133,7 +137,7 @@ class Notebook(GenServer):
         self._maybe_trim_history()
         return index
 
-    def _store_result_as(self, result, store_key):
+    def _store_result_as(self, result: Term, store_key: Term) -> Term:
         """ Store result as a new named value. Trim overflowing values over
             the ``history_limit_``.
         """
@@ -166,7 +170,7 @@ class Notebook(GenServer):
 
         return Atom('error'), Atom('not_found')
 
-    def _resolve_path(self, p: List[str]) -> Callable:
+    def _resolve_path(self, p: List[str]) -> Union[Callable, ModuleType]:
         """ Imports p[0] and then follows the list p, by applying getattr()
             repeatedly. """
         if isinstance(p, str):
@@ -188,7 +192,7 @@ class Notebook(GenServer):
 
         return val
 
-    def _retrieve_value(self, pyrlang_val: Tuple[Atom, any]):
+    def _retrieve_value(self, pyrlang_val: Sequence[Term]) -> Term:
         k = pyrlang_val[1]
 
         if k not in self.history_:

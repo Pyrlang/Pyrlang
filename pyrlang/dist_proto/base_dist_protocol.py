@@ -19,10 +19,10 @@ import logging
 import struct
 import time
 from hashlib import md5
-from typing import Union, Tuple
+from typing import Tuple, Optional
 
-from pyrlang.node_db import NodeDB
 from pyrlang.errors import DistributionError
+from pyrlang.node_db import NodeDB
 from term import codec
 from term import util
 from term.atom import Atom
@@ -99,25 +99,25 @@ class BaseDistProtocol(asyncio.Protocol):
         """ Packet size header is variable, 2 bytes before handshake is finished
             and 4 bytes afterwards. """
 
-        self.addr_ = None  # type: [None, Tuple[str, int]]
+        self.addr_ = None  # type: Optional[Tuple[str, int]]
 
-        self.inbox_ = asyncio.Queue()
+        self.inbox_ = asyncio.Queue()  # type: asyncio.Queue
         """ Inbox is used to ask the connection to do something. """
 
-        self.dist_vsn_ = None # type: int
+        self.dist_vsn_ = None  # type: Optional[int]
         """ Protocol version range supported by the remote peer and us.
             Erlang/OTP since R6B supports protocol version 5.
             In OTP-23 protocol version 6 was added as optional,
             which became mandatory in OTP-25. """
 
         self.peer_flags_ = 0
-        self.peer_name_ = None  # type: Union[None, str]
-        self.my_challenge_ = None
+        self.peer_name_ = None  # type: Optional[str]
+        self.my_challenge_ = None  # type: Optional[int]
 
         self.state_ = self.DISCONNECTED
         """ FSM state for the protocol state-machine. """
 
-        self.transport_ = None  # type: [None, asyncio.Transport]
+        self.transport_ = None  # type: Optional[asyncio.Transport]
         self.unconsumed_data_ = b''
 
         self._last_interaction = time.time()
@@ -127,7 +127,7 @@ class BaseDistProtocol(asyncio.Protocol):
             self.transport_.close()
             self.transport_ = None
 
-    def connection_made(self, transport: asyncio.Transport):
+    def connection_made(self, transport: asyncio.BaseTransport):
         """ Connection has been accepted and established (callback).
         """
         # Ping the remote periodically if our state is CONNECTED
@@ -135,7 +135,10 @@ class BaseDistProtocol(asyncio.Protocol):
         # Check that there's been some activity between the nodes
         self._schedule_periodic_alive_check()
         sock = transport.get_extra_info('socket')
-        self.transport_ = transport
+        if isinstance(transport, asyncio.Transport):
+            self.transport_ = transport
+        else:
+            self.transport_ = None
         self.addr_ = sock.getpeername()
         self.state_ = self.RECV_NAME
 
@@ -201,13 +204,18 @@ class BaseDistProtocol(asyncio.Protocol):
         """
         LOG.debug("out %d: %s", len(content), content)
         msg = struct.pack(">H", len(content)) + content
-        self.transport_.write(msg)
+        if self.transport_ is None:
+            return self.raise_protocol_error("Transport is None in _send_packet2 [internal error]")
+        else:
+            self.transport_.write(msg)
 
     def _send_packet4(self, content: bytes):
         """ Send a connection-time status message with a 4 byte length prefix
         """
         LOG.debug("out %d: %s", len(content), content)
         msg = struct.pack(">I", len(content)) + content
+        if self.transport_ is None:
+            return self.raise_protocol_error("Transport is None in _send_packet4 [internal error]")
         self.transport_.write(msg)
 
     async def on_passthrough_message(self, control_term, msg_term):
@@ -377,7 +385,7 @@ class BaseDistProtocol(asyncio.Protocol):
                      + bytes(str(challenge), "ascii")).digest()
         return result
 
-    def protocol_error(self, msg):
+    def raise_protocol_error(self, msg):
         LOG.error("Error: %s (state %s)", msg, self.state_)
         raise DistributionError(msg=msg)
 
@@ -399,7 +407,7 @@ class BaseDistProtocol(asyncio.Protocol):
         msg_type = chr(data[0])
 
         if msg_type == "p":
-            LOG.debug("message data: {}".format(data))
+            LOG.debug(f"message data: {str(data)}")
             (control_term, tail) = codec.binary_to_term(data[1:])
 
             if tail != b'':
@@ -416,9 +424,7 @@ class BaseDistProtocol(asyncio.Protocol):
             )
             return tail
 
-        else:
-            self.protocol_error("Unexpected dist message type: %s" % msg_type)
-            # raise
+        return self.raise_protocol_error("Unexpected dist message type: %s" % msg_type)
 
     def report_dist_connected(self):
         assert (self.peer_name_ is not None)

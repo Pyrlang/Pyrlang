@@ -35,7 +35,7 @@ class DistClientProtocol(BaseDistProtocol):
         super().__init__(node_name=node_name)
         self.dist_vsn_ = dist_vsn
 
-    def connection_made(self, transport: asyncio.Transport):
+    def connection_made(self, transport: asyncio.BaseTransport):
         super().connection_made(transport)
         self._send_name()
         self.state_ = self.RECV_STATUS
@@ -61,7 +61,7 @@ class DistClientProtocol(BaseDistProtocol):
         elif self.state_ == self.ALIVE:
             return self.on_packet_alive(data)
 
-        self.protocol_error("Unknown state for on_packet: %s" % self.state_)
+        return self.raise_protocol_error("Unknown state for on_packet: %s" % self.state_)
 
     def _send_name(self):
         """ Create and send first welcome packet. """
@@ -87,7 +87,7 @@ class DistClientProtocol(BaseDistProtocol):
 
     def on_packet_recvstatus(self, data: bytes) -> bytes:
         if chr(data[0]) != 's':
-            self.protocol_error("Handshake 's' packet expected")
+            self.raise_protocol_error("Handshake 's' packet expected")
             # raise
 
         # a duplicate connection detected
@@ -103,16 +103,14 @@ class DistClientProtocol(BaseDistProtocol):
             self.state_ = self.RECV_CHALLENGE
             return data[3:]  # cut after b'sok'
 
-        self.protocol_error("Handshake bad status: %s" % data)
-        # raise
+        return self.raise_protocol_error("Handshake bad status: %r" % data)
 
     def on_packet_alive(self, data: bytes) -> bytes:
         if data.startswith(b'true'):
             self.state_ = self.CONNECTED  # not sure if we have to challenge
             return data[4:]
 
-        self.protocol_error("Duplicate connection denied")
-        # raise
+        return self.raise_protocol_error("Duplicate connection denied")
 
     def on_packet_recvchallenge(self, data: bytes) -> bytes:
         if chr(data[0]) == 'n':  # (version 5)
@@ -142,7 +140,7 @@ class DistClientProtocol(BaseDistProtocol):
             return b''  # assume everything is consumed?
 
         else:
-            return self.protocol_error("Handshake 'n' or 'N' packet expected")
+            return self.raise_protocol_error("Handshake 'n' or 'N' packet expected")
 
     def _send_challenge_reply(self, challenge: int):
         digest = self.make_digest(challenge, self.get_node().get_cookie())
@@ -153,15 +151,17 @@ class DistClientProtocol(BaseDistProtocol):
 
     def on_packet_recvchallenge_ack(self, data: bytes) -> bytes:
         if chr(data[0]) != 'a':
-            self.protocol_error("Handshake 'r' packet expected")
+            self.raise_protocol_error("Handshake 'r' packet expected")
             # raise
 
         digest = data[1:]
+        if self.my_challenge_ is None:
+            return self.raise_protocol_error(
+                "Receive challenge: Challenge was not set [internal error]")
         if not self.check_digest(digest=digest,
                                  challenge=self.my_challenge_,
                                  cookie=self.get_node().get_cookie()):
-            self.protocol_error("Handshake digest verification failed")
-            # raise
+            return self.raise_protocol_error("Handshake digest verification failed")
 
         self.packet_len_size_ = 4
         self.state_ = self.CONNECTED

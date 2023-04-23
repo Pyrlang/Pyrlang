@@ -69,11 +69,13 @@ class Process:
         self.node_name_ = node_obj.node_name_  # type: str
         """ Convenience field to see the Node  """
 
-        self.inbox_ = asyncio.Queue()
+        self.inbox_ = asyncio.Queue()  # type: asyncio.Queue
+
+        # used for selective receives
         """ Message queue. Messages are detected by the ``_run``
             loop and handled one by one in ``handle_one_inbox_message()``. 
         """
-        self.__tmp_inbox = asyncio.Queue() # used for selective receives
+        self.__tmp_inbox = asyncio.Queue()  # type: asyncio.Queue
 
         self.pid_ = node_obj.register_new_process(self)
         """ Process identifier for this object. Remember that when creating a 
@@ -97,7 +99,7 @@ class Process:
         """ Bi-directional linked process pids. Each linked pid pair is unique
             hence using a set to store them. """
 
-        self._signals = asyncio.Queue()
+        self._signals = asyncio.Queue()  # type: asyncio.Queue
         """ Exit (and maybe later other) signals are placed here and handled
             at safe moments of time between handling messages. """
 

@@ -1,0 +1,11 @@
+# Documentation requirements
+Jinja2>=2.10.1
+MarkupSafe>=1.0
+Pillow>=4.0.0
+Pygments>=2.2.0
+Sphinx>=1.6.2
+
+# Log coloring for tests (not used in library logging)
+ansicolors>=1.1.8
+
+Mypy>=1.2

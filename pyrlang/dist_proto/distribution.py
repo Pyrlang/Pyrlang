@@ -17,6 +17,7 @@
 import asyncio
 import logging
 import sys
+from typing import Optional
 
 import pyrlang
 from pyrlang.dist_proto import DistClientProtocol
@@ -24,7 +25,6 @@ from pyrlang.dist_proto.epmd_client import EPMDClient
 from pyrlang.node_db import NodeDB
 
 LOG = logging.getLogger(__name__)
-
 
 node_db = NodeDB()
 
@@ -43,8 +43,8 @@ class ErlangDistribution:
             newly connected nodes. 
         """
 
-        self.in_port_ = None  # type: [None, int]
-        self.in_srv_ = None  # type: [None, asyncio.AbstractServer]
+        self.in_port_ = None  # type: Optional[int]
+        self.in_srv_ = None  # type: Optional[asyncio.AbstractServer]
         self.epmd_ = EPMDClient()
         self.n_connect_tries_ = 5
 
@@ -91,7 +91,7 @@ class ErlangDistribution:
         """ Finish EPMD connection, this will remove the node from the list of
             available nodes on EPMD
         """
-        self.in_srv_.close()
+        if self.in_srv_ is not None: self.in_srv_.close()
         self.epmd_.close()
 
     def destroy(self):
@@ -108,16 +108,17 @@ class ErlangDistribution:
             :param remote_node: String with node 'name@ip'
             :return: boolean whether the connection succeeded
         """
-        host_port_version = await EPMDClient.query_node(remote_node)
-        if host_port_version is None:
+        query_result = await EPMDClient.query_node(remote_node)
+        if query_result is None:
             # Connection to node failed, node is not known
             return False
         else:
+            host, port, dist_vsn = query_result
             await asyncio.get_event_loop().create_connection(
                 lambda: DistClientProtocol(node_name=local_node,
-                                           dist_vsn=host_port_version[2]),
-                host=host_port_version[0],
-                port=host_port_version[1]
+                                           dist_vsn=dist_vsn),
+                host=host,
+                port=port
             )
             return True
 

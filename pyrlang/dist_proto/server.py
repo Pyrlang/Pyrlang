@@ -27,6 +27,8 @@ from pyrlang.dist_proto.base_dist_protocol import BaseDistProtocol, \
 from term import util
 
 LOG = logging.getLogger(__name__)
+
+
 # LOG.setLevel(logging.INFO)
 
 
@@ -59,11 +61,11 @@ class DistServerProtocol(BaseDistProtocol):
 
     def on_packet_recvname(self, data: bytes) -> bytes:
         """ Handle RECV_NAME command, the first packet in a new connection. """
-        if data.startswith(b'n'): # (version 5)
+        if data.startswith(b'n'):  # (version 5)
             # Read peer dist_proto version and compare to ours
             dist_vsn = util.u16(data[1:3])
             if not version.check_valid_dist_version(dist_vsn):
-                self.protocol_error(
+                self.raise_protocol_error(
                     "Dist protocol version have: %s got: %d"
                     % (str(version.DIST_VSN_PAIR), dist_vsn)
                 )
@@ -74,7 +76,7 @@ class DistServerProtocol(BaseDistProtocol):
             self.peer_name_ = data[7:].decode("latin1")
             LOG.info("RECV_NAME: (version %d) %s", self.dist_vsn_, self.peer_name_)
 
-        elif data.startswith(b'N'): # (version 6)
+        elif data.startswith(b'N'):  # (version 6)
             self.dist_vsn_ = 6  # implicit
             self.peer_flags_ = struct.unpack(">Q", data[1:9])[0]
             creation = util.u32(data[9:13])
@@ -84,7 +86,7 @@ class DistServerProtocol(BaseDistProtocol):
                      self.dist_vsn_, self.peer_name_, creation)
 
         else:
-            self.protocol_error("Unexpected packet (expecting RECV_NAME)")
+            self.raise_protocol_error("Unexpected packet (expecting RECV_NAME)")
             # raise
 
         # Report
@@ -99,20 +101,22 @@ class DistServerProtocol(BaseDistProtocol):
 
     def on_packet_challengereply(self, data: bytes) -> bytes:
         if not data.startswith(b'r'):
-            self.protocol_error(
-                "Unexpected packet (expecting CHALLENGE_REPLY) %s" % data
-            )
-            # raise
+            return self.raise_protocol_error(
+                "Unexpected packet (expecting CHALLENGE_REPLY) %r" % data)
 
         peers_challenge = util.u32(data, 1)
         peer_digest = data[5:]
         LOG.info("challengereply: peer's challenge %s", peers_challenge)
 
+        if self.my_challenge_ is None:
+            return self.raise_protocol_error(
+                "In on_packet_challengereply: self.my_challenge_ is None [internal error]")
+
         my_cookie = self.get_node().node_opts_.cookie_
         if not self.check_digest(digest=peer_digest,
                                  challenge=self.my_challenge_,
                                  cookie=my_cookie):
-            self.protocol_error("Disallowed node connection (check the cookie)")
+            self.raise_protocol_error("Disallowed node connection (check the cookie)")
             # raise
 
         self._send_challenge_ack(peers_challenge, my_cookie)

@@ -21,7 +21,7 @@ import logging
 import socket
 import struct
 import sys
-from typing import Tuple
+from typing import Tuple, Optional
 
 from pyrlang.dist_proto import version
 from pyrlang.errors import EPMDClientError, EPMDConnectionError
@@ -56,8 +56,8 @@ class EPMDClient(asyncio.Protocol):
         self.port_ = EPMD_DEFAULT_PORT
         """ We expect local EPMD to be available on the default port. """
 
-        self.reader_ = None  # type: [asyncio.StreamReader, None]
-        self.writer_ = None  # type: [asyncio.StreamWriter, None]
+        self.reader_ = None  # type: Optional[asyncio.StreamReader]
+        self.writer_ = None  # type: Optional[asyncio.StreamWriter]
         self.n_connection_attempts_ = 5
 
     def close(self):
@@ -127,17 +127,20 @@ class EPMDClient(asyncio.Protocol):
         # - ALIVE2_RESP [121,0,Creation:16] for OK, otherwise [121,Error]
         # - ALIVE2_X_RESP [118,0,Creation:32] for OK, otherwise [118,Error]
         # The latter if both the node and EPMD support distribution version 6.
+        if self.reader_ is None:
+            raise EPMDClientError(f"No reader set in _read_alive2_reply [internal error]")
+
         reply = await self.reader_.read(2)
         if not reply:
             LOG.error("ALIVE2 Read error. Closed? %s", reply)
             return -1
 
         if reply[1] == 0:
-            if reply[0] == 121: # ALIVE2_RESP
+            if reply[0] == 121:  # ALIVE2_RESP
                 cr = await self.reader_.read(2)
                 (creation,) = struct.unpack(">H", cr)
                 return creation
-            elif reply[0] == 118: # ALIVE2_X_RESP
+            elif reply[0] == 118:  # ALIVE2_X_RESP
                 cr = await self.reader_.read(4)
                 (creation,) = struct.unpack(">I", cr)
                 return creation
@@ -176,15 +179,19 @@ class EPMDClient(asyncio.Protocol):
         """ Generic helper function to send a preformatted request to EPMD
         """
         header = struct.pack(">H", len(req))
+
+        if self.writer_ is None:
+            raise EPMDClientError(f"No writer set in _req [internal error]")
+
         self.writer_.write(header + req)
 
     @staticmethod
-    async def query_node(node_name: str) -> [Tuple[str, int, int], None]:
+    async def query_node(node_name: str) -> Optional[tuple[str, int, int]]:
         """ Query EPMD about the port to the given node.
 
             :param node_name: String with node "name@ip" or "name@hostname"
             :return: Host, port (where the node is) and distribution version, or None if not found
-            :rtype: [tuple(str, int), None]
+            :rtype: Optional[Tuple[str, int]]
             :throws EPMDClientError: if something is wrong with input
             :throws EPMDConnectionError: if connection went wrong
         """

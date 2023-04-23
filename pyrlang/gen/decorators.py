@@ -21,6 +21,7 @@ the classes `CallDecorator`, `CastDecorator`, `InfoDecorator` instead
 """
 
 import asyncio
+from typing import Optional
 
 from pyrlang.match import Pattern
 
@@ -38,7 +39,7 @@ class HandleDecorator(object):
     """
     Base class for handler Decorators, don't use directly
     """
-    handler_type = None
+    handler_type = None  # type: Optional[str]
 
     def __init__(self, order, pattern=None):
         if not pattern:
@@ -86,7 +87,7 @@ class CallDecorator(HandleDecorator):
     handle_call decorator, decorate functions that should be part of the
     handle_call matching
     """
-    handler_type = 'call'
+    handler_type = 'call'  # type: Optional[str]
 
     @staticmethod
     def _pattern_run_fun_factory(fun):
