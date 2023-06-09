@@ -2,7 +2,7 @@
 
 This is a drop-in Erlang node implementation in Python 3, implementing
 a network Erlang node protocol. It was designed to allow interoperation between
-existing Python projects and BEAM languages: Erlang, Elixir, Alpaca, Luaerl,
+existing Python projects and BEAM languages: Erlang, Elixir, Gleam, Luaerl,
 LFE, Clojerl and such.
 
 With just a few lines of startup code your Python program becomes an Erlang
