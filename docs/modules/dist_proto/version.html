@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>dist_proto.version module &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=039e1c02" />
+    <script src="../../_static/documentation_options.js?v=afdf7161"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="gen module - Generic OTP-style calls" href="../gen/index.html" />
@@ -32,36 +31,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.dist_proto.version">
-<span id="dist-proto-version-module"></span><h1>dist_proto.version module<a class="headerlink" href="#module-pyrlang.dist_proto.version" title="Permalink to this headline">¶</a></h1>
-<p>Implement shared pieces of Erlang node negotiation and dist_proto
-protocol</p>
-<dl class="data">
-<dt id="pyrlang.dist_proto.version.DIST_VSN_PAIR">
-<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">DIST_VSN_PAIR</code><em class="property"> = (5, 5)</em><a class="headerlink" href="#pyrlang.dist_proto.version.DIST_VSN_PAIR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Supported dist_proto protocol version (MAX,MIN).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrlang.dist_proto.version.check_valid_dist_version">
-<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">check_valid_dist_version</code><span class="sig-paren">(</span><em class="sig-param">max_min: tuple</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.version.check_valid_dist_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check that the version is supported
-:param max_min: tuple(int, int
-:return: True if ok</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrlang.dist_proto.version.dist_version_check">
-<code class="sig-prename descclassname">pyrlang.dist_proto.version.</code><code class="sig-name descname">dist_version_check</code><span class="sig-paren">(</span><em class="sig-param">max_min: tuple</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.version.dist_version_check" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check pair of versions against version which is supported by us</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_min</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) -- (Max, Min) version pair for peer-supported dist version</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
+  <section id="dist-proto-version-module">
+<h1>dist_proto.version module<a class="headerlink" href="#dist-proto-version-module" title="Link to this heading">¶</a></h1>
+</section>
 
 
           </div>
@@ -86,7 +58,7 @@ protocol</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
@@ -135,12 +107,12 @@ protocol</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -157,8 +129,8 @@ protocol</p>
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../../_sources/modules/dist_proto/version.rst.txt"

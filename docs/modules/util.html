@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="../">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>util module &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=afdf7161"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="rex module - Remote Execution" href="rex.html" />
@@ -31,28 +30,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.util">
-<span id="util-module"></span><h1>util module<a class="headerlink" href="#module-pyrlang.util" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
-<dt id="pyrlang.util.as_str">
-<code class="sig-prename descclassname">pyrlang.util.</code><code class="sig-name descname">as_str</code><span class="sig-paren">(</span><em class="sig-param">x: Union[bytes, str, term.atom.Atom]</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.util.as_str" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given byte string, or string, or <code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code>
-extracts a string from it. Bytes are interpreted as ASCII/Latin-1.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>Exception</strong> -- if argument is not bytes, string or Atom</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrlang.util.start_pyrlang">
-<code class="sig-prename descclassname">pyrlang.util.</code><code class="sig-name descname">start_pyrlang</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.util.start_pyrlang" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is invoked on <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">Pyrlang</span></code>. Function checks OS environment
-variables documented at <a class="reference internal" href="../configuration.html"><span class="doc">Configuring Pyrlang in Runtime</span></a>.</p>
-</dd></dl>
-
-</div>
+  <section id="util-module">
+<h1>util module<a class="headerlink" href="#util-module" title="Link to this heading">¶</a></h1>
+</section>
 
 
           </div>
@@ -77,7 +57,7 @@ variables documented at <a class="reference internal" href="../configuration.htm
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples!</a></li>
@@ -114,12 +94,12 @@ variables documented at <a class="reference internal" href="../configuration.htm
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -136,8 +116,8 @@ variables documented at <a class="reference internal" href="../configuration.htm
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/modules/util.rst.txt"

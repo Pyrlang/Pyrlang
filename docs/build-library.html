@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>Building the Library &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=afdf7161"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples!" href="examples.html" />
@@ -32,10 +31,16 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="building-the-library">
-<h1>Building the Library<a class="headerlink" href="#building-the-library" title="Permalink to this headline">¶</a></h1>
-<p>To run pyrlang you need to have term installed. Term is an external package
-that pyrlang uses to encode / decode Erlangs <a class="reference external" href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">external term fomrat</a>. Install it with:</p>
+  <section id="building-the-library">
+<h1>Building the Library<a class="headerlink" href="#building-the-library" title="Link to this heading">¶</a></h1>
+<p>If you just want to get going just install pyralng using <code class="code docutils literal notranslate"><span class="pre">pip</span></code> the dependancy
+<code class="code docutils literal notranslate"><span class="pre">pyrlang-term</span></code> will be installed automatically</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip3 install pyrlang</span>
+</pre></div>
+</div>
+<p>To install pyrlang from source you need to install term manually. Term is an external package
+that pyrlang uses to encode / decode Erlangs
+<a class="reference external" href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">external term fomrat</a>. Install it with:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip3 install pyrlang-term</span>
 </pre></div>
 </div>
@@ -45,10 +50,6 @@ that pyrlang uses to encode / decode Erlangs <a class="reference external" href=
 <span class="go">pip install .</span>
 </pre></div>
 </div>
-<p>Install requirements via: <code class="code docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>, this will
-also
-pull requirements for Sphinx documentation generator (not needed if you only
-use the library).</p>
 <p>To build the docs you need to install Sphinx and some other pacakges you can
 do that with the requirements file:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install -r requirements.txt</span>
@@ -57,7 +58,7 @@ do that with the requirements file:</p>
 <p>Source for the documentation is in the <code class="docutils literal notranslate"><span class="pre">docs-src/</span></code> directory. To generate
 HTML, run <code class="code docutils literal notranslate"><span class="pre">make</span> <span class="pre">docs</span></code> and the <code class="docutils literal notranslate"><span class="pre">docs</span></code> directory will be deleted and
 recreated.</p>
-</div>
+</section>
 
 
           </div>
@@ -82,7 +83,7 @@ recreated.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples!</a></li>
@@ -108,12 +109,12 @@ recreated.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -130,8 +131,8 @@ recreated.</p>
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/build-library.rst.txt"

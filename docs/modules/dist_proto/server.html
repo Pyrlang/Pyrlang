@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>dist_proto.server module &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=039e1c02" />
+    <script src="../../_static/documentation_options.js?v=afdf7161"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="dist_proto.distribution module" href="distribution.html" />
@@ -32,47 +31,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.dist_proto.server">
-<span id="dist-proto-server-module"></span><h1>dist_proto.server module<a class="headerlink" href="#module-pyrlang.dist_proto.server" title="Permalink to this headline">¶</a></h1>
-<p>The module implements incoming TCP dist_proto protocol (i.e. initiated
-by another node with the help of EPMD). Protocol only performs handling of
-incoming data, the socket is handled by the Async Engine (pyrlang.async).</p>
-<dl class="class">
-<dt id="pyrlang.dist_proto.server.DistServerProtocol">
-<em class="property">class </em><code class="sig-prename descclassname">pyrlang.dist_proto.server.</code><code class="sig-name descname">DistServerProtocol</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.server.DistServerProtocol" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="base_dist_protocol.html#pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol" title="pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyrlang.dist_proto.base_dist_protocol.BaseDistProtocol</span></code></a></p>
-<p>Protocol handles incoming connections from other nodes.</p>
-<dl class="method">
-<dt id="pyrlang.dist_proto.server.DistServerProtocol.connection_lost">
-<code class="sig-name descname">connection_lost</code><span class="sig-paren">(</span><em class="sig-param">exc</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.server.DistServerProtocol.connection_lost" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handler is called when the client has disconnected</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.server.DistServerProtocol.on_packet">
-<code class="sig-name descname">on_packet</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.server.DistServerProtocol.on_packet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle incoming dist_proto packet</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data</strong> -- The packet after the header had been removed</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.server.DistServerProtocol.on_packet_challengereply">
-<code class="sig-name descname">on_packet_challengereply</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.server.DistServerProtocol.on_packet_challengereply" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.server.DistServerProtocol.on_packet_recvname">
-<code class="sig-name descname">on_packet_recvname</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#pyrlang.dist_proto.server.DistServerProtocol.on_packet_recvname" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle RECV_NAME command, the first packet in a new connection.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
+  <section id="dist-proto-server-module">
+<h1>dist_proto.server module<a class="headerlink" href="#dist-proto-server-module" title="Link to this heading">¶</a></h1>
+</section>
 
 
           </div>
@@ -97,7 +58,7 @@ incoming data, the socket is handled by the Async Engine (pyrlang.async).</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
@@ -146,12 +107,12 @@ incoming data, the socket is handled by the Async Engine (pyrlang.async).</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -168,8 +129,8 @@ incoming data, the socket is handled by the Async Engine (pyrlang.async).</p>
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../../_sources/modules/dist_proto/server.rst.txt"

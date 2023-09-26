@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>dist_proto.epmd_client module &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=039e1c02" />
+    <script src="../../_static/documentation_options.js?v=afdf7161"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="dist_proto.flags module" href="flags.html" />
@@ -32,88 +31,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.dist_proto.epmd_client">
-<span id="dist-proto-epmd-client-module"></span><h1>dist_proto.epmd_client module<a class="headerlink" href="#module-pyrlang.dist_proto.epmd_client" title="Permalink to this headline">¶</a></h1>
-<p>The module represents EPMD connection and implements the protocol.
-EPMD is a daemon application, part of Erlang/OTP which registers Erlang
-nodes on the local machine and helps nodes finding each other.</p>
-<dl class="class">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient">
-<em class="property">class </em><code class="sig-prename descclassname">pyrlang.dist_proto.epmd_client.</code><code class="sig-name descname">EPMDClient</code><a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.protocols.Protocol</span></code></p>
-<p>An EPMD client connection which registers ourselves in EPMD and can
-do other queries.</p>
-<dl class="method">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.alive2">
-<em class="property">async </em><code class="sig-name descname">alive2</code><span class="sig-paren">(</span><em class="sig-param">dist</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.alive2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Send initial hello (ALIVE2) to EPMD</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dist</strong> (<em>pyrlang.dist.distribution.ErlangDistribution</em>) -- The distribution object from the node</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closing EPMD connection removes the node from available EPMD nodes
-list.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.connect">
-<em class="property">async </em><code class="sig-name descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Establish a long running connection to EPMD, will not return until
-the connection has been established.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>True if connection succeeded within 5 tries, else False</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.host_">
-<code class="sig-name descname">host_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.host_" title="Permalink to this definition">¶</a></dt>
-<dd><p>The local EPMD is always located on the local host.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.port_">
-<code class="sig-name descname">port_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.port_" title="Permalink to this definition">¶</a></dt>
-<dd><p>We expect local EPMD to be available on the default port.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.dist_proto.epmd_client.EPMDClient.query_node">
-<em class="property">static </em><code class="sig-name descname">query_node</code><span class="sig-paren">(</span><em class="sig-param">node_name: str</em><span class="sig-paren">)</span> &#x2192; [typing.Tuple[str, int], None]<a class="headerlink" href="#pyrlang.dist_proto.epmd_client.EPMDClient.query_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Query EPMD about the port to the given node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>node_name</strong> -- String with node &quot;<a class="reference external" href="mailto:name&#37;&#52;&#48;ip">name<span>&#64;</span>ip</a>&quot; or &quot;<a class="reference external" href="mailto:name&#37;&#52;&#48;hostname">name<span>&#64;</span>hostname</a>&quot;</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Host and port where the node is, or None if not found</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>[tuple(str, int), None]</p>
-</dd>
-<dt class="field-even">Throws EPMDClientError</dt>
-<dd class="field-even"><p>if something is wrong with input</p>
-</dd>
-<dt class="field-odd">Throws EPMDConnectionError</dt>
-<dd class="field-odd"><p>if connection went wrong</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
+  <section id="dist-proto-epmd-client-module">
+<h1>dist_proto.epmd_client module<a class="headerlink" href="#dist-proto-epmd-client-module" title="Link to this heading">¶</a></h1>
+</section>
 
 
           </div>
@@ -138,7 +58,7 @@ the connection has been established.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples!</a></li>
@@ -187,12 +107,12 @@ the connection has been established.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -209,8 +129,8 @@ the connection has been established.</p>
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../../_sources/modules/dist_proto/epmd_client.rst.txt"

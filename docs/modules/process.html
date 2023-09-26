@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="../">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>process module &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=afdf7161"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="rex module - Remote Execution" href="rex.html" />
@@ -32,173 +31,9 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-pyrlang.process">
-<span id="process-module"></span><h1>process module<a class="headerlink" href="#module-pyrlang.process" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="pyrlang.process.Process">
-<em class="property">class </em><code class="sig-prename descclassname">pyrlang.process.</code><code class="sig-name descname">Process</code><span class="sig-paren">(</span><em class="sig-param">passive: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Implements Erlang process semantic and lifetime.
-Registers itself in the process registry, can receive and send messages.
-To optionally register self with a name, call
-<code class="docutils literal notranslate"><span class="pre">node.register_name(self,</span> <span class="pre">term.Atom('fgsfds'))</span></code></p>
-<p>Subclass the Process to run your logic in its <code class="docutils literal notranslate"><span class="pre">_loop()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code>
-function or to handle incoming messages via
-<code class="docutils literal notranslate"><span class="pre">handle_one_inbox_message(self,</span> <span class="pre">msg)</span></code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Only a <code class="docutils literal notranslate"><span class="pre">Process</span></code> can serve as a target for sending messages, for
-linking and monitoring. You do not need to create a Process for simple
-one-way interactions with remote Erlang nodes.</p>
-</div>
-<dl class="method">
-<dt id="pyrlang.process.Process.add_link">
-<code class="sig-name descname">add_link</code><span class="sig-paren">(</span><em class="sig-param">pid</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.add_link" title="Permalink to this definition">¶</a></dt>
-<dd><p>Links pid to this process.
-Please use Node method <a class="reference internal" href="node.html#pyrlang.node.Node.link" title="pyrlang.node.Node.link"><code class="xref py py-meth docutils literal notranslate"><span class="pre">link()</span></code></a> for proper
-linking.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.add_monitor">
-<code class="sig-name descname">add_monitor</code><span class="sig-paren">(</span><em class="sig-param">pid: term.pid.Pid</em>, <em class="sig-param">ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.add_monitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function. To monitor a process please use Node's
-<a class="reference internal" href="node.html#pyrlang.node.Node.monitor_process" title="pyrlang.node.Node.monitor_process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">monitor_process()</span></code></a>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.add_monitored_by">
-<code class="sig-name descname">add_monitored_by</code><span class="sig-paren">(</span><em class="sig-param">pid: term.pid.Pid</em>, <em class="sig-param">ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.add_monitored_by" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function. To monitor a process please use Node's
-<a class="reference internal" href="node.html#pyrlang.node.Node.monitor_process" title="pyrlang.node.Node.monitor_process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">monitor_process()</span></code></a>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.deliver_message">
-<code class="sig-name descname">deliver_message</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.deliver_message" title="Permalink to this definition">¶</a></dt>
-<dd><p>Places message into the inbox, or delivers it immediately to a
-handler (if process is <code class="docutils literal notranslate"><span class="pre">passive</span></code>).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.exit">
-<code class="sig-name descname">exit</code><span class="sig-paren">(</span><em class="sig-param">reason=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.exit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Marks the object as exiting with the reason, informs links and
-monitors and unregisters the object from the node process
-dictionary.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.get_node">
-<code class="sig-name descname">get_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.get_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds current node from global nodes dict by <code class="docutils literal notranslate"><span class="pre">self.node_name_</span></code>.
-A convenient way to access the node which holds the current process.
-:rtype: pyrlang2.node.Node</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.handle_inbox">
-<code class="sig-name descname">handle_inbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#pyrlang.process.Process.handle_inbox" title="Permalink to this definition">¶</a></dt>
-<dd><p>Do not override <cite>handle_inbox</cite>, instead go for
-<cite>handle_one_inbox_message</cite>
-:returns: How many messages have been handled</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.handle_one_inbox_message">
-<code class="sig-name descname">handle_one_inbox_message</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.handle_one_inbox_message" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override this method to handle new incoming messages.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.handle_signals">
-<em class="property">async </em><code class="sig-name descname">handle_signals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.handle_signals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called from Node if the Node knows that there's a signal waiting
-to be handled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.inbox_">
-<code class="sig-name descname">inbox_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.inbox_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Message queue. Messages are detected by the <code class="docutils literal notranslate"><span class="pre">_run</span></code>
-loop and handled one by one in <code class="docutils literal notranslate"><span class="pre">handle_one_inbox_message()</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.node_db">
-<code class="sig-name descname">node_db</code><em class="property"> = &lt;pyrlang.node_db.NodeDB object&gt;</em><a class="headerlink" href="#pyrlang.process.Process.node_db" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.node_name_">
-<code class="sig-name descname">node_name_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.node_name_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience field to see the Node</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.passive_">
-<code class="sig-name descname">passive_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.passive_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Having <code class="docutils literal notranslate"><span class="pre">passive=True</span></code> will only wake up this
-<code class="docutils literal notranslate"><span class="pre">Process</span></code> when a message arrives, to handle it, otherwise it will
-not get any CPU time for any empty polling loops. Having
-<code class="docutils literal notranslate"><span class="pre">passive=False</span></code> will run
-<code class="xref py py-func docutils literal notranslate"><span class="pre">process_loop`()</span></code>
-polling inbox.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="pyrlang.process.Process.pid_">
-<code class="sig-name descname">pid_</code><em class="property"> = None</em><a class="headerlink" href="#pyrlang.process.Process.pid_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Process identifier for this object. Remember that when creating a 
-process, it registers itself in the node, and this creates a
-reference. 
-References prevent an object from being garbage collected.
-To destroy a process, get rid of this extra reference by calling
-<code class="docutils literal notranslate"><span class="pre">exit()</span></code> and telling it the cause of its death.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.process_loop">
-<em class="property">async </em><code class="sig-name descname">process_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.process_loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Polls inbox in an endless loop.
-.. note:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>This will not be executed if the process was constructed with
-``passive=True`` (the default). Passive processes should read
-their inbox directly from ``self.inbox_``.
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.receive">
-<em class="property">async </em><code class="sig-name descname">receive</code><span class="sig-paren">(</span><em class="sig-param">match=None</em>, <em class="sig-param">timeout=None</em>, <em class="sig-param">timeout_callback=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.receive" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.remove_link">
-<code class="sig-name descname">remove_link</code><span class="sig-paren">(</span><em class="sig-param">pid</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.remove_link" title="Permalink to this definition">¶</a></dt>
-<dd><p>Unlinks pid from this process.
-Please use Node method <a class="reference internal" href="node.html#pyrlang.node.Node.unlink" title="pyrlang.node.Node.unlink"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unlink()</span></code></a> for
-proper unlinking.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.remove_monitor">
-<code class="sig-name descname">remove_monitor</code><span class="sig-paren">(</span><em class="sig-param">pid: term.pid.Pid</em>, <em class="sig-param">ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.remove_monitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function. To demonitor a process please use Node's
-<a class="reference internal" href="node.html#pyrlang.node.Node.demonitor_process" title="pyrlang.node.Node.demonitor_process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demonitor_process()</span></code></a>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyrlang.process.Process.remove_monitored_by">
-<code class="sig-name descname">remove_monitored_by</code><span class="sig-paren">(</span><em class="sig-param">pid: term.pid.Pid</em>, <em class="sig-param">ref: term.reference.Reference</em><span class="sig-paren">)</span><a class="headerlink" href="#pyrlang.process.Process.remove_monitored_by" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function. To demonitor a process please use Node's
-<a class="reference internal" href="node.html#pyrlang.node.Node.demonitor_process" title="pyrlang.node.Node.demonitor_process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demonitor_process()</span></code></a>.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
+  <section id="process-module">
+<h1>process module<a class="headerlink" href="#process-module" title="Link to this heading">¶</a></h1>
+</section>
 
 
           </div>
@@ -223,7 +58,7 @@ proper unlinking.</p>
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples!</a></li>
@@ -261,12 +96,12 @@ proper unlinking.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -283,8 +118,8 @@ proper unlinking.</p>
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/modules/process.rst.txt"

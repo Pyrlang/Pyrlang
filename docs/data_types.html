@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="Python">
+<html lang="Python" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>Data Types in Pyrlang &#8212; Pyrlang 1.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=afdf7161"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Remote Calling Python from Erlang" href="calling_python.html" />
@@ -32,10 +31,10 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="data-types-in-pyrlang">
-<h1>Data Types in Pyrlang<a class="headerlink" href="#data-types-in-pyrlang" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="things-to-be-aware-about">
-<h2>Things to be aware about<a class="headerlink" href="#things-to-be-aware-about" title="Permalink to this headline">¶</a></h2>
+  <section id="data-types-in-pyrlang">
+<h1>Data Types in Pyrlang<a class="headerlink" href="#data-types-in-pyrlang" title="Link to this heading">¶</a></h1>
+<section id="things-to-be-aware-about">
+<h2>Things to be aware about<a class="headerlink" href="#things-to-be-aware-about" title="Link to this heading">¶</a></h2>
 <p>As we started this we've seen that there are some things that doesn't map
 that good between python and erlang, and that the best solution for it could
 be different pending on the problem you're currently trying to solve.</p>
@@ -56,15 +55,10 @@ object. In python you generally don't handle list and unicode objects the same.<
 <p>We have a pending state where we're testing around what would be the best
 solution. Expect changes going forward and keep an eye out for changes in
 default behaviour.</p>
-</div>
-<div class="section" id="decoding">
-<h2>Decoding<a class="headerlink" href="#decoding" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="decoding">
+<h2>Decoding<a class="headerlink" href="#decoding" title="Link to this heading">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 18%" />
-<col style="width: 64%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Erlang</p></td>
 <td><p>Python</p></td>
@@ -128,15 +122,10 @@ default behaviour.</p>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="encoding">
-<h2>Encoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="encoding">
+<h2>Encoding<a class="headerlink" href="#encoding" title="Link to this heading">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 29%" />
-<col style="width: 26%" />
-<col style="width: 45%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Python</p></td>
 <td><p>Erlang</p></td>
@@ -200,9 +189,9 @@ default behaviour.</p>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="lists">
-<h2>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="lists">
+<h2>Lists<a class="headerlink" href="#lists" title="Link to this heading">¶</a></h2>
 <p>Erlang lists can be of 2 kinds:</p>
 <ul class="simple">
 <li><p>Regular lists of anything:</p>
@@ -231,15 +220,15 @@ its last cell.
 Pyrlang returns these as Python tuple <code class="docutils literal notranslate"><span class="pre">(list,</span> <span class="pre">tail)</span></code>.
 To tell Pyrlang encoder to send an improper list back to Erlang, use the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ImproperList</span></code> class.</p>
-</div>
-<div class="section" id="binaries">
-<h2>Binaries<a class="headerlink" href="#binaries" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="binaries">
+<h2>Binaries<a class="headerlink" href="#binaries" title="Link to this heading">¶</a></h2>
 <p>Pyrlang always decodes incoming Erlang binaries into Python <code class="docutils literal notranslate"><span class="pre">bytes</span></code> objects.</p>
 <p>Bitstrings are decoded as Python pairs of <code class="docutils literal notranslate"><span class="pre">(bytes,</span> <span class="pre">last_byte_bits:int)</span></code>
 To be able to send a bitstring back to Erlang, use class
 <code class="xref py py-class docutils literal notranslate"><span class="pre">BitString</span></code>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -264,7 +253,7 @@ To be able to send a bitstring back to Erlang, use class
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="build-library.html">Building the Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples!</a></li>
@@ -297,12 +286,12 @@ To be able to send a bitstring back to Erlang, use class
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -319,8 +308,8 @@ To be able to send a bitstring back to Erlang, use class
       &copy;2017-2019, Erlang Solutions Ltd. S2HC Sweden AB.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/data_types.rst.txt"
