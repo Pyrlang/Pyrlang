@@ -95,9 +95,10 @@ class Process:
         """ Who we monitor. NOTE: For simplicity multiple monitors of same 
             target are not implemented. """
 
-        self._links = set()  # type: Set[Pid]
-        """ Bi-directional linked process pids. Each linked pid pair is unique
-            hence using a set to store them. """
+        self._links = dict()  # type: Dict[Pid, True | int]
+        """ Bi-directional linked process pids. Each linked pid pair is unique.
+            True designates an active link; int designates an outstanding unlink
+            request during the completion of the UNLINK_ID protocol. """
 
         self._signals = asyncio.Queue()  # type: asyncio.Queue
         """ Exit (and maybe later other) signals are placed here and handled
@@ -215,14 +216,16 @@ class Process:
             Please use Node method :py:meth:`~pyrlang.node.Node.link` for proper
             linking.
         """
-        self._links.add(pid)
+        if pid not in self._links:
+            self._links[pid] = True
 
     def remove_link(self, pid):
         """ Unlinks pid from this process.
             Please use Node method :py:meth:`~pyrlang.node.Node.unlink` for
             proper unlinking.
         """
-        self._links.remove(pid)
+        if pid in self._links:
+            del self._links[pid]
 
     def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and
@@ -278,11 +281,12 @@ class Process:
                 reason = Atom('killed')
 
         node = self.get_node()
-        for link in self._links:
-            # For local pids, just forward them the exit signal
-            node.send_link_exit_notification(sender=self.pid_,
-                                             receiver=link,
-                                             reason=reason)
+        for link, value in self._links.items():
+            if value is True:
+                # For local pids, just forward them the exit signal
+                node.send_link_exit_notification(sender=self.pid_,
+                                                 receiver=link,
+                                                 reason=reason)
 
     def add_monitor(self, pid: Pid, ref: Reference):
         """ Helper function. To monitor a process please use Node's
@@ -311,3 +315,13 @@ class Process:
         existing = self._monitored_by.get(ref, None)
         if existing == pid:
             del self._monitored_by[ref]
+
+    async def link(self, pid: Pid):
+        """ 
+        """
+        await self.get_node().link(self.pid_, pid)
+
+    async def unlink(self, pid: Pid):
+        """ 
+        """
+        await self.get_node().unlink(self.pid_, pid)
