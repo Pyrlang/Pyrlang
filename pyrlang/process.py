@@ -317,11 +317,9 @@ class Process:
             del self._monitored_by[ref]
 
     async def link(self, pid: Pid):
-        """ 
-        """
+        """Link this process to the target pid."""
         await self.get_node().link(self.pid_, pid)
 
     async def unlink(self, pid: Pid):
-        """ 
-        """
+        """Unlink this process from the target pid."""
         await self.get_node().unlink(self.pid_, pid)
