@@ -55,6 +55,9 @@ CONTROL_TERM_MONITOR_P_EXIT = 21
 CONTROL_TERM_SEND_SENDER = 22
 CONTROL_TERM_SEND_SENDER_TT = 23
 
+CONTROL_TERM_UNLINK_ID = 35
+CONTROL_TERM_UNLINK_ID_ACK = 36
+
 
 class BaseDistProtocol(asyncio.Protocol):
     """ Defines Erlang distribution protocol (shared parts).
@@ -245,11 +248,19 @@ class BaseDistProtocol(asyncio.Protocol):
 
         elif ctrl_msg_type == CONTROL_TERM_LINK:
             (_, from_pid, to_pid) = control_term
-            await n.link(from_pid, to_pid, local_only=True)
+            return await n.link(from_pid, to_pid, local_only=True)
 
         elif ctrl_msg_type == CONTROL_TERM_UNLINK:
             (_, from_pid, to_pid) = control_term
-            await n.unlink(from_pid, to_pid, local_only=True)
+            return await n.unlink(from_pid, to_pid, local_only=True)
+
+        elif ctrl_msg_type == CONTROL_TERM_UNLINK_ID:
+            (_, identifier, from_pid, to_pid) = control_term
+            return await n._unlink_id(identifier, from_pid, to_pid)
+
+        elif ctrl_msg_type == CONTROL_TERM_UNLINK_ID_ACK:
+            (_, identifier, from_pid, to_pid) = control_term
+            return await n._unlink_id_ack(identifier, from_pid, to_pid)
 
         elif ctrl_msg_type == CONTROL_TERM_MONITOR_P:
             (_, sender, target, ref) = control_term
@@ -351,6 +362,24 @@ class BaseDistProtocol(asyncio.Protocol):
             (_, pid1, pid2) = m
             ctrl = (CONTROL_TERM_LINK, pid1, pid2)
             LOG.info("Sending link %s <-> %s", pid1, pid2)
+            return self._control_message(ctrl, None)
+
+        elif m[0] == 'unlink':
+            (_, pid1, pid2) = m
+            ctrl = (CONTROL_TERM_UNLINK, pid1, pid2)
+            LOG.info("Sending unlink %s <-> %s", pid1, pid2)
+            return self._control_message(ctrl, None)
+
+        elif m[0] == 'unlink_id':
+            (_, identifier, pid1, pid2) = m
+            ctrl = (CONTROL_TERM_UNLINK_ID, identifier, pid1, pid2)
+            LOG.info("Sending unlink_id %s -(%s)-> %s", pid1, identifier, pid2)
+            return self._control_message(ctrl, None)
+
+        elif m[0] == 'unlink_id_ack':
+            (_, identifier, pid1, pid2) = m
+            ctrl = (CONTROL_TERM_UNLINK_ID_ACK, identifier, pid1, pid2)
+            LOG.info("Sending unlink_id_ack %s -(%s)-> %s", pid1, identifier, pid2)
             return self._control_message(ctrl, None)
 
         LOG.error("Unhandled message to InConnection %s", m)

@@ -80,6 +80,19 @@ DFLAGS_HANDSHAKE_23 = 0x1000000
     This flag is mandatory (from OTP 25). If not present, the connection is refused.
 """
 
+DFLAG_UNLINK_ID = 0x2000000
+""" Use the new link protocol. This flag will become mandatory in OTP 26. Unless both
+    nodes have set this flag, the old link protocol will be used as a fallback.
+"""
+
+DFLAG_V4_NC = 1 << 34
+""" The node accepts a larger amount of data in pids, ports and references (node container
+    types version 4). In the pid case full 32-bit ID and Serial fields in NEW_PID_EXT, in
+    the port case a 64-bit integer in V4_PORT_EXT, and in the reference case up to 5 32-bit
+    ID words are now accepted in NEWER_REFERENCE_EXT. Introduced in OTP 24.
+    This flag will become mandatory in OTP 26.
+"""
+
 DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_EXT_PIDS_PORTS |
                   DFLAG_FUN_TAGS | DFLAG_NEW_FUN_TAGS |
@@ -90,7 +103,8 @@ DEFAULT_DFLAGS = (DFLAG_EXT_REFS |
                   DFLAG_BIG_CREATION |
                   DFLAG_UTF8_ATOMS | DFLAG_SMALL_ATOM_TAGS |
                   DFLAG_DIST_MONITOR_NAME | DFLAG_DIST_MONITOR |
-                  DFLAGS_HANDSHAKE_23)
+                  DFLAGS_HANDSHAKE_23 | DFLAG_UNLINK_ID |
+                  DFLAG_V4_NC)
 """ Default flags value represents current Pyrlang library features
     as a combination of feature bits.
 """
