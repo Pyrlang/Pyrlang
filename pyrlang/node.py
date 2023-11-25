@@ -392,10 +392,9 @@ class Node:
             await self._send_exit_signal(to_pid, from_pid, Atom("noproc"))
             return
 
-        from_process = self.processes_.get(from_pid, None)
-        to_process = self.processes_.get(to_pid, None)
-
         if from_pid.is_local_to(self) and to_pid.is_local_to(self):
+            from_process = self.processes_[from_pid]
+            to_process = self.processes_[to_pid]
             from_process._links[to_pid] = True
             to_process._links[from_pid] = True
 
@@ -404,6 +403,7 @@ class Node:
             if link_exists is True:
                 return
 
+            from_process = self.processes_[from_pid]
             from_process._links[to_pid] = True
             await self.dist_command(receiver_node=to_pid.node_name_,
                                     message=('link', from_pid, to_pid))
@@ -411,10 +411,11 @@ class Node:
         elif to_pid.is_local_to(self):
             if from_pid in to_process._links:
                 return
+            to_process = self.processes_[to_pid]
             to_process._links[from_pid] = True
 
         else:
-            raise ValueError("Illegal to generate remote-remote links")
+            LOG.warn("Illegal remote-remote link: %s -> %s", from_pid, to_pid)
 
     async def unlink(self, from_pid, to_pid, local_only=False):
         """ Mutually unlink two processes.
