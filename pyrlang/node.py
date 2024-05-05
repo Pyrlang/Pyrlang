@@ -399,19 +399,19 @@ class Node:
             to_process._links[from_pid] = True
 
         elif from_pid.is_local_to(self):  # we're generating the message
+            from_process = self.processes_[from_pid]
             link_exists = from_process._links.get(to_pid, False)
             if link_exists is True:
                 return
 
-            from_process = self.processes_[from_pid]
             from_process._links[to_pid] = True
             await self.dist_command(receiver_node=to_pid.node_name_,
                                     message=('link', from_pid, to_pid))
 
         elif to_pid.is_local_to(self):
+            to_process = self.processes_[to_pid]
             if from_pid in to_process._links:
                 return
-            to_process = self.processes_[to_pid]
             to_process._links[from_pid] = True
 
         else:
