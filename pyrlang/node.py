@@ -395,24 +395,24 @@ class Node:
         if from_pid.is_local_to(self) and to_pid.is_local_to(self):
             from_process = self.processes_[from_pid]
             to_process = self.processes_[to_pid]
-            from_process._links[to_pid] = True
-            to_process._links[from_pid] = True
+            from_process._set_link_state(to_pid, True)
+            to_process._set_link_state(from_pid, True)
 
         elif from_pid.is_local_to(self):  # we're generating the message
             from_process = self.processes_[from_pid]
-            link_exists = from_process._links.get(to_pid, False)
+            link_exists = from_process._link_state(to_pid)
             if link_exists is True:
                 return
 
-            from_process._links[to_pid] = True
+            from_process._set_link_state(to_pid, True)
             await self.dist_command(receiver_node=to_pid.node_name_,
                                     message=('link', from_pid, to_pid))
 
         elif to_pid.is_local_to(self):
             to_process = self.processes_[to_pid]
-            if from_pid in to_process._links:
+            if to_process._link_state(from_pid) is not None:
                 return
-            to_process._links[from_pid] = True
+            to_process._set_link_state(from_pid, True)
 
         else:
             LOG.warn("Illegal remote-remote link: %s -> %s", from_pid, to_pid)
@@ -436,20 +436,17 @@ class Node:
                 return
             to_process = self.processes_[to_pid]
 
-            if to_pid in from_process._links:
-                del from_process._links[to_pid]
-            if from_pid in to_process._links:
-                del to_process._links[from_pid]
+            from_process._set_link_state(to_pid, None)
+            to_process._set_link_state(from_pid, None)
 
             return
 
         if to_pid.is_local_to(self):  # inbound old-protocol message
             if to_pid not in self.processes_:
                 return
-            to_process = self.processes_[to_pid]
 
-            if from_pid in to_process._links:
-                del to_process._links[from_pid]
+            to_process = self.processes_[to_pid]
+            to_process._set_link_state(from_pid, None)
 
             return
 
@@ -463,18 +460,18 @@ class Node:
         if from_pid not in self.processes_:
             return
         from_process = self.processes_[from_pid]
-        if to_pid not in from_process._links or from_process._links[to_pid] != True:
+        if from_process._link_state(to_pid) != True:
             return
 
         from .dist_proto.flags import DFLAG_UNLINK_ID
         if conn.peer_flags_ & DFLAG_UNLINK_ID == 0:  # old protocol
-            del from_process._links[to_pid]
+            from_process._set_link_state(to_pid, None)
             return await self.dist_command(to_pid.node_name_,
                                            ('unlink', from_pid, to_pid))
         else:  # new protocol
             self._prev_unlink_identifier += 1
             identifier = self._prev_unlink_identifier
-            from_process._links[to_pid] = identifier  # set to "unlinking"
+            from_process._set_link_state(to_pid, identifier)  # set to "unlinking"
             return await self.dist_command(to_pid.node_name_,
                                            ('unlink_id', identifier, from_pid, to_pid))
 
@@ -490,8 +487,8 @@ class Node:
         if to_pid not in self.processes_:
             return
         to_process = self.processes_[to_pid]
-        if to_process._links.get(from_pid, False) == True:
-            del to_process._links[from_pid]
+        if to_process._link_state(from_pid) == True:
+            to_process._set_link_state(from_pid, None)
 
         # NOTE: to_pid / from_pid are deliberately swapped in the response
         return await self.dist_command(from_pid.node_name_,
@@ -504,8 +501,8 @@ class Node:
         if to_pid not in self.processes_:
             return
         to_process = self.processes_[to_pid]
-        if to_process._links.get(from_pid, False) == identifier:
-            del to_process._links[from_pid]
+        if to_process._link_state(from_pid) == identifier:
+            to_process._set_link_state(from_pid, None)
 
     def monitor_process(self, origin_pid: Pid, target, ref=None):
         """ Locate the process referenced by the target and place the origin

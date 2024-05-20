@@ -227,6 +227,33 @@ class Process:
         if pid in self._links:
             del self._links[pid]
 
+    def _link_state(self, pid):
+        """ Returns the state of the link from this process to PID, if any.
+            True - the processes are linked.
+            int - the processes are in the act of becoming unlinked w/ this id.
+            None - the processes are not linked.
+
+            Please use the methods on Node for un/linking processes rather than
+            inspecting the link status directly.
+        """
+        return self._links.get(pid, None)
+
+    def _set_link_state(self, pid, state):
+        """ Sets the state of the link from this process to PID.
+            True - the processes have established a link.
+            int - the processes are in the act of becoming unlinked w/ this id.
+            None - the processes are not linked.
+
+            Please use the methods on Node for un/linking processes rather than
+            modifying the link status directly.
+        """
+        if state is None:
+            if pid in self._links:
+                del self._links[pid]
+            return None
+        self._links[pid] = state
+        return state
+
     def exit(self, reason=None):
         """ Marks the object as exiting with the reason, informs links and
             monitors and unregisters the object from the node process
